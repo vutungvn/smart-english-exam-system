@@ -1,6 +1,11 @@
 # Smart Exam Learning System
 
-Đồ án tốt nghiệp (1 sinh viên, hạn 17/1/2027): web luyện thi TOEIC Listening & Reading và các môn CNTT, có AI phân tích năng lực, gợi ý bài tập, chatbot trợ giảng. Trả lời người dùng bằng tiếng Việt.
+Đồ án tốt nghiệp (1 sinh viên, hạn 17/1/2027): web luyện thi TOEIC Listening & Reading và các môn CNTT, có AI phân tích năng lực, gợi ý bài tập, chatbot trợ giảng.
+
+## 🇻🇳 Ngôn ngữ: luôn dùng tiếng Việt
+- **Mọi** câu trả lời, giải thích, hướng dẫn, cập nhật tiến độ giữa các bước, tóm tắt cuối việc, câu hỏi lại người dùng đều viết bằng **tiếng Việt**, kể cả khi người dùng hỏi bằng tiếng Anh hoặc tài liệu/lỗi gốc là tiếng Anh.
+- Giữ nguyên tiếng Anh cho: code, tên biến/hàm/file, lệnh terminal, thông báo lỗi trích nguyên văn, thuật ngữ kỹ thuật phổ biến (có thể kèm giải thích tiếng Việt).
+- Ngoại lệ theo quy ước dự án: commit message và tên nhánh viết tiếng Anh (xem mục Git); comment trong code theo ngôn ngữ của code xung quanh.
 
 ## ⚠️ Quy tắc làm việc: KHÔNG vibe coding
 - **Mặc định chỉ hướng dẫn:** với mọi việc liên quan đến code, chỉ đọc (code, tài liệu, Jira) rồi trả lời bằng **các bước chi tiết + code đầy đủ cho từng file** (đường dẫn, code block, giải thích ngắn vì sao làm vậy).
