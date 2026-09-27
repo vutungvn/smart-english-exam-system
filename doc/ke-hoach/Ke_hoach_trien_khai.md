@@ -45,6 +45,10 @@
 | Môi trường | **Code và chạy hoàn chỉnh ở local** bằng Docker Compose. Nơi deploy bản demo chốt sau |
 | Gemini API key | Chưa cần. Từ Sprint 0 đến Sprint 4 dùng `FakeAiProvider`; lấy key trước Sprint 5 (16/11) |
 | Dữ liệu câu hỏi | 300 TOEIC + 300 CNTT, soạn song song Tuần 8–13 theo `Ke_hoach_soan_cau_hoi.md` |
+| Phiên bản công cụ (chốt ở SPRINT-20, 27/9/2026) | Dùng bản mới nhất khi khởi tạo: **NestJS 12 (ESM)**, **Vite 8**, React 19, **Vitest 4**, ESLint 10, Prettier 3. Riêng **TypeScript ghim `~6.0`** (khai báo một lần ở root `package.json`): `typescript-eslint` chỉ hỗ trợ `<6.1`, Nest CLI 12 build bằng `~6.0`, còn TypeScript 7 không còn JS API |
+| Công cụ lint | Template của NestJS 12 và create-vite 9 mặc định dùng **oxlint**; dự án bỏ oxlint, dùng **một `eslint.config.mjs` ở gốc** cho cả BE (có kiểm tra kiểu, bắt `no-floating-promises`) và FE (luật React Hooks, React Refresh) + Prettier |
+| Tiền tố API | `/api/v1` = `setGlobalPrefix('api')` + URI versioning `defaultVersion: '1'`. Khi cần v2 cho một route thì gắn `@Version('2')`, không đổi toàn bộ tiền tố |
+| Gọi API ở dev | Vite proxy `/api` → `http://localhost:3000`; FE gọi đường dẫn tương đối `VITE_API_BASE_URL=/api/v1` nên cùng origin, cookie refresh token không cần CORS có credentials |
 
 ---
 
@@ -73,17 +77,17 @@
 
 | Tầng | Lựa chọn |
 |---|---|
-| Runtime | Node.js 24 LTS, npm workspaces, TypeScript strict |
-| Backend | NestJS 11, `@nestjs/config` + Zod (kiểm tra biến môi trường), `class-validator`/`class-transformer`, `@nestjs/swagger`, `@nestjs/jwt`, `passport-google-oauth20`, `bcrypt`, `@nestjs/throttler`, `helmet`, `cookie-parser`, `nestjs-pino` |
+| Runtime | Node.js 24 LTS, npm workspaces, TypeScript 6.0 strict (ghim `~6.0`, xem Mục 2.1) |
+| Backend | NestJS 12 (ESM, `module: nodenext`), `@nestjs/config` + Zod (kiểm tra biến môi trường), `class-validator`/`class-transformer`, `@nestjs/swagger`, `@nestjs/jwt`, `passport-google-oauth20`, `bcrypt`, `@nestjs/throttler`, `helmet`, `cookie-parser`, `nestjs-pino` |
 | DB | PostgreSQL 16, Prisma ORM (migrate + client extension cho xóa mềm), extension `pg_trgm` |
 | Cache/Queue | Redis 7, `ioredis`, `@nestjs/bullmq` |
 | Realtime | `@nestjs/websockets` + Socket.IO (adapter Redis nếu chạy nhiều instance) |
 | AI | `@google/genai` (Gemini Flash), Zod để kiểm tra JSON đầu ra |
 | Tệp | `multer`, `pdf-parse`, `mammoth` (DOCX), `exceljs` (nhập/xuất câu hỏi) |
 | Email | `nodemailer`; **Mailpit** ở dev để xem email |
-| Frontend | React 19, Vite, TypeScript, React Router, TanStack Query, Zustand, React Hook Form + Zod, Tailwind CSS + shadcn/ui, Recharts, `socket.io-client` |
+| Frontend | React 19, Vite 8, TypeScript, React Router, TanStack Query, Zustand, React Hook Form + Zod, Tailwind CSS + shadcn/ui, Recharts, `socket.io-client` |
 | Sinh client API | **Orval**: sinh hook TanStack Query + type từ `openapi.json` |
-| Kiểm thử | Jest + Supertest (BE), Vitest + Testing Library (FE), Playwright (E2E luồng chính), k6 (tải) |
+| Kiểm thử | Vitest + Supertest (BE), Vitest + Testing Library (FE), Playwright (E2E luồng chính), k6 (tải) |
 | Hạ tầng dev | Docker Compose: postgres, redis, mailpit (+ minio tùy chọn) |
 | CI | GitHub Actions: lint → typecheck → test → build |
 
@@ -114,7 +118,8 @@ smart-exam-learning-system/
 │  │     ├─ ai/ (analysis, recommendation, explanation, chat, generation, quota)
 │  │     ├─ admin-stats/  settings/  audit/  backups/
 │  │     └─ uploads/  notifications/  system/
-│  └─ test/                     # e2e (Supertest)
+│  ├─ test/                     # e2e (Vitest + Supertest)
+│  └─ vitest.config.ts, vitest.config.e2e.ts
 ├─ frontend/
 │  ├─ src/
 │  │  ├─ app/                   # router, providers, layouts theo vai trò
@@ -126,7 +131,10 @@ smart-exam-learning-system/
 │  └─ e2e/                      # Playwright
 ├─ docker-compose.yml
 ├─ .github/workflows/ci.yml
-├─ package.json                 # npm workspaces: backend, frontend
+├─ .vscode/                     # settings (LF, format on save), extensions gợi ý
+├─ eslint.config.mjs            # ESLint dùng chung cho backend + frontend
+├─ .prettierrc, .prettierignore, .editorconfig, .gitattributes
+├─ package.json                 # npm workspaces: backend, frontend; công cụ dùng chung (ESLint, Prettier, TypeScript)
 └─ README.md                    # hướng dẫn cài đặt, chạy
 ```
 
@@ -265,8 +273,8 @@ Thuật toán lặp lại ngắt quãng rút gọn (dựa trên SM-2, 2 mức "�
 | E2E API | Supertest trên DB test (docker, reset mỗi lần chạy): đăng ký → đăng nhập → làm bài → nộp → xem kết quả; phân quyền (403 khi truy cập tài nguyên người khác) |
 | E2E UI | Playwright: 3 luồng (học viên thi thử, giáo viên tạo đề, admin khóa tài khoản) |
 | Hiệu năng | k6: 50 VU làm bài đồng thời (tự động lưu + heartbeat + nộp), p95 < 500ms không tính AI (NFR-01, NFR-02). Chạy trong Tuần 21 |
-| Git | `main` (bản bảo vệ/demo) ← `develop` ← `feature/<module>-<mô-tả>`; Conventional Commits; PR tự review + CI xanh mới merge |
-| CI | lint (ESLint + Prettier), `tsc --noEmit`, test, build cả BE và FE; job e2e dùng service postgres/redis |
+| Git | `main` (bản bảo vệ/demo) ← `develop` ← `feature/SPRINT-<số>-<mô-tả>`; Conventional Commits; PR tự review + CI xanh mới merge |
+| CI | `npm run lint` (ESLint + Prettier), `npm run typecheck`, `npm test`, `npm run build` cả BE và FE; job e2e dùng service postgres/redis |
 | Theo dõi | Jira: mỗi sprint là 1 Epic, mỗi mục trong Mục 11 là 1 task; tên nhánh và commit gắn mã task (ví dụ `feature/SPRINT-28-auth-api`) |
 
 **Definition of Done cho một tính năng:** migration + seed (nếu cần) · API có Swagger + DTO validate · kiểm tra quyền và quyền sở hữu · unit/e2e test cho logic chính · UI có trạng thái loading/empty/error · chạy tốt ở màn hình di động · ghi audit log nếu là thao tác quản trị.
@@ -379,7 +387,7 @@ Ký hiệu mức ưu tiên: 🔴 Bắt buộc · 🟡 Nên có · ⚪ Có thể 
 
 ## 13. Việc cần làm ngay (Sprint 0)
 
-1. Tạo nhánh `feature/project-setup` từ `develop`.
+1. Tạo nhánh `feature/SPRINT-20-project-setup` từ `develop`.
 2. Dựng khung `backend/` (NestJS) và `frontend/` (Vite React TS), root `package.json` dạng workspaces, `docker-compose.yml`.
 3. Viết `schema.prisma` từ Mục 5 và tài liệu CSDL → `prisma migrate dev` → bổ sung SQL tay → seed tối thiểu (roles, permissions, admin, subjects, topics).
 4. Làm các thành phần dùng chung ở Mục 6 + `/system/status`.

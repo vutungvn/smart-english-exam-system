@@ -15,26 +15,31 @@
 - Chỉ đọc đoạn cần thiết (dùng Grep theo tên bảng, endpoint, use case), không đọc cả file dài.
 
 ## Công nghệ
-- **Backend** `backend/`: NestJS 11 + TypeScript strict, Prisma + PostgreSQL 16, Redis 7 (cache, token, BullMQ), Socket.IO, Swagger.
-- **Frontend** `frontend/`: React 19 + Vite, TanStack Query, Zustand, React Hook Form + Zod, Tailwind + shadcn/ui, Recharts.
+- **Backend** `backend/`: NestJS 12 (ESM) + TypeScript strict, Prisma + PostgreSQL 16, Redis 7 (cache, token, BullMQ), Socket.IO, Swagger.
+- **Frontend** `frontend/`: React 19 + Vite 8, TanStack Query, Zustand, React Hook Form + Zod, Tailwind + shadcn/ui, Recharts.
 - **AI:** Gemini qua `@google/genai`, bọc bởi interface `AiProvider`. **Không dùng LangChain.** Khi chưa có API key thì dùng `FakeAiProvider`.
+- **Kiểm thử:** Vitest cho cả hai workspace (BE thêm Supertest, FE thêm Testing Library), Playwright cho E2E. Không dùng Jest.
 - npm workspaces (không dùng pnpm/yarn), Docker Compose chạy postgres, redis, mailpit. Chạy hoàn toàn ở local.
+- **Công cụ dùng chung ở gốc:** `eslint.config.mjs` (ESLint flat config cho cả BE và FE, không dùng oxlint mà template sinh ra), `.prettierrc`, `.editorconfig`, `.gitattributes` (ép xuống dòng LF). TypeScript khai báo một lần ở root `package.json`, ghim `~6.0`: `typescript-eslint` chỉ hỗ trợ `<6.1` và Nest CLI 12 build bằng `~6.0`; TypeScript 7 không còn JS API cho công cụ khác gọi vào.
+- Khi cài package mới: dùng bản mới nhất, trừ TypeScript như trên.
 
 ## Lệnh (có từ Sprint 0)
 ```bash
 docker compose up -d                       # postgres, redis, mailpit
 npm install
 npm run dev -w backend                     # API: http://localhost:3000/api/v1, Swagger: /api/docs
-npm run dev -w frontend                    # http://localhost:5173
+npm run dev -w frontend                    # http://localhost:5173, Vite proxy /api → http://localhost:3000
 npm run db:migrate -w backend              # prisma migrate dev
 npm run db:seed -w backend
 npm run openapi:export -w backend && npm run api:gen -w frontend   # sinh lại client Orval
-npm run lint && npm run typecheck && npm test
+npm run format                             # Prettier ghi lại toàn repo
+npm run lint && npm run typecheck && npm test && npm run build
 ```
 
 ## Quy ước Backend
 - Module theo nghiệp vụ trong `src/modules/<name>/`: Controller (DTO + Swagger) → Service (nghiệp vụ, transaction) → Prisma. Chỉ tách Repository khi truy vấn phức tạp.
-- Tiền tố `/api/v1`. Route công khai và học viên ở gốc, `/teacher/*`, `/admin/*`. Tên endpoint là danh từ số nhiều, kebab-case; hành động nghiệp vụ đặt ở cuối (`/publish`, `/submit`).
+- Backend là **ESM** (`"type": "module"`, `module: nodenext`): import tương đối phải ghi đuôi `.js` (`import { AppModule } from './app.module.js'`), import chỉ dùng làm kiểu viết `import type`. Đường dẫn con của package không khai báo `exports` cũng cần đuôi `.js` (ví dụ `supertest/types.js`).
+- Tiền tố `/api/v1` tạo bằng `setGlobalPrefix('api')` + URI versioning (`defaultVersion: '1'`) trong `main.ts`. Route cần phiên bản khác dùng `@Version('2')`, không tự ghép `v1` vào `@Controller()`. Route công khai và học viên ở gốc, `/teacher/*`, `/admin/*`. Tên endpoint là danh từ số nhiều, kebab-case; hành động nghiệp vụ đặt ở cuối (`/publish`, `/submit`).
 - Phản hồi thành công `{ success, data, meta }`, lỗi `{ success: false, error: { code, message, details } }`. Mã lỗi là hằng số `UPPER_SNAKE` khai báo trong `src/common/errors`, không ném chuỗi tự do.
 - Mặc định mọi route cần JWT; route công khai đánh dấu `@Public()`. Phân quyền bằng `@Roles` / `@RequirePermission(module, action)`. **Quyền sở hữu tài nguyên kiểm tra trong Service.**
 - Cập nhật có khóa lạc quan qua `updatedAt`, xung đột trả 409 `VERSION_CONFLICT`. Phân trang bằng `page`, `limit` (≤ 100), `sort=field:dir`.
