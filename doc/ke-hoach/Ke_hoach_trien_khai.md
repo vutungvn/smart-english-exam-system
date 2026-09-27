@@ -267,7 +267,7 @@ Thuật toán lặp lại ngắt quãng rút gọn (dựa trên SM-2, 2 mức "�
 | Hiệu năng | k6: 50 VU làm bài đồng thời (tự động lưu + heartbeat + nộp), p95 < 500ms không tính AI (NFR-01, NFR-02). Chạy trong Tuần 21 |
 | Git | `main` (bản bảo vệ/demo) ← `develop` ← `feature/<module>-<mô-tả>`; Conventional Commits; PR tự review + CI xanh mới merge |
 | CI | lint (ESLint + Prettier), `tsc --noEmit`, test, build cả BE và FE; job e2e dùng service postgres/redis |
-| Theo dõi | Jira: mỗi sprint là 1 Epic, mỗi mục trong Mục 11 là 1 task; tên nhánh và commit gắn mã task (ví dụ `feature/SELS-12-auth-login`) |
+| Theo dõi | Jira: mỗi sprint là 1 Epic, mỗi mục trong Mục 11 là 1 task; tên nhánh và commit gắn mã task (ví dụ `feature/SPRINT-28-auth-api`) |
 
 **Definition of Done cho một tính năng:** migration + seed (nếu cần) · API có Swagger + DTO validate · kiểm tra quyền và quyền sở hữu · unit/e2e test cho logic chính · UI có trạng thái loading/empty/error · chạy tốt ở màn hình di động · ghi audit log nếu là thao tác quản trị.
 
