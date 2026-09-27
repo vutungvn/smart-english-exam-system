@@ -1,0 +1,164 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ================================================================
+// ENUM
+// ================================================================
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  PENDING_APPROVAL
+  ACTIVE
+  LOCKED
+
+  @@map("user_status")
+}
+
+enum PermissionAction {
+  VIEW
+  CREATE
+  UPDATE
+  DELETE
+
+  @@map("permission_action")
+}
+
+enum Level {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+
+  @@map("level")
+}
+
+// ================================================================
+// Nhóm Người dùng và phân quyền
+// ================================================================
+
+model Role {
+  id          String   @id(map: "pk_roles") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String   @unique(map: "uq_roles_code") @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  users           User[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id        String           @id(map: "pk_permissions") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code      String           @unique(map: "uq_permissions_code") @db.VarChar(100)
+  module    String           @db.VarChar(50)
+  action    PermissionAction
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  rolePermissions RolePermission[]
+
+  @@unique([module, action], map: "uq_permissions_module_action")
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String   @map("role_id") @db.Uuid
+  permissionId String   @map("permission_id") @db.Uuid
+  grantedAt    DateTime @default(now()) @map("granted_at") @db.Timestamptz(6)
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade, map: "fk_role_permissions_role_id")
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, map: "fk_role_permissions_permission_id")
+
+  @@id([roleId, permissionId], map: "pk_role_permissions")
+  @@index([permissionId], map: "ix_role_permissions_permission_id")
+  @@map("role_permissions")
+}
+
+model User {
+  id                 String     @id(map: "pk_users") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roleId             String     @map("role_id") @db.Uuid
+  /// Luôn lưu chữ thường (D3), chuẩn hóa ở tầng Service trước khi ghi
+  email              String     @unique(map: "uq_users_email") @db.VarChar(255)
+  passwordHash       String     @map("password_hash") @db.VarChar(255)
+  fullName           String     @map("full_name") @db.VarChar(100)
+  avatarUrl          String?    @map("avatar_url") @db.VarChar(500)
+  status             UserStatus @default(PENDING_VERIFICATION)
+  /// Bổ sung theo Mục 5.2 kế hoạch: admin mặc định trong seed phải đổi mật khẩu lần đầu
+  mustChangePassword Boolean    @default(false) @map("must_change_password")
+  emailVerifiedAt    DateTime?  @map("email_verified_at") @db.Timestamptz(6)
+  lastLoginAt        DateTime?  @map("last_login_at") @db.Timestamptz(6)
+  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  role           Role           @relation(fields: [roleId], references: [id], onDelete: Restrict, map: "fk_users_role_id")
+  student        Student?
+  teacher        Teacher?
+  admin          Admin?
+  loginHistories LoginHistory[]
+
+  @@index([roleId], map: "ix_users_role_id")
+  @@index([status], map: "ix_users_status")
+  @@map("users")
+}
+
+model Student {
+  userId       String @id(map: "pk_students") @map("user_id") @db.Uuid
+  currentLevel Level? @map("current_level")
+  currentScore Int?   @map("current_score")
+  targetScore  Int?   @map("target_score")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_students_user_id")
+
+  @@map("students")
+}
+
+model Teacher {
+  userId         String  @id(map: "pk_teachers") @map("user_id") @db.Uuid
+  organization   String  @db.VarChar(255)
+  specialization String  @db.VarChar(255)
+  isApproved     Boolean @default(false) @map("is_approved")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_teachers_user_id")
+
+  @@map("teachers")
+}
+
+model Admin {
+  userId           String  @id(map: "pk_admins") @map("user_id") @db.Uuid
+  phone            String  @db.VarChar(20)
+  twoFactorEnabled Boolean @default(false) @map("two_factor_enabled")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_admins_user_id")
+
+  @@map("admins")
+}
+
+// ================================================================
+// Bảng bổ sung cho Auth
+// ================================================================
+
+/// Mỗi lượt đăng nhập (thành công hoặc thất bại) của một tài khoản có thật; phục vụ /me/login-history
+model LoginHistory {
+  id            String   @id(map: "pk_login_histories") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  success       Boolean
+  /// Mã lý do khi thất bại, ví dụ INVALID_PASSWORD, ACCOUNT_LOCKED
+  failureReason String?  @map("failure_reason") @db.VarChar(50)
+  ipAddress     String?  @map("ip_address") @db.VarChar(45)
+  userAgent     String?  @map("user_agent") @db.VarChar(500)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_login_histories_user_id")
+
+  @@index([userId, createdAt(sort: Desc)], map: "ix_login_histories_user_created")
+  @@map("login_histories")
+}

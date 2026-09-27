@@ -8,3 +8,6 @@ package-lock.json
 doc/
 CLAUDE.md
 .claude/
+
+backend/src/generated/
+
