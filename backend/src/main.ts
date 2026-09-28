@@ -1,12 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { Logger, VersioningType } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Env } from './config/env.schema.js';
 
 async function bootstrap(): Promise<void> {
-  // Nạp .env
-  process.loadEnvFile();
-
   const app = await NestFactory.create(AppModule);
+
+  const config = app.get<ConfigService, ConfigService<Env, true>>(ConfigService);
 
   // 1. Set prefix chung
   app.setGlobalPrefix('api');
@@ -19,7 +20,7 @@ async function bootstrap(): Promise<void> {
 
   app.enableShutdownHooks();
 
-  const port = Number(process.env.PORT ?? 3000);
+  const port = config.get('PORT', { infer: true });
   await app.listen(port);
   Logger.log(`API đang chạy tại http://localhost:${port}/api/v1`, 'Bootstrap');
 }
