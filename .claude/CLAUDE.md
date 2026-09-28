@@ -23,22 +23,36 @@
 - **Backend** `backend/`: NestJS 12 (ESM) + TypeScript strict, Prisma + PostgreSQL 16, Redis 7 (cache, token, BullMQ), Socket.IO, Swagger.
 - **Frontend** `frontend/`: React 19 + Vite 8, TanStack Query, Zustand, React Hook Form + Zod, Tailwind + shadcn/ui, Recharts.
 - **AI:** Gemini qua `@google/genai`, bọc bởi interface `AiProvider`. **Không dùng LangChain.** Khi chưa có API key thì dùng `FakeAiProvider`.
-- **Kiểm thử:** Vitest cho cả hai workspace (BE thêm Supertest, FE thêm Testing Library), Playwright cho E2E. Không dùng Jest.
-- npm workspaces (không dùng pnpm/yarn), Docker Compose chạy postgres, redis, mailpit. Chạy hoàn toàn ở local.
-- **Công cụ dùng chung ở gốc:** `eslint.config.mjs` (ESLint flat config cho cả BE và FE, không dùng oxlint mà template sinh ra), `.prettierrc`, `.editorconfig`, `.gitattributes` (ép xuống dòng LF). TypeScript khai báo một lần ở root `package.json`, ghim `~6.0`: `typescript-eslint` chỉ hỗ trợ `<6.1` và Nest CLI 12 build bằng `~6.0`; TypeScript 7 không còn JS API cho công cụ khác gọi vào.
+- **Kiểm thử:** Vitest cho cả BE và FE (BE thêm Supertest, FE thêm Testing Library), Playwright cho E2E. Không dùng Jest.
+- npm (không dùng pnpm/yarn), Docker Compose chạy postgres, redis, mailpit. Chạy hoàn toàn ở local.
+
+## Cấu trúc repo
+- Root chỉ có 4 thư mục `backend/`, `frontend/`, `infra/`, `doc/` cùng các dotfile bắt buộc phải ở gốc (`.gitignore`, `.gitattributes`, `.editorconfig`, `.vscode/`, `.claude/`) và `README.md`.
+- **Không dùng npm workspaces:** `backend/` và `frontend/` là hai project npm độc lập, mỗi bên có `package.json`, `package-lock.json`, `node_modules/`, `eslint.config.mjs`, `.prettierrc`, `.prettierignore` riêng. Chạy lệnh npm **bên trong** thư mục app. Package cài cho app nào khai báo ở app đó.
+- ESLint flat config: BE có kiểm tra kiểu (bắt `no-floating-promises`), FE có luật React Hooks, React Refresh; không dùng oxlint mà template sinh ra. Hai file `.prettierrc` phải giống nhau. `.editorconfig`, `.gitattributes` ở gốc ép xuống dòng LF.
+- TypeScript ghim `~6.0` ở **cả hai** `package.json`: `typescript-eslint` chỉ hỗ trợ `<6.1` và Nest CLI 12 build bằng `~6.0`; TypeScript 7 không còn JS API cho công cụ khác gọi vào.
+- `infra/`: hạ tầng chạy CSDL và dịch vụ phụ trợ: `docker-compose.yml`, `postgres/init/` (script SQL chạy khi khởi tạo volume lần đầu), sau này thêm script sao lưu, phục hồi. Prisma schema và migration vẫn nằm ở `backend/prisma/` vì là một phần code backend.
 - Khi cài package mới: dùng bản mới nhất, trừ TypeScript như trên.
 
 ## Lệnh (có từ Sprint 0)
 ```bash
-docker compose up -d                       # postgres, redis, mailpit
+docker compose -f infra/docker-compose.yml up -d   # (chạy ở root) postgres, redis, mailpit
+
+cd backend
 npm install
-npm run dev -w backend                     # API: http://localhost:3000/api/v1, Swagger: /api/docs
-npm run dev -w frontend                    # http://localhost:5173, Vite proxy /api → http://localhost:3000
-npm run db:migrate -w backend              # prisma migrate dev
-npm run db:seed -w backend
-npm run openapi:export -w backend && npm run api:gen -w frontend   # sinh lại client Orval
-npm run format                             # Prettier ghi lại toàn repo
+npm run dev                  # API: http://localhost:3000/api/v1, Swagger: /api/docs
+npm run db:migrate           # prisma migrate dev
+npm run db:seed
+npm run openapi:export       # xuất OpenAPI cho FE sinh client Orval
+npm run format               # Prettier ghi lại toàn bộ backend
 npm run lint && npm run typecheck && npm test && npm run build
+
+cd frontend
+npm install
+npm run dev                  # http://localhost:5173, Vite proxy /api → http://localhost:3000
+npm run api:gen              # sinh lại client Orval
+npm run format
+npm run lint && npm run typecheck && npm run build
 ```
 
 ## Quy ước Backend

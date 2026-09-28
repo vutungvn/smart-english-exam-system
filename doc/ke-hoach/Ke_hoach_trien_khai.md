@@ -45,8 +45,9 @@
 | Môi trường | **Code và chạy hoàn chỉnh ở local** bằng Docker Compose. Nơi deploy bản demo chốt sau |
 | Gemini API key | Chưa cần. Từ Sprint 0 đến Sprint 4 dùng `FakeAiProvider`; lấy key trước Sprint 5 (16/11) |
 | Dữ liệu câu hỏi | 300 TOEIC + 300 CNTT, soạn song song Tuần 8–13 theo `Ke_hoach_soan_cau_hoi.md` |
-| Phiên bản công cụ (chốt ở SPRINT-20, 27/9/2026) | Dùng bản mới nhất khi khởi tạo: **NestJS 12 (ESM)**, **Vite 8**, React 19, **Vitest 4**, ESLint 10, Prettier 3. Riêng **TypeScript ghim `~6.0`** (khai báo một lần ở root `package.json`): `typescript-eslint` chỉ hỗ trợ `<6.1`, Nest CLI 12 build bằng `~6.0`, còn TypeScript 7 không còn JS API |
-| Công cụ lint | Template của NestJS 12 và create-vite 9 mặc định dùng **oxlint**; dự án bỏ oxlint, dùng **một `eslint.config.mjs` ở gốc** cho cả BE (có kiểm tra kiểu, bắt `no-floating-promises`) và FE (luật React Hooks, React Refresh) + Prettier |
+| Phiên bản công cụ (chốt ở SPRINT-20, 27/9/2026) | Dùng bản mới nhất khi khởi tạo: **NestJS 12 (ESM)**, **Vite 8**, React 19, **Vitest 4**, ESLint 10, Prettier 3. Riêng **TypeScript ghim `~6.0`** (khai báo trong `package.json` của cả `backend/` và `frontend/`): `typescript-eslint` chỉ hỗ trợ `<6.1`, Nest CLI 12 build bằng `~6.0`, còn TypeScript 7 không còn JS API |
+| Công cụ lint | Template của NestJS 12 và create-vite 9 mặc định dùng **oxlint**; dự án bỏ oxlint, mỗi app có `eslint.config.mjs` riêng: BE có kiểm tra kiểu, bắt `no-floating-promises`; FE có luật React Hooks, React Refresh. Kèm Prettier (`.prettierrc` giống nhau ở hai app) |
+| Cấu trúc repo (chốt 28/9/2026) | Root chỉ gồm `backend/`, `frontend/`, `infra/`, `doc/` và các dotfile bắt buộc. **Bỏ npm workspaces**: BE và FE là hai project npm độc lập (lockfile, `node_modules`, ESLint, Prettier riêng), chạy lệnh trong từng thư mục. `infra/` chứa Docker Compose và script khởi tạo, sao lưu CSDL; Prisma schema, migration vẫn ở `backend/prisma/` |
 | Tiền tố API | `/api/v1` = `setGlobalPrefix('api')` + URI versioning `defaultVersion: '1'`. Khi cần v2 cho một route thì gắn `@Version('2')`, không đổi toàn bộ tiền tố |
 | Gọi API ở dev | Vite proxy `/api` → `http://localhost:3000`; FE gọi đường dẫn tương đối `VITE_API_BASE_URL=/api/v1` nên cùng origin, cookie refresh token không cần CORS có credentials |
 
@@ -77,7 +78,7 @@
 
 | Tầng | Lựa chọn |
 |---|---|
-| Runtime | Node.js 24 LTS, npm workspaces, TypeScript 6.0 strict (ghim `~6.0`, xem Mục 2.1) |
+| Runtime | Node.js 24 LTS, npm (BE và FE là hai project độc lập, không dùng workspaces), TypeScript 6.0 strict (ghim `~6.0`, xem Mục 2.1) |
 | Backend | NestJS 12 (ESM, `module: nodenext`), `@nestjs/config` + Zod (kiểm tra biến môi trường), `class-validator`/`class-transformer`, `@nestjs/swagger`, `@nestjs/jwt`, `passport-google-oauth20`, `bcrypt`, `@nestjs/throttler`, `helmet`, `cookie-parser`, `nestjs-pino` |
 | DB | PostgreSQL 16, Prisma ORM (migrate + client extension cho xóa mềm), extension `pg_trgm` |
 | Cache/Queue | Redis 7, `ioredis`, `@nestjs/bullmq` |
@@ -129,13 +130,17 @@ smart-exam-learning-system/
 │  │  ├─ stores/                # zustand: auth, exam-session
 │  │  ├─ hooks/  lib/  styles/
 │  └─ e2e/                      # Playwright
-├─ docker-compose.yml
-├─ .github/workflows/ci.yml
-├─ .vscode/                     # settings (LF, format on save), extensions gợi ý
-├─ eslint.config.mjs            # ESLint dùng chung cho backend + frontend
-├─ .prettierrc, .prettierignore, .editorconfig, .gitattributes
-├─ package.json                 # npm workspaces: backend, frontend; công cụ dùng chung (ESLint, Prettier, TypeScript)
+├─ infra/                       # hạ tầng CSDL và dịch vụ phụ trợ
+│  ├─ docker-compose.yml        # postgres, redis, mailpit (dev)
+│  └─ postgres/init/            # SQL chạy khi khởi tạo volume lần đầu
+├─ .github/workflows/ci.yml     # chạy lint, typecheck, test, build trong từng app
+├─ .vscode/                     # settings (LF, format on save, ESLint theo từng app), extensions gợi ý
+├─ .claude/CLAUDE.md            # hướng dẫn dự án cho Claude Code
+├─ .editorconfig, .gitattributes, .gitignore
 └─ README.md                    # hướng dẫn cài đặt, chạy
+
+# backend/ và frontend/ mỗi bên tự có: package.json, package-lock.json,
+# eslint.config.mjs, .prettierrc, .prettierignore, tsconfig*.json (không dùng npm workspaces)
 ```
 
 ---
