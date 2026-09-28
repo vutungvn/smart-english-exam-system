@@ -3,6 +3,9 @@ import { AppModule } from './app.module.js';
 import { Logger, VersioningType } from '@nestjs/common';
 
 async function bootstrap(): Promise<void> {
+  // Nạp .env
+  process.loadEnvFile();
+
   const app = await NestFactory.create(AppModule);
 
   // 1. Set prefix chung
