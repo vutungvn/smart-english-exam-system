@@ -142,6 +142,12 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
-.claude/
+# Cấu hình Claude Code cá nhân không commit
+.claude/*
 
 backend/src/generated/
+
+doc/*
+
+.vscode/*
+

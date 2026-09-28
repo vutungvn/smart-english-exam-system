@@ -1,4 +1,7 @@
-# Hạ tầng cho môi trường dev: chỉ dùng ở local, mật khẩu ở đây không dùng cho production
+# Hạ tầng cho môi trường dev: chỉ dùng ở local, mật khẩu ở đây không dùng cho production.
+# Chạy từ root: docker compose -f infra/docker-compose.yml up -d
+# Đường dẫn tương đối bên dưới tính từ thư mục infra/.
+# Giữ name cố định để container và volume không đổi khi di chuyển file compose.
 name: smart-exam
 
 services:
@@ -13,7 +16,7 @@ services:
       - '127.0.0.1:5433:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
       interval: 5s
