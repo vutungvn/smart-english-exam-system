@@ -195,7 +195,7 @@ Giữ nguyên Bảng 3.39 (refresh token, token xác minh email, token đặt l�
 
 | Thành phần | Nội dung |
 |---|---|
-| Định dạng phản hồi | `TransformInterceptor` bọc `{ success, data, meta }`; `AllExceptionsFilter` trả `{ success:false, error:{ code, message, details } }`. Mã lỗi là hằng số dạng `AUTH_INVALID_CREDENTIALS`, `EXAM_NOT_PUBLISHED`, `VERSION_CONFLICT`… trong `common/errors` |
+| Định dạng phản hồi | `TransformInterceptor` bọc `{ success, status, data, meta }`; `AllExceptionsFilter` trả `{ success:false, status, error:{ code, message, details } }`; `status` luôn trùng HTTP status code. Mã lỗi là hằng số dạng `AUTH_INVALID_CREDENTIALS`, `EXAM_NOT_PUBLISHED`, `VERSION_CONFLICT`… trong `common/errors` |
 | Validation | `ValidationPipe({ whitelist, forbidNonWhitelisted, transform })` toàn cục |
 | Phân trang | `PaginationQueryDto` (`page`, `limit ≤ 100`, `sort=field:dir` có danh sách trường cho phép), helper `paginate()` trả `meta:{page,limit,total}` |
 | Xác thực | `JwtAuthGuard` toàn cục; decorator `@Public()` để bỏ qua; `@CurrentUser()` |
