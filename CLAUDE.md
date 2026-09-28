@@ -45,7 +45,7 @@ npm run lint && npm run typecheck && npm test && npm run build
 - Module theo nghiệp vụ trong `src/modules/<name>/`: Controller (DTO + Swagger) → Service (nghiệp vụ, transaction) → Prisma. Chỉ tách Repository khi truy vấn phức tạp.
 - Backend là **ESM** (`"type": "module"`, `module: nodenext`): import tương đối phải ghi đuôi `.js` (`import { AppModule } from './app.module.js'`), import chỉ dùng làm kiểu viết `import type`. Đường dẫn con của package không khai báo `exports` cũng cần đuôi `.js` (ví dụ `supertest/types.js`).
 - Tiền tố `/api/v1` tạo bằng `setGlobalPrefix('api')` + URI versioning (`defaultVersion: '1'`) trong `main.ts`. Route cần phiên bản khác dùng `@Version('2')`, không tự ghép `v1` vào `@Controller()`. Route công khai và học viên ở gốc, `/teacher/*`, `/admin/*`. Tên endpoint là danh từ số nhiều, kebab-case; hành động nghiệp vụ đặt ở cuối (`/publish`, `/submit`).
-- Phản hồi thành công `{ success, data, meta }`, lỗi `{ success: false, error: { code, message, details } }`. Mã lỗi là hằng số `UPPER_SNAKE` khai báo trong `src/common/errors`, không ném chuỗi tự do.
+- Phản hồi thành công `{ success, status, data, meta }`, lỗi `{ success: false, status, error: { code, message, details } }`; `status` luôn trùng HTTP status code. Mã lỗi là hằng số `UPPER_SNAKE` khai báo trong `src/common/errors`, không ném chuỗi tự do.
 - Mặc định mọi route cần JWT; route công khai đánh dấu `@Public()`. Phân quyền bằng `@Roles` / `@RequirePermission(module, action)`. **Quyền sở hữu tài nguyên kiểm tra trong Service.**
 - Cập nhật có khóa lạc quan qua `updatedAt`, xung đột trả 409 `VERSION_CONFLICT`. Phân trang bằng `page`, `limit` (≤ 100), `sort=field:dir`.
 - Thao tác quản trị gắn `@Audit('<entity>.<action>')`.

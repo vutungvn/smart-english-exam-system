@@ -15,7 +15,7 @@ Phần này trình bày thiết kế giao diện lập trình ứng dụng (API)
 | Phương thức HTTP | GET – truy xuất; POST – tạo mới hoặc thực hiện hành động; PUT – thay thế toàn bộ; PATCH – cập nhật một phần; DELETE – xóa (xóa mềm với courses, questions, exams) |
 | Xác thực | Access Token (15 phút) gửi qua header Authorization: Bearer <token>; Refresh Token (7 ngày) lưu trong cookie httpOnly, Secure, SameSite=Strict |
 | Phân quyền | Guard RBAC kiểm tra quyền theo cặp (module, action) của bảng permissions, kết hợp kiểm tra quyền sở hữu tài nguyên |
-| Định dạng phản hồi | Thành công: { success, data, meta }. Lỗi: { success: false, error: { code, message, details } } |
+| Định dạng phản hồi | Thành công: { success, status, data, meta }. Lỗi: { success: false, status, error: { code, message, details } }. Trường status luôn trùng với mã trạng thái HTTP của phản hồi |
 | Phân trang | Tham số page, limit, sort (ví dụ sort=createdAt:desc); kết quả trả về meta: { page, limit, total }; phân trang luôn thực hiện phía máy chủ |
 | Xung đột đồng thời | Client gửi kèm updatedAt khi cập nhật; nếu dữ liệu đã bị thay đổi, trả về 409 VERSION_CONFLICT |
 | Tác vụ dài | Tác vụ gọi AI, xuất báo cáo, sao lưu trả về 202 Accepted kèm jobId, xử lý qua hàng đợi BullMQ và thông báo tiến độ qua WebSocket |
