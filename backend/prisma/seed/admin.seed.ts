@@ -1,7 +1,7 @@
 import { UserStatus } from '../../src/generated/prisma/client.js';
 import type { PrismaClient } from '../../src/generated/prisma/client.js';
 import { RoleCode } from '../../src/common/constants/roles.js';
-import { hashPassword } from '../../src/module/auth/password.js';
+import { hashPassword } from '../../src/modules/auth/password.js';
 
 // Tài khoản cho môi trường dev. Mật khẩu ai cũng biết nên bắt buộc đổi ở lần đăng nhập đầu (D8)
 const DEFAULT_ADMIN = {

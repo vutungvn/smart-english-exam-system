@@ -19,6 +19,12 @@ export const ErrorCode = {
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
+
+  // Auth
+  AUTH_INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',
+  AUTH_EMAIL_NOT_VERIFIED: 'AUTH_EMAIL_NOT_VERIFIED',
+  AUTH_ACCOUNT_PENDING_APPROVAL: 'AUTH_ACCOUNT_PENDING_APPROVAL',
+  AUTH_ACCOUNT_LOCKED: 'AUTH_ACCOUNT_LOCKED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -69,6 +75,24 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.SERVICE_UNAVAILABLE]: {
     status: HttpStatus.SERVICE_UNAVAILABLE,
     message: 'Dịch vụ tạm thời không khả dụng',
+  },
+
+  // Auth
+  [ErrorCode.AUTH_INVALID_CREDENTIALS]: {
+    status: HttpStatus.UNAUTHORIZED,
+    message: 'Email hoặc mật khẩu không chính xác',
+  },
+  [ErrorCode.AUTH_EMAIL_NOT_VERIFIED]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'Tài khoản chưa xác minh email, vui lòng kiểm tra hộp thư',
+  },
+  [ErrorCode.AUTH_ACCOUNT_PENDING_APPROVAL]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'Tài khoản đang chờ quản trị viên phê duyệt',
+  },
+  [ErrorCode.AUTH_ACCOUNT_LOCKED]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên',
   },
 };
 
