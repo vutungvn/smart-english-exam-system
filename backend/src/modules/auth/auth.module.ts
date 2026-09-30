@@ -7,7 +7,6 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { TokenService } from './token.service.js';
 
 @Module({
-  // Secret truyền theo từng lần ký/xác thực trong TokenService (sau này có thêm secret refresh)
   imports: [JwtModule.register({})],
   controllers: [AuthController],
   providers: [AuthService, TokenService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
