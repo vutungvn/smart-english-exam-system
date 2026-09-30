@@ -1,4 +1,5 @@
 import type { RoleCode } from '../../common/constants/roles.js';
+import { UserStatus } from '../../generated/prisma/enums.js';
 
 export interface RequestMeta {
   ipAddress?: string;
@@ -23,4 +24,10 @@ export interface AuthSession {
 /** Kết quả nội bộ của AuthService: refresh token đi riêng, controller đặt vào cookie httpOnly */
 export interface IssuedSession extends AuthSession {
   refreshToken: string;
+}
+
+export interface RegisterResult {
+  id: string;
+  email: string;
+  status: UserStatus;
 }

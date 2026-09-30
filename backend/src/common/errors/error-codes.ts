@@ -26,6 +26,8 @@ export const ErrorCode = {
   AUTH_ACCOUNT_PENDING_APPROVAL: 'AUTH_ACCOUNT_PENDING_APPROVAL',
   AUTH_ACCOUNT_LOCKED: 'AUTH_ACCOUNT_LOCKED',
   AUTH_REFRESH_TOKEN_INVALID: 'AUTH_REFRESH_TOKEN_INVALID',
+  AUTH_EMAIL_ALREADY_EXISTS: 'AUTH_EMAIL_ALREADY_EXISTS',
+  AUTH_TOKEN_INVALID: 'AUTH_TOKEN_INVALID',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -98,6 +100,14 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.AUTH_REFRESH_TOKEN_INVALID]: {
     status: HttpStatus.UNAUTHORIZED,
     message: 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại',
+  },
+  [ErrorCode.AUTH_EMAIL_ALREADY_EXISTS]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Email đã được sử dụng',
+  },
+  [ErrorCode.AUTH_TOKEN_INVALID]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: 'Liên kết không hợp lệ hoặc đã hết hạn',
   },
 };
 
