@@ -95,6 +95,9 @@ model User {
   /// Bổ sung theo Mục 5.2 kế hoạch: admin mặc định trong seed phải đổi mật khẩu lần đầu
   mustChangePassword Boolean    @default(false) @map("must_change_password")
   emailVerifiedAt    DateTime?  @map("email_verified_at") @db.Timestamptz(6)
+  /// Thời điểm đồng ý Điều khoản sử dụng và Chính sách xử lý dữ liệu cá nhân (Luật BVDLCN).
+  /// null với tài khoản do hệ thống tạo (admin trong seed).
+  termsAcceptedAt    DateTime?  @map("terms_accepted_at") @db.Timestamptz(6)
   lastLoginAt        DateTime?  @map("last_login_at") @db.Timestamptz(6)
   createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt          DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)

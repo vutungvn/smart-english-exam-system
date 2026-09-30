@@ -5,11 +5,19 @@ import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { TokenService } from './token.service.js';
+import { OneTimeTokenService } from './one-time-token.service.js';
+import { AuthLimitService } from './auth-limit.service.js';
 
 @Module({
   imports: [JwtModule.register({})],
   controllers: [AuthController],
-  providers: [AuthService, TokenService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
+  providers: [
+    AuthService,
+    TokenService,
+    OneTimeTokenService,
+    AuthLimitService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+  ],
   exports: [TokenService],
 })
 export class AuthModule {}

@@ -8,6 +8,7 @@ import { CommonModule } from './common/common.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { MeModule } from './modules/me/me.module.js';
 import { RedisModule } from './infra/redis/redis.module.js';
+import { MailModule } from './infra/mail/mail.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { RedisModule } from './infra/redis/redis.module.js';
     }),
     PrismaModule,
     RedisModule,
+    MailModule,
     CommonModule,
     AuthModule,
     MeModule,

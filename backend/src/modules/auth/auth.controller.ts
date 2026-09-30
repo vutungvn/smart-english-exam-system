@@ -8,8 +8,11 @@ import { ErrorCode } from '../../common/errors/error-codes.js';
 import type { Env } from '../../config/env.schema.js';
 import { REFRESH_COOKIE_NAME, REFRESH_COOKIE_PATH } from './auth.constants.js';
 import { AuthService } from './auth.service.js';
-import type { AuthSession, RequestMeta } from './auth.types.js';
+import type { AuthSession, RegisterResult, RequestMeta } from './auth.types.js';
 import { LoginDto } from './dto/login.dto.js';
+import { RegisterDto } from './dto/register.dto.js';
+import { VerifyEmailDto } from './dto/verify-email.dto.js';
+import { EmailDto } from './dto/email.dto.js';
 
 @ApiTags('Auth')
 @IsPublic()
@@ -30,6 +33,29 @@ export class AuthController {
       secure: config.get('NODE_ENV', { infer: true }) === 'production',
     };
     this.refreshCookieMaxAge = config.get('JWT_REFRESH_TTL', { infer: true }) * 1000;
+  }
+
+  @Post('register')
+  @ApiOperation({ summary: 'Đăng ký tài khoản học viên và gửi email xác minh' })
+  register(@Body() dto: RegisterDto): Promise<RegisterResult> {
+    return this.authService.register(dto);
+  }
+
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Xác minh email bằng token trong liên kết, kích hoạt tài khoản' })
+  verifyEmail(@Body() dto: VerifyEmailDto): Promise<void> {
+    return this.authService.verifyEmail(dto.token);
+  }
+
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Gửi lại email xác minh',
+    description: 'Luôn trả thành công để không lộ email nào đã đăng ký; tối đa 3 lần mỗi 15 phút.',
+  })
+  resendVerification(@Body() dto: EmailDto): Promise<void> {
+    return this.authService.resendVerification(dto.email);
   }
 
   @Post('login')
