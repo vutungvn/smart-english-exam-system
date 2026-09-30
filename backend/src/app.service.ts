@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from './modules/prisma/prisma.service.js';
+import { PrismaService } from './infra/prisma/prisma.service.js';
 
 export interface DatabaseCheckResult {
   database: string;

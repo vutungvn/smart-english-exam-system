@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import { UserStatus } from '../../generated/prisma/enums.js';
 import { hashPassword, verifyPassword } from './password.js';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { TokenService } from './token.service.js';
 import { LoginDto } from './dto/login.dto.js';
-import { LoginResult, RequestMeta } from './auth.types.js';
+import { IssuedSession, RequestMeta } from './auth.types.js';
 import { normalizeEmail } from '../../common/utils/email.js';
 import { AppException } from '../../common/errors/app.exception.js';
 import { RoleCode } from '../../common/constants/roles.js';
+import { User } from '../../generated/prisma/client.js';
 
 // Trạng thái không được đăng nhập → mã lỗi trả về + lý do ghi vào login_histories.
 // Dùng chung cho 3 vai trò: học viên chưa xác minh, giáo viên chờ duyệt, tài khoản bị khóa.
@@ -24,6 +25,11 @@ const BLOCKED_STATUSES: Partial<Record<UserStatus, { code: ErrorCode; reason: st
   [UserStatus.LOCKED]: { code: ErrorCode.AUTH_ACCOUNT_LOCKED, reason: 'ACCOUNT_LOCKED' },
 };
 
+// Các cột cần để cấp phiên, dùng chung cho login và refresh
+type SessionUser = Pick<User, 'id' | 'email' | 'fullName' | 'mustChangePassword'> & {
+  role: { code: string };
+};
+
 @Injectable()
 export class AuthService {
   // Hash giả để so khớp khi email không tồn tại, giữ thời gian phản hồi như khi email có thật
@@ -34,7 +40,7 @@ export class AuthService {
     private readonly tokens: TokenService,
   ) {}
 
-  async login(dto: LoginDto, meta: RequestMeta): Promise<LoginResult> {
+  async login(dto: LoginDto, meta: RequestMeta): Promise<IssuedSession> {
     const email = normalizeEmail(dto.email);
 
     const user = await this.prisma.user.findUnique({
@@ -58,16 +64,52 @@ export class AuthService {
       throw new AppException(blocked.code);
     }
 
-    const role = user.role.code as RoleCode;
-    const accessToken = await this.tokens.signAccessToken({ id: user.id, role });
+    const session = await this.createSession(user);
 
     await Promise.all([
       this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
       this.recordLogin(user.id, meta),
     ]);
 
+    return session;
+  }
+
+  async refresh(refreshToken: string | undefined): Promise<IssuedSession> {
+    if (!refreshToken) throw new AppException(ErrorCode.AUTH_REFRESH_TOKEN_INVALID);
+
+    // Hủy phiên cũ trước; token bị dùng lại sẽ ném lỗi ngay trong bước này
+    const userId = await this.tokens.rotateRefreshToken(refreshToken);
+
+    // Đọc lại từ DB để phiên mới phản ánh đúng trạng thái và vai trò hiện tại
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: { select: { code: true } } },
+    });
+
+    // Tài khoản bị khóa hoặc xóa sau khi đăng nhập: không cấp phiên mới, đăng xuất mọi thiết bị
+    if (!user || user.status !== UserStatus.ACTIVE) {
+      await this.tokens.revokeAllSessions(userId);
+      throw new AppException(ErrorCode.AUTH_REFRESH_TOKEN_INVALID);
+    }
+
+    return this.createSession(user);
+  }
+
+  async logout(refreshToken: string | undefined): Promise<void> {
+    if (refreshToken) await this.tokens.revokeRefreshToken(refreshToken);
+  }
+
+  private async createSession(user: SessionUser): Promise<IssuedSession> {
+    const role = user.role.code as RoleCode;
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.tokens.signAccessToken({ id: user.id, role }),
+      this.tokens.createRefreshToken(user.id),
+    ]);
+
     return {
       accessToken,
+      refreshToken,
       expiresIn: this.tokens.accessTokenTtl,
       user: {
         id: user.id,

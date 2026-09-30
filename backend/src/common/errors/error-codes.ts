@@ -25,6 +25,7 @@ export const ErrorCode = {
   AUTH_EMAIL_NOT_VERIFIED: 'AUTH_EMAIL_NOT_VERIFIED',
   AUTH_ACCOUNT_PENDING_APPROVAL: 'AUTH_ACCOUNT_PENDING_APPROVAL',
   AUTH_ACCOUNT_LOCKED: 'AUTH_ACCOUNT_LOCKED',
+  AUTH_REFRESH_TOKEN_INVALID: 'AUTH_REFRESH_TOKEN_INVALID',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -93,6 +94,10 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.AUTH_ACCOUNT_LOCKED]: {
     status: HttpStatus.FORBIDDEN,
     message: 'Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên',
+  },
+  [ErrorCode.AUTH_REFRESH_TOKEN_INVALID]: {
+    status: HttpStatus.UNAUTHORIZED,
+    message: 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại',
   },
 };
 

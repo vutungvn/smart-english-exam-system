@@ -5,7 +5,8 @@ export interface RequestMeta {
   userAgent?: string;
 }
 
-export interface LoginResult {
+/** Body trả về cho login và refresh */
+export interface AuthSession {
   accessToken: string;
   /** Số giây access token còn hiệu lực, FE dùng để biết khi nào cần làm mới */
   expiresIn: number;
@@ -17,4 +18,9 @@ export interface LoginResult {
     /** true: FE chuyển thẳng tới trang Đổi mật khẩu (admin mặc định từ seed) */
     mustChangePassword: boolean;
   };
+}
+
+/** Kết quả nội bộ của AuthService: refresh token đi riêng, controller đặt vào cookie httpOnly */
+export interface IssuedSession extends AuthSession {
+  refreshToken: string;
 }
