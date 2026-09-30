@@ -5,6 +5,9 @@ export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+  JWT_ACCESS_SECRET: z.string().min(32, 'Secret JWT phải dài ít nhất 32 ký tự'),
+  // Thời hạn access token, đơn vị giây (15 phút)
+  JWT_ACCESS_TTL: z.coerce.number().int().positive().default(900),
 });
 
 export type Env = z.infer<typeof envSchema>;

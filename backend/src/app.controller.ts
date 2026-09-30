@@ -1,6 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService, DatabaseCheckResult } from './app.service.js';
+import { IsPublic } from './common/decorators/public.decorator.js';
 
+@IsPublic()
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
