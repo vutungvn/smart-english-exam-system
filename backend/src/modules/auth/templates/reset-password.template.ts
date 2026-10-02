@@ -16,11 +16,11 @@ export function resetPasswordTemplate({
   const href = escapeHtml(link);
 
   return {
-    subject: 'Đặt lại mật khẩu Smart Exam',
+    subject: 'Đặt lại mật khẩu Smart English Exam',
     text: [
       `Chào ${fullName},`,
       '',
-      'Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Smart Exam của bạn.',
+      'Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Smart English Exam của bạn.',
       'Mở liên kết dưới đây để đặt mật khẩu mới:',
       link,
       '',
@@ -30,7 +30,7 @@ export function resetPasswordTemplate({
     html: `
       <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #1f2937">
         <p>Chào <strong>${name}</strong>,</p>
-        <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Smart Exam của bạn.</p>
+        <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Smart English Exam của bạn.</p>
         <p>
           <a href="${href}"
              style="display: inline-block; padding: 10px 20px; background: #2563eb;

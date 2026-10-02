@@ -19,7 +19,7 @@ export function configureApp(app: INestApplication): void {
 // Tài liệu API tại /api/docs; nút Authorize nhận access token dạng Bearer
 export function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
-    .setTitle('Smart Exam Learning System API')
+    .setTitle('Smart English Exam System API')
     .setVersion('1.0')
     .addBearerAuth()
     .addCookieAuth(REFRESH_COOKIE_NAME)

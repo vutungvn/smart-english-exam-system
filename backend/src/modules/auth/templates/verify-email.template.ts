@@ -16,11 +16,11 @@ export function verifyEmailTemplate({
   const href = escapeHtml(link);
 
   return {
-    subject: 'Xác minh email tài khoản Smart Exam',
+    subject: 'Xác minh email tài khoản Smart English Exam',
     text: [
       `Chào ${fullName},`,
       '',
-      'Cảm ơn bạn đã đăng ký Smart Exam. Mở liên kết dưới đây để kích hoạt tài khoản:',
+      'Cảm ơn bạn đã đăng ký Smart English Exam. Mở liên kết dưới đây để kích hoạt tài khoản:',
       link,
       '',
       `Liên kết có hiệu lực trong ${expiresInHours} giờ và chỉ dùng được một lần.`,
@@ -29,7 +29,7 @@ export function verifyEmailTemplate({
     html: `
       <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #1f2937">
         <p>Chào <strong>${name}</strong>,</p>
-        <p>Cảm ơn bạn đã đăng ký Smart Exam. Nhấn nút dưới đây để kích hoạt tài khoản:</p>
+        <p>Cảm ơn bạn đã đăng ký Smart English Exam. Nhấn nút dưới đây để kích hoạt tài khoản:</p>
         <p>
           <a href="${href}"
              style="display: inline-block; padding: 10px 20px; background: #2563eb;
