@@ -5,14 +5,17 @@ export const REFRESH_COOKIE_PATH = '/api/v1/auth';
 // Link xác minh email có hiệu lực 24 giờ, dùng một lần
 export const VERIFY_EMAIL_TTL_SECONDS = 24 * 60 * 60;
 
+// Link đặt lại mật khẩu có hiệu lực 15 phút, dùng một lần
+export const RESET_PASSWORD_TTL_SECONDS = 15 * 60;
+
 // Gửi lại email: tối đa 3 lần mỗi 15 phút cho một địa chỉ
 export const EMAIL_REQUEST_LIMIT = 3;
 export const EMAIL_REQUEST_WINDOW_SECONDS = 15 * 60;
 
-// Mục đích của token một lần; sau này thêm 'reset-password'
-export type OneTimeTokenPurpose = 'verify-email';
-// Loại yêu cầu gửi email bị giới hạn; sau này thêm 'forgot-password'
-export type EmailRequestKind = 'resend-verification';
+// Mục đích của token một lần
+export type OneTimeTokenPurpose = 'verify-email' | 'reset-password';
+// Loại yêu cầu gửi email bị giới hạn (đếm riêng từng loại)
+export type EmailRequestKind = 'resend-verification' | 'forgot-password';
 
 export const redisKeys = {
   // Mỗi phiên đăng nhập (mỗi thiết bị) là một key, tự hết hạn cùng refresh token

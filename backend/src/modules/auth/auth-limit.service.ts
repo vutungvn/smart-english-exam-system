@@ -21,7 +21,7 @@ export class AuthLimitService {
     if (count > EMAIL_REQUEST_LIMIT) {
       throw new AppException(
         ErrorCode.TOO_MANY_REQUESTS,
-        'Bạn đã yêu cầu gửi lại quá nhiều lần, vui lòng thử lại sau 15 phút',
+        'Bạn đã yêu cầu quá nhiều lần, vui lòng thử lại sau 15 phút',
       );
     }
   }

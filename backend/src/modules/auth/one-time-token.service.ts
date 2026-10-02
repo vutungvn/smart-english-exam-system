@@ -1,11 +1,16 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { RedisService } from '../../infra/redis/redis.service.js';
-import { VERIFY_EMAIL_TTL_SECONDS, redisKeys } from './auth.constants.js';
+import {
+  RESET_PASSWORD_TTL_SECONDS,
+  VERIFY_EMAIL_TTL_SECONDS,
+  redisKeys,
+} from './auth.constants.js';
 import type { OneTimeTokenPurpose } from './auth.constants.js';
 
 const TTL_SECONDS: Record<OneTimeTokenPurpose, number> = {
   'verify-email': VERIFY_EMAIL_TTL_SECONDS,
+  'reset-password': RESET_PASSWORD_TTL_SECONDS,
 };
 
 function sha256(value: string): string {
@@ -33,6 +38,11 @@ export class OneTimeTokenService {
     await tx.exec();
 
     return token;
+  }
+
+  /** Kiểm tra token còn hiệu lực mà KHÔNG hủy; trả userId hoặc null */
+  peek(purpose: OneTimeTokenPurpose, token: string): Promise<string | null> {
+    return this.redis.get(redisKeys.oneTimeToken(purpose, sha256(token)));
   }
 
   /** Trả userId và hủy token ngay; null nếu token sai, hết hạn hoặc đã dùng */

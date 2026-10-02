@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { CookieOptions, Request, Response } from 'express';
@@ -13,6 +13,7 @@ import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { VerifyEmailDto } from './dto/verify-email.dto.js';
 import { EmailDto } from './dto/email.dto.js';
+import { ResetPasswordDto, ResetPasswordTokenDto } from './dto/reset-password.dto.js';
 
 @ApiTags('Auth')
 @IsPublic()
@@ -56,6 +57,29 @@ export class AuthController {
   })
   resendVerification(@Body() dto: EmailDto): Promise<void> {
     return this.authService.resendVerification(dto.email);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Yêu cầu đặt lại mật khẩu, gửi liên kết qua email',
+    description: 'Luôn trả thành công để không lộ email nào đã đăng ký; tối đa 3 lần mỗi 15 phút.',
+  })
+  forgotPassword(@Body() dto: EmailDto): Promise<void> {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Get('reset-password/validate')
+  @ApiOperation({ summary: 'Kiểm tra liên kết đặt lại mật khẩu còn hiệu lực (không hủy token)' })
+  validateResetToken(@Query() dto: ResetPasswordTokenDto): Promise<void> {
+    return this.authService.validateResetToken(dto.token);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Đặt mật khẩu mới bằng token, đăng xuất mọi thiết bị' })
+  resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
+    return this.authService.resetPassword(dto);
   }
 
   @Post('login')
