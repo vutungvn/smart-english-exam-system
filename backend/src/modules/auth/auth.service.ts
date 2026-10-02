@@ -17,7 +17,9 @@ import { ConfigService } from '@nestjs/config';
 import { Env } from '../../config/env.schema.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { verifyEmailTemplate } from './templates/verify-email.template.js';
-import { VERIFY_EMAIL_TTL_SECONDS } from './auth.constants.js';
+import { RESET_PASSWORD_TTL_SECONDS, VERIFY_EMAIL_TTL_SECONDS } from './auth.constants.js';
+import type { ResetPasswordDto } from './dto/reset-password.dto.js';
+import { resetPasswordTemplate } from './templates/reset-password.template.js';
 
 // Trạng thái không được đăng nhập → mã lỗi trả về + lý do ghi vào login_histories.
 // Dùng chung cho 3 vai trò: học viên chưa xác minh, giáo viên chờ duyệt, tài khoản bị khóa.
@@ -69,7 +71,7 @@ export class AuthService {
     }
 
     const [studentRoleId, passwordHash] = await Promise.all([
-      this.findRoldId(RoleCode.STUDENT),
+      this.findRoleId(RoleCode.STUDENT),
       hashPassword(dto.password),
     ]);
 
@@ -128,6 +130,53 @@ export class AuthService {
     if (!user || user.status !== UserStatus.PENDING_VERIFICATION) return;
 
     await this.sendVerificationEmail(user);
+  }
+
+  async forgotPassword(rawEmail: string): Promise<void> {
+    const email = normalizeEmail(rawEmail);
+    await this.limits.assertEmailQuota('forgot-password', email);
+
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, fullName: true, status: true },
+    });
+
+    // Email không tồn tại hoặc tài khoản bị khóa: không gửi gì nhưng vẫn trả thành công như nhau
+    if (!user || user.status === UserStatus.LOCKED) return;
+
+    const token = await this.oneTimeTokens.create('reset-password', user.id);
+
+    this.mail.sendInBackground({
+      to: user.email,
+      ...resetPasswordTemplate({
+        fullName: user.fullName,
+        link: `${this.appUrl}/reset-password?token=${token}`,
+        expiresInMinutes: RESET_PASSWORD_TTL_SECONDS / 60,
+      }),
+    });
+  }
+
+  async validateResetToken(token: string): Promise<void> {
+    const userId = await this.oneTimeTokens.peek('reset-password', token);
+    if (!userId) throw new AppException(ErrorCode.AUTH_TOKEN_INVALID);
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    // Hủy token ngay khi dùng: dù các bước sau lỗi, link này cũng không dùng lại được
+    const userId = await this.oneTimeTokens.consume('reset-password', dto.token);
+    if (!userId) throw new AppException(ErrorCode.AUTH_TOKEN_INVALID);
+
+    const passwordHash = await hashPassword(dto.newPassword);
+
+    // updateMany kèm điều kiện: tài khoản đã bị xóa hoặc bị khóa sau khi gửi link thì không đổi gì
+    const { count } = await this.prisma.user.updateMany({
+      where: { id: userId, status: { not: UserStatus.LOCKED } },
+      data: { passwordHash, mustChangePassword: false },
+    });
+    if (count === 0) throw new AppException(ErrorCode.AUTH_TOKEN_INVALID);
+
+    // Đăng xuất mọi thiết bị: phiên cũ (có thể của người đã biết mật khẩu cũ) không dùng tiếp được
+    await this.tokens.revokeAllSessions(userId);
   }
 
   async login(dto: LoginDto, meta: RequestMeta): Promise<IssuedSession> {
@@ -230,7 +279,7 @@ export class AuthService {
     });
   }
 
-  private async findRoldId(code: RoleCode): Promise<string> {
+  private async findRoleId(code: RoleCode): Promise<string> {
     const role = await this.prisma.role.findUnique({
       where: { code },
       select: { id: true },
