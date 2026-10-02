@@ -1,3 +1,3 @@
-# smart-exam-learning-system
+# smart-english-exam-system
 
-Smart web platform for TOEIC exam practice and IT coursework, built with React, NestJS, PostgreSQL, and Gemini AI for personalized weakness analysis and an AI tutoring chatbot.
+Smart English Exam: a smart web platform for TOEIC 4-skill exam practice (Listening, Reading, Speaking, Writing), built with React, NestJS, PostgreSQL, and Gemini AI for weakness analysis, AI-assisted Speaking/Writing scoring, and personalized practice.
