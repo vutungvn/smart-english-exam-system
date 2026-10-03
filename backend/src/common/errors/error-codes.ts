@@ -29,6 +29,7 @@ export const ErrorCode = {
   AUTH_EMAIL_ALREADY_EXISTS: 'AUTH_EMAIL_ALREADY_EXISTS',
   AUTH_TOKEN_INVALID: 'AUTH_TOKEN_INVALID',
   AUTH_TOO_MANY_LOGIN_ATTEMPTS: 'AUTH_TOO_MANY_LOGIN_ATTEMPTS',
+  AUTH_CURRENT_PASSWORD_INCORRECT: 'AUTH_CURRENT_PASSWORD_INCORRECT',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -113,6 +114,10 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.AUTH_TOO_MANY_LOGIN_ATTEMPTS]: {
     status: HttpStatus.TOO_MANY_REQUESTS,
     message: 'Bạn đã nhập sai mật khẩu quá nhiều lần, vui lòng thử lại sau 15 phút',
+  },
+  [ErrorCode.AUTH_CURRENT_PASSWORD_INCORRECT]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: 'Mật khẩu hiện tại không đúng',
   },
 };
 
