@@ -4,6 +4,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../src/generated/prisma/client.js';
 import { seedAdmin } from './admin.seed.js';
 import { seedRoles } from './roles.seed.js';
+import { seedTeacher } from './teacher.seed.js';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -15,6 +16,7 @@ const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) })
 try {
   await seedRoles(prisma);
   await seedAdmin(prisma);
+  await seedTeacher(prisma);
   console.log('Seed xong');
 } finally {
   await prisma.$disconnect();
