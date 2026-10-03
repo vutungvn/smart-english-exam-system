@@ -23,3 +23,14 @@ export interface MeProfile {
   updatedAt: Date;
   student: StudentProfile | null;
 }
+
+// Một lượt đăng nhập trong GET /me/login-history
+export interface LoginHistoryItem {
+  id: string;
+  success: boolean;
+  /** Mã lý do khi thất bại, ví dụ INVALID_PASSWORD, TOO_MANY_ATTEMPTS; null khi thành công */
+  failureReason: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+}

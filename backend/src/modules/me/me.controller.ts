@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
 import { MeService } from './me.service.js';
-import { MeProfile } from './me.types.js';
+import { LoginHistoryItem, MeProfile } from './me.types.js';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
+import type { WithMeta } from '../../common/types/api-response.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 
@@ -17,6 +19,15 @@ export class MeController {
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ cá nhân' })
   getProfile(@CurrentUser() user: AuthUser): Promise<MeProfile> {
     return this.meService.getProfile(user.id);
+  }
+
+  @Get('login-history')
+  @ApiOperation({ summary: 'Xem lịch sử đăng nhập của chính mình, mới nhất trước' })
+  getLoginHistory(
+    @CurrentUser() user: AuthUser,
+    @Query() query: PaginationQueryDto,
+  ): Promise<WithMeta<LoginHistoryItem[]>> {
+    return this.meService.getLoginHistory(user.id, query);
   }
 
   @Patch()

@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
-import { MeProfile } from './me.types.js';
+import { LoginHistoryItem, MeProfile } from './me.types.js';
 import { AppException } from '../../common/errors/app.exception.js';
+import type { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
+import type { WithMeta } from '../../common/types/api-response.js';
+import { paginate, toPrismaPage } from '../../common/utils/pagination.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import { RoleCode } from '../../common/constants/roles.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
@@ -40,6 +43,34 @@ export class MeService {
 
     const { role, ...profile } = user;
     return { ...profile, role: role.code as RoleCode };
+  }
+
+  async getLoginHistory(
+    userId: string,
+    query: PaginationQueryDto,
+  ): Promise<WithMeta<LoginHistoryItem[]>> {
+    const where = { userId };
+
+    // Đếm và lấy trang trong cùng transaction để total khớp với dữ liệu trả về.
+    // Truy vấn đi theo chỉ mục ix_login_histories_user_created (user_id, created_at DESC).
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.loginHistory.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          success: true,
+          failureReason: true,
+          ipAddress: true,
+          userAgent: true,
+          createdAt: true,
+        },
+        ...toPrismaPage(query),
+      }),
+      this.prisma.loginHistory.count({ where }),
+    ]);
+
+    return paginate(items, total, query);
   }
 
   async updateProfile(user: AuthUser, dto: UpdateProfileDto): Promise<MeProfile> {
