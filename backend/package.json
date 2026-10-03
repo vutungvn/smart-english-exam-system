@@ -25,7 +25,8 @@
     "dev": "nest start --watch",
     "typecheck": "tsc --noEmit",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed/index.ts"
+    "db:seed": "tsx prisma/seed/index.ts",
+    "openapi:export": "nest build && node dist/openapi-export.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

@@ -6,3 +6,6 @@ package-lock.json
 
 # Prisma Client sinh tự động
 src/generated/
+
+# Tài liệu OpenAPI sinh bằng npm run openapi:export
+openapi.json
