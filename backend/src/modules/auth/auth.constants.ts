@@ -12,6 +12,11 @@ export const RESET_PASSWORD_TTL_SECONDS = 15 * 60;
 export const EMAIL_REQUEST_LIMIT = 3;
 export const EMAIL_REQUEST_WINDOW_SECONDS = 15 * 60;
 
+// Sai mật khẩu 5 lần trong 15 phút → khóa đăng nhập 15 phút (tính từ lần sai cuối)
+export const LOGIN_FAILURE_LIMIT = 5;
+export const LOGIN_FAILURE_WINDOW_SECONDS = 15 * 60;
+export const LOGIN_LOCK_SECONDS = 15 * 60;
+
 // Mục đích của token một lần
 export type OneTimeTokenPurpose = 'verify-email' | 'reset-password';
 // Loại yêu cầu gửi email bị giới hạn (đếm riêng từng loại)
@@ -30,4 +35,7 @@ export const redisKeys = {
 
   // Bộ đếm số lần gửi email theo từng địa chỉ
   emailRequests: (kind: EmailRequestKind, email: string) => `rate:${kind}:${email}`,
+
+  // Bộ đếm số lần đăng nhập sai theo email; key còn và đạt ngưỡng nghĩa là đang bị khóa
+  loginFailures: (email: string) => `rate:login-fail:${email}`,
 };
