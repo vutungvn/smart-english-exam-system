@@ -1,4 +1,16 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { CookieOptions, Request, Response } from 'express';
@@ -6,7 +18,7 @@ import { IsPublic } from '../../common/decorators/public.decorator.js';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import type { Env } from '../../config/env.schema.js';
-import { REFRESH_COOKIE_NAME, REFRESH_COOKIE_PATH } from './auth.constants.js';
+import { AUTH_THROTTLE, REFRESH_COOKIE_NAME, REFRESH_COOKIE_PATH } from './auth.constants.js';
 import { AuthService } from './auth.service.js';
 import type { AuthSession, RegisterResult, RequestMeta } from './auth.types.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -17,6 +29,8 @@ import { ResetPasswordDto, ResetPasswordTokenDto } from './dto/reset-password.dt
 
 @ApiTags('Auth')
 @IsPublic()
+// Giới hạn theo IP cho mọi route auth (mức default); route nhạy cảm ghi đè bằng @Throttle
+@UseGuards(ThrottlerGuard)
 @Controller('auth')
 export class AuthController {
   private readonly refreshCookieOptions: CookieOptions;
@@ -37,6 +51,7 @@ export class AuthController {
   }
 
   @Post('register')
+  @Throttle({ default: AUTH_THROTTLE.sensitive })
   @ApiOperation({ summary: 'Đăng ký tài khoản học viên và gửi email xác minh' })
   register(@Body() dto: RegisterDto): Promise<RegisterResult> {
     return this.authService.register(dto);
@@ -50,6 +65,7 @@ export class AuthController {
   }
 
   @Post('resend-verification')
+  @Throttle({ default: AUTH_THROTTLE.sensitive })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Gửi lại email xác minh',
@@ -60,6 +76,7 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @Throttle({ default: AUTH_THROTTLE.sensitive })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Yêu cầu đặt lại mật khẩu, gửi liên kết qua email',
@@ -83,6 +100,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ default: AUTH_THROTTLE.login })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đăng nhập bằng email và mật khẩu (dùng chung cho mọi vai trò)' })
   async login(

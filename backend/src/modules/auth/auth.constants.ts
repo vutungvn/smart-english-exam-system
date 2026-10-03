@@ -17,6 +17,17 @@ export const LOGIN_FAILURE_LIMIT = 5;
 export const LOGIN_FAILURE_WINDOW_SECONDS = 15 * 60;
 export const LOGIN_LOCK_SECONDS = 15 * 60;
 
+// Giới hạn số request theo IP cho /auth/* (ttl tính bằng mili giây, theo @nestjs/throttler v6).
+// Đếm riêng từng route: gọi login nhiều không làm hết lượt của refresh.
+export const AUTH_THROTTLE = {
+  // Mức chung cho mọi route auth; refresh được FE gọi mỗi lần tải trang nên để rộng
+  default: { limit: 30, ttl: 60_000 },
+  // Chặn thử mật khẩu trên nhiều email từ một IP (khóa theo email chỉ chặn từng email)
+  login: { limit: 10, ttl: 60_000 },
+  // Route tạo tài khoản hoặc gửi mail: chặn spam tài khoản rác và mail rác
+  sensitive: { limit: 5, ttl: 15 * 60_000 },
+} satisfies Record<string, { limit: number; ttl: number }>;
+
 // Mục đích của token một lần
 export type OneTimeTokenPurpose = 'verify-email' | 'reset-password';
 // Loại yêu cầu gửi email bị giới hạn (đếm riêng từng loại)
