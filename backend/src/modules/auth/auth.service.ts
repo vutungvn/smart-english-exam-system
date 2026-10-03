@@ -40,6 +40,15 @@ type SessionUser = Pick<User, 'id' | 'email' | 'fullName' | 'mustChangePassword'
   role: { code: string };
 };
 
+// Thông báo theo số phút còn lại, details trả số giây để FE hiển thị đếm ngược
+function loginLockedError(seconds: number): AppException {
+  return new AppException(
+    ErrorCode.AUTH_TOO_MANY_LOGIN_ATTEMPTS,
+    `Bạn đã nhập sai mật khẩu quá nhiều lần, vui lòng thử lại sau ${Math.ceil(seconds / 60)} phút`,
+    { retryAfterSeconds: seconds },
+  );
+}
+
 @Injectable()
 export class AuthService {
   // Hash giả để so khớp khi email không tồn tại, giữ thời gian phản hồi như khi email có thật
@@ -175,8 +184,18 @@ export class AuthService {
     });
     if (count === 0) throw new AppException(ErrorCode.AUTH_TOKEN_INVALID);
 
-    // Đăng xuất mọi thiết bị: phiên cũ (có thể của người đã biết mật khẩu cũ) không dùng tiếp được
-    await this.tokens.revokeAllSessions(userId);
+    // updateMany không trả về bản ghi nên đọc lại email để xóa bộ đếm đăng nhập sai
+    const { email } = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { email: true },
+    });
+
+    // Đăng xuất mọi thiết bị: phiên cũ (có thể của người đã biết mật khẩu cũ) không dùng tiếp được.
+    // Đồng thời mở khóa đăng nhập tạm: người dùng vừa chứng minh sở hữu email.
+    await Promise.all([
+      this.tokens.revokeAllSessions(userId),
+      this.limits.resetLoginFailures(email),
+    ]);
   }
 
   async login(dto: LoginDto, meta: RequestMeta): Promise<IssuedSession> {
@@ -187,13 +206,26 @@ export class AuthService {
       include: { role: { select: { code: true } } },
     });
 
+    // Đang bị khóa tạm: từ chối trước khi so mật khẩu, kể cả mật khẩu đúng, để không đoán tiếp được
+    const lockedFor = await this.limits.loginLockRemaining(email);
+    if (lockedFor > 0) {
+      await this.recordLogin(user?.id, meta, 'TOO_MANY_ATTEMPTS');
+      throw loginLockedError(lockedFor);
+    }
+
     const passwordHash = user?.passwordHash ?? (await this.dummyPasswordHash);
     const passwordMatches = await verifyPassword(dto.password, passwordHash);
 
     if (!user || !passwordMatches) {
+      // Đếm cả email không tồn tại: email nào cũng bị khóa sau 5 lần sai, không lộ email nào có thật
+      const lockSeconds = await this.limits.recordLoginFailure(email);
       await this.recordLogin(user?.id, meta, 'INVALID_PASSWORD');
+      if (lockSeconds > 0) throw loginLockedError(lockSeconds);
       throw new AppException(ErrorCode.AUTH_INVALID_CREDENTIALS);
     }
+
+    // Mật khẩu đúng thì xóa bộ đếm, kể cả khi tài khoản đang chờ xác minh hoặc chờ duyệt
+    await this.limits.resetLoginFailures(email);
 
     // Mật khẩu đúng rồi mới báo trạng thái, tránh bị dò trạng thái tài khoản
     const blocked = BLOCKED_STATUSES[user.status];
