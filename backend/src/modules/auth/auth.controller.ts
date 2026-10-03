@@ -15,12 +15,15 @@ import { ConfigService } from '@nestjs/config';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { CookieOptions, Request, Response } from 'express';
 import { IsPublic } from '../../common/decorators/public.decorator.js';
+import { ApiEnvelope, ApiNullEnvelope } from '../../common/swagger/api-envelope.decorator.js';
+import { ApiErrors } from '../../common/swagger/api-errors.decorator.js';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import type { Env } from '../../config/env.schema.js';
 import { AUTH_THROTTLE, REFRESH_COOKIE_NAME, REFRESH_COOKIE_PATH } from './auth.constants.js';
 import { AuthService } from './auth.service.js';
-import type { AuthSession, RegisterResult, RequestMeta } from './auth.types.js';
+import { AuthSession, RegisterResult } from './auth.types.js';
+import type { RequestMeta } from './auth.types.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { VerifyEmailDto } from './dto/verify-email.dto.js';
@@ -53,6 +56,8 @@ export class AuthController {
   @Post('register')
   @Throttle({ default: AUTH_THROTTLE.sensitive })
   @ApiOperation({ summary: 'Đăng ký tài khoản học viên và gửi email xác minh' })
+  @ApiEnvelope(RegisterResult, { status: HttpStatus.CREATED })
+  @ApiErrors(HttpStatus.CONFLICT, HttpStatus.TOO_MANY_REQUESTS)
   register(@Body() dto: RegisterDto): Promise<RegisterResult> {
     return this.authService.register(dto);
   }
@@ -60,6 +65,7 @@ export class AuthController {
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Xác minh email bằng token trong liên kết, kích hoạt tài khoản' })
+  @ApiNullEnvelope()
   verifyEmail(@Body() dto: VerifyEmailDto): Promise<void> {
     return this.authService.verifyEmail(dto.token);
   }
@@ -71,6 +77,8 @@ export class AuthController {
     summary: 'Gửi lại email xác minh',
     description: 'Luôn trả thành công để không lộ email nào đã đăng ký; tối đa 3 lần mỗi 15 phút.',
   })
+  @ApiNullEnvelope()
+  @ApiErrors(HttpStatus.TOO_MANY_REQUESTS)
   resendVerification(@Body() dto: EmailDto): Promise<void> {
     return this.authService.resendVerification(dto.email);
   }
@@ -82,12 +90,15 @@ export class AuthController {
     summary: 'Yêu cầu đặt lại mật khẩu, gửi liên kết qua email',
     description: 'Luôn trả thành công để không lộ email nào đã đăng ký; tối đa 3 lần mỗi 15 phút.',
   })
+  @ApiNullEnvelope()
+  @ApiErrors(HttpStatus.TOO_MANY_REQUESTS)
   forgotPassword(@Body() dto: EmailDto): Promise<void> {
     return this.authService.forgotPassword(dto.email);
   }
 
   @Get('reset-password/validate')
   @ApiOperation({ summary: 'Kiểm tra liên kết đặt lại mật khẩu còn hiệu lực (không hủy token)' })
+  @ApiNullEnvelope()
   validateResetToken(@Query() dto: ResetPasswordTokenDto): Promise<void> {
     return this.authService.validateResetToken(dto.token);
   }
@@ -95,6 +106,7 @@ export class AuthController {
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đặt mật khẩu mới bằng token, đăng xuất mọi thiết bị' })
+  @ApiNullEnvelope()
   resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
     return this.authService.resetPassword(dto);
   }
@@ -103,6 +115,8 @@ export class AuthController {
   @Throttle({ default: AUTH_THROTTLE.login })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đăng nhập bằng email và mật khẩu (dùng chung cho mọi vai trò)' })
+  @ApiEnvelope(AuthSession)
+  @ApiErrors(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN, HttpStatus.TOO_MANY_REQUESTS)
   async login(
     @Body() dto: LoginDto,
     @Req() req: Request,
@@ -117,6 +131,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiCookieAuth(REFRESH_COOKIE_NAME)
   @ApiOperation({ summary: 'Cấp lại access token, xoay vòng refresh token trong cookie' })
+  @ApiEnvelope(AuthSession)
+  @ApiErrors(HttpStatus.UNAUTHORIZED)
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -141,6 +157,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiCookieAuth(REFRESH_COOKIE_NAME)
   @ApiOperation({ summary: 'Đăng xuất, thu hồi refresh token của phiên hiện tại' })
+  @ApiNullEnvelope()
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
     await this.authService.logout(this.readRefreshCookie(req));
     this.clearRefreshCookie(res);

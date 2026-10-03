@@ -1,4 +1,5 @@
-import type { RoleCode } from '../../common/constants/roles.js';
+import { ApiProperty } from '@nestjs/swagger';
+import { RoleCode } from '../../common/constants/roles.js';
 import { UserStatus } from '../../generated/prisma/enums.js';
 
 export interface RequestMeta {
@@ -6,19 +7,40 @@ export interface RequestMeta {
   userAgent?: string;
 }
 
+// Khai báo trước AuthSession: decorator của AuthSession tham chiếu tới class này ngay khi nạp file
+export class AuthSessionUser {
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty({ example: 'hocvien@gmail.com' })
+  email: string;
+
+  @ApiProperty({ example: 'Nguyễn Văn A' })
+  fullName: string;
+
+  @ApiProperty({ enum: RoleCode, enumName: 'RoleCode' })
+  role: RoleCode;
+
+  @ApiProperty({
+    description: 'true: FE chuyển thẳng tới trang Đổi mật khẩu (admin mặc định từ seed)',
+  })
+  mustChangePassword: boolean;
+}
+
 /** Body trả về cho login và refresh */
-export interface AuthSession {
+export class AuthSession {
+  @ApiProperty()
   accessToken: string;
-  /** Số giây access token còn hiệu lực, FE dùng để biết khi nào cần làm mới */
+
+  @ApiProperty({
+    type: 'integer',
+    example: 900,
+    description: 'Số giây access token còn hiệu lực, FE dùng để biết khi nào cần làm mới',
+  })
   expiresIn: number;
-  user: {
-    id: string;
-    email: string;
-    fullName: string;
-    role: RoleCode;
-    /** true: FE chuyển thẳng tới trang Đổi mật khẩu (admin mặc định từ seed) */
-    mustChangePassword: boolean;
-  };
+
+  @ApiProperty({ type: AuthSessionUser })
+  user: AuthSessionUser;
 }
 
 /** Kết quả nội bộ của AuthService: refresh token đi riêng, controller đặt vào cookie httpOnly */
@@ -26,8 +48,13 @@ export interface IssuedSession extends AuthSession {
   refreshToken: string;
 }
 
-export interface RegisterResult {
+export class RegisterResult {
+  @ApiProperty({ format: 'uuid' })
   id: string;
+
+  @ApiProperty({ example: 'hocvien@gmail.com' })
   email: string;
+
+  @ApiProperty({ enum: UserStatus, enumName: 'UserStatus' })
   status: UserStatus;
 }
