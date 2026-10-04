@@ -24,5 +24,11 @@ export default defineConfig(
     },
   },
 
+  // File do shadcn sinh export kèm hằng số (buttonVariants)
+  {
+    files: ['src/components/ui/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+
   prettier,
 );

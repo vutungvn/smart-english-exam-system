@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="ink" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3b5bdb" />
+      <stop offset="1" stop-color="#6741d9" />
+    </linearGradient>
+  </defs>
+  <g stroke="url(#ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Mũ tốt nghiệp -->
+    <path d="M32 5 46 11.5 32 18 18 11.5Z" fill="#edf2ff" />
+    <path d="M23.5 15.5v5.5c5 3.2 12 3.2 17 0v-5.5" />
+    <!-- Sách mở: hai trang, gáy sách, bìa -->
+    <path d="M32 28c-6-4-15-5-22-3v24c7-2 16-1 22 3 6-4 15-5 22-3V25c-7-2-16-1-22 3Z" />
+    <path d="M32 28v24" />
+    <path d="M10 29H5v25h21c2.5 0 4.5 1 6 3 1.5-2 3.5-3 6-3h21V29h-5" />
+  </g>
+  <!-- Nhánh mạch AI mọc từ gáy sách -->
+  <g stroke="#12b886" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 38 26 33M32 38l6-5" />
+    <path d="M32 46 27 41h-7M32 46l5-5h7" />
+  </g>
+  <g fill="#12b886">
+    <circle cx="24.5" cy="31.5" r="2.6" />
+    <circle cx="39.5" cy="31.5" r="2.6" />
+    <circle cx="18" cy="41" r="2.6" />
+    <circle cx="46" cy="41" r="2.6" />
+  </g>
+</svg>
