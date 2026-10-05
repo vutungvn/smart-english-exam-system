@@ -1,4 +1,3 @@
-import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import {
   ArrowLeft,
@@ -19,10 +18,24 @@ import { AuthHeader } from '../components/AuthHeader';
 import { ResultCard } from '../components/ResultCard';
 import { RESEND_COOLDOWN_SECONDS, useCooldown } from '../hooks/use-cooldown';
 import { getMailbox, MAIL_SUBJECTS } from '../mailbox';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { forgotPasswordSchema, type ForgotPasswordValues } from '../schemas';
+import { useState } from 'react';
 
 export function ForgotPasswordPage() {
   const cooldown = useCooldown();
   const [sentTo, setSentTo] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: '' },
+    mode: 'onTouched',
+  });
 
   // TẠM (giai đoạn giao diện): chưa gọi POST /auth/forgot-password
   const send = (email: string) => {
@@ -30,10 +43,7 @@ export function ForgotPasswordPage() {
     cooldown.start(RESEND_COOLDOWN_SECONDS);
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    send(String(new FormData(event.currentTarget).get('email')));
-  };
+  const onSubmit = ({ email }: ForgotPasswordValues) => send(email);
 
   if (sentTo) {
     const mailbox = getMailbox(sentTo, MAIL_SUBJECTS.resetPassword);
@@ -97,17 +107,23 @@ export function ForgotPasswordPage() {
       />
 
       <AuthCard accent className="pt-7">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <FormField id="email" label="Email đăng ký tài khoản" required>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+          <FormField
+            id="email"
+            label="Email đăng ký tài khoản"
+            required
+            error={errors.email?.message}
+          >
             <IconInput
               id="email"
-              name="email"
               type="email"
               required
               icon={<Mail />}
               autoComplete="email"
               inputMode="email"
               placeholder="nguyenvana@example.com"
+              aria-invalid={!!errors.email}
+              {...register('email')}
             />
           </FormField>
 

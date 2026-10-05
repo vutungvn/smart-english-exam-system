@@ -1,4 +1,3 @@
-import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { ArrowRight, KeyRound, Mail, ShieldCheck } from 'lucide-react';
 import { FormAlert } from '@/components/form/FormAlert';
@@ -10,21 +9,31 @@ import { GoogleIcon } from '@/components/icons/GoogleIcon';
 import { Button } from '@/components/ui/button';
 import { AuthCard } from '../components/AuthCard';
 import { AuthHeader } from '../components/AuthHeader';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema } from '@/features/auth/schemas';
 
 // Màn Đăng nhập theo Stitch (project "Hệ thống luyện thi tiếng anh")
 export function LoginPage() {
-  const [loading, setLoading] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+    mode: 'onTouched',
+  });
+
+  const formError = errors.root?.server?.message;
 
   // TẠM (giai đoạn giao diện): giả lập gọi API để xem trạng thái loading và khung lỗi
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setFormError(null);
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setFormError('Email hoặc mật khẩu không chính xác');
-    }, 800);
+  const onSubmit = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    setError('root.server', { message: 'Email hoặc mật khẩu không chính xác' });
   };
 
   return (
@@ -44,29 +53,27 @@ export function LoginPage() {
       </AuthHeader>
 
       <AuthCard className="space-y-5">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField id="email" label="Email" required>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+          <FormField id="email" label="Email" required error={errors.email?.message}>
             <IconInput
               id="email"
-              name="email"
               type="email"
               required
               icon={<Mail />}
               autoComplete="email"
               inputMode="email"
               placeholder="nguyenvana@example.com"
+              aria-invalid={!!errors.email}
+              {...register('email')}
             />
           </FormField>
 
-          <FormField id="password" label="Mật khẩu" required>
-            <PasswordInput
-              id="password"
-              name="password"
-              required
-              autoComplete="current-password"
-              placeholder="Nhập mật khẩu"
-            />
-            <div className="flex justify-end pt-1">
+          <FormField
+            id="password"
+            label="Mật khẩu"
+            required
+            error={errors.password?.message}
+            hint={
               <Link
                 to="/forgot-password"
                 className="inline-flex items-center gap-1 text-xs font-semibold text-primary transition hover:text-brand hover:underline"
@@ -74,18 +81,27 @@ export function LoginPage() {
                 <KeyRound className="size-3" />
                 Quên mật khẩu?
               </Link>
-            </div>
+            }
+          >
+            <PasswordInput
+              id="password"
+              required
+              autoComplete="current-password"
+              placeholder="Nhập mật khẩu"
+              aria-invalid={!!errors.password}
+              {...register('password')}
+            />
           </FormField>
 
           {formError && (
-            <FormAlert message={formError} onClose={() => setFormError(null)}>
+            <FormAlert message={formError} onClose={() => clearErrors('root.server')}>
               <Link to="/forgot-password" className="text-brand hover:underline">
                 Khôi phục mật khẩu
               </Link>
             </FormAlert>
           )}
 
-          <SubmitButton loading={loading} className="mt-2">
+          <SubmitButton loading={isSubmitting} className="mt-2">
             Đăng nhập ngay
             <ArrowRight className="transition-transform group-hover/button:translate-x-1" />
           </SubmitButton>

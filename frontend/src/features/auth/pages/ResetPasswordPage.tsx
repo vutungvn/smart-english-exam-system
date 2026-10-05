@@ -1,5 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, ArrowRight, Check, CircleX, LockKeyhole } from 'lucide-react';
 import { ButtonLink } from '@/components/ButtonLink';
 import { FormField } from '@/components/form/FormField';
@@ -9,6 +11,7 @@ import { AuthCard } from '../components/AuthCard';
 import { AuthHeader } from '../components/AuthHeader';
 import { ResultCard } from '../components/ResultCard';
 import { PasswordMatchHint, PasswordStrength } from '../components/PasswordStrength';
+import { resetPasswordSchema } from '../schemas';
 
 export function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -52,14 +55,24 @@ export function ResetPasswordPage() {
 }
 
 function ResetPasswordForm({ onDone }: { onDone: () => void }) {
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const {
+    register,
+    control,
+    handleSubmit,
+    trigger,
+    formState: { errors, touchedFields },
+  } = useForm({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { newPassword: '', confirmPassword: '' },
+    mode: 'onTouched',
+  });
+  const [newPassword, confirmPassword] = useWatch({
+    control,
+    name: ['newPassword', 'confirmPassword'],
+  });
 
-  // TẠM (giai đoạn giao diện): chưa gọi POST /auth/reset-password
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    onDone();
-  };
+  // TẠM (giai đoạn giao diện): chưa gọi POST /auth/reset-password (gửi kèm token)
+  const onSubmit = () => onDone();
 
   return (
     <>
@@ -75,30 +88,43 @@ function ResetPasswordForm({ onDone }: { onDone: () => void }) {
       />
 
       <AuthCard>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <FormField id="newPassword" label="Mật khẩu mới" required>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+          <FormField
+            id="newPassword"
+            label="Mật khẩu mới"
+            required
+            error={errors.newPassword?.message}
+          >
             <PasswordInput
               id="newPassword"
-              name="newPassword"
               required
               autoComplete="new-password"
               placeholder="Tạo mật khẩu mới"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              aria-invalid={!!errors.newPassword}
+              {...register('newPassword', {
+                // Sửa mật khẩu sau khi đã nhập ô xác nhận thì kiểm tra lại ô xác nhận
+                onChange: () => {
+                  if (touchedFields.confirmPassword) void trigger('confirmPassword');
+                },
+              })}
             />
             <PasswordStrength value={newPassword} />
           </FormField>
 
-          <FormField id="confirmPassword" label="Xác nhận mật khẩu mới" required>
+          <FormField
+            id="confirmPassword"
+            label="Xác nhận mật khẩu mới"
+            required
+            error={errors.confirmPassword?.message}
+          >
             <PasswordInput
               id="confirmPassword"
-              name="confirmPassword"
               required
               icon={<LockKeyhole />}
               autoComplete="new-password"
               placeholder="Nhập lại mật khẩu mới"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              aria-invalid={!!errors.confirmPassword}
+              {...register('confirmPassword')}
             />
             <PasswordMatchHint password={newPassword} confirm={confirmPassword} />
           </FormField>
