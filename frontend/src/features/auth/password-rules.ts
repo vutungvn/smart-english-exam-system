@@ -1,5 +1,5 @@
-// Khớp STRONG_PASSWORD_REGEX ở backend/src/common/validators/password.ts
-// `short`: nhãn rút gọn khi danh sách dồn về 1 dòng (PasswordStrength compact)
+export const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
+
 export const PASSWORD_RULES = [
   {
     label: '8–72 ký tự',

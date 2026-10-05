@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Label } from '@/components/ui/label';
+import { FieldError } from './FieldError';
 
 interface FormFieldProps {
   id: string;
@@ -21,11 +22,7 @@ export function FormField({ id, label, required, hint, error, children }: FormFi
         {hint}
       </div>
       {children}
-      {error && (
-        <p role="alert" className="px-1 text-xs font-medium text-destructive">
-          {error}
-        </p>
-      )}
+      <FieldError message={error} />
     </div>
   );
 }

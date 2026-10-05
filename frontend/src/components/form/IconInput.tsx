@@ -19,6 +19,7 @@ export function IconInput({ icon, endAdornment, className, ...props }: IconInput
       <Input
         className={cn(
           'h-11 rounded-xl border-input bg-slate-50/70 pl-10 text-base shadow-xs placeholder:text-slate-400 focus-visible:border-primary focus-visible:bg-white focus-visible:ring-primary/20 md:text-sm',
+          'aria-invalid:focus-visible:border-destructive aria-invalid:focus-visible:ring-destructive/20',
           endAdornment ? 'pr-11' : 'pr-4',
           className,
         )}
