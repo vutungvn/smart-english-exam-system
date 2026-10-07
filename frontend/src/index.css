@@ -138,6 +138,11 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+  /* Edge tự thêm nút xem mật khẩu và nút xóa vào ô nhập: ẩn đi để không trùng nút của PasswordInput */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
   button:not(:disabled),
   [role='button']:not(:disabled) {
     cursor: pointer;
