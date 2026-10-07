@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, KeyRound, Mail, ShieldCheck } from 'lucide-react';
@@ -17,10 +17,12 @@ import { AuthHeader } from '../components/AuthHeader';
 import { loginSchema, type LoginValues } from '../schemas';
 import { useAppDispatch } from '@/hooks/hooks';
 import { sessionReceived } from '@/store/slice/auth-slice';
+import { getHomePath, type RedirectState } from '../home-path';
 
 // Màn Đăng nhập theo Stitch (project "Hệ thống luyện thi tiếng anh")
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const [login] = useLoginMutation();
   const {
@@ -42,9 +44,10 @@ export function LoginPage() {
     try {
       const { data: session } = await login(values).unwrap();
       dispatch(sessionReceived(session));
-      // TẠM: mới có khu vực học viên; giáo viên/admin về trang xem trước cho tới khi có layout riêng.
-      // Chưa xử lý mustChangePassword (chưa có trang Đổi mật khẩu)
-      void navigate(session.user.role === 'STUDENT' ? '/app' : '/dev/auth', { replace: true });
+      // Về trang đang định vào trước khi bị chuyển sang Đăng nhập, không có thì về trang chủ theo vai trò.
+      // TẠM: chưa xử lý mustChangePassword (chưa có trang Đổi mật khẩu)
+      const from = (location.state as RedirectState | null)?.from;
+      void navigate(from ?? getHomePath(session.user.role), { replace: true });
     } catch (error) {
       const apiError = toApiError(error);
       if (applyFieldErrors(apiError, setError, ['email', 'password'])) return;

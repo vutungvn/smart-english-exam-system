@@ -1,9 +1,12 @@
 import { Link } from 'react-router';
 import { BrandLogo } from '@/components/brand/BrandLogo';
+import { useLandingSession } from '../use-landing-session';
 
 const linkClass = 'text-sm text-white/60 transition-colors hover:text-white';
 
 export function LandingFooter() {
+  const session = useLandingSession();
+
   return (
     <footer className="bg-foreground text-white">
       <div className="mx-auto w-full max-w-300 px-4 sm:px-6">
@@ -46,16 +49,26 @@ export function LandingFooter() {
                   Câu hỏi thường gặp
                 </a>
               </li>
-              <li>
-                <Link to="/login" className={linkClass}>
-                  Đăng nhập
-                </Link>
-              </li>
-              <li>
-                <Link to="/register" className={linkClass}>
-                  Đăng ký
-                </Link>
-              </li>
+              {session.state === 'signed-in' ? (
+                <li>
+                  <Link to={session.homePath} className={linkClass}>
+                    {session.enterLabel}
+                  </Link>
+                </li>
+              ) : (
+                <>
+                  <li>
+                    <Link to="/login" className={linkClass}>
+                      Đăng nhập
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/register" className={linkClass}>
+                      Đăng ký
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
           </nav>
 
