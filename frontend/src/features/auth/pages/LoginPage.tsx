@@ -1,5 +1,9 @@
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, KeyRound, Mail, ShieldCheck } from 'lucide-react';
+import { useLoginMutation } from '@/api/generated';
+import { toApiError } from '@/api/errors';
 import { FormAlert } from '@/components/form/FormAlert';
 import { FormField } from '@/components/form/FormField';
 import { IconInput } from '@/components/form/IconInput';
@@ -7,33 +11,45 @@ import { PasswordInput } from '@/components/form/PasswordInput';
 import { SubmitButton } from '@/components/form/SubmitButton';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
 import { Button } from '@/components/ui/button';
+import { applyFieldErrors } from '@/lib/form-errors';
 import { AuthCard } from '../components/AuthCard';
 import { AuthHeader } from '../components/AuthHeader';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema } from '@/features/auth/schemas';
+import { loginSchema, type LoginValues } from '../schemas';
+import { useAppDispatch } from '@/hooks/hooks';
+import { sessionReceived } from '@/store/slice/auth-slice';
 
 // Màn Đăng nhập theo Stitch (project "Hệ thống luyện thi tiếng anh")
 export function LoginPage() {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [login] = useLoginMutation();
   const {
     register,
     handleSubmit,
     setError,
     clearErrors,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
     mode: 'onTouched',
   });
+  // type của lỗi root = error.code từ server, dùng để chọn nút hành động trong khung lỗi
+  const formError = errors.root?.server;
 
-  const formError = errors.root?.server?.message;
-
-  // TẠM (giai đoạn giao diện): giả lập gọi API để xem trạng thái loading và khung lỗi
-  const onSubmit = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    setError('root.server', { message: 'Email hoặc mật khẩu không chính xác' });
+  const onSubmit = async (values: LoginValues) => {
+    try {
+      const { data: session } = await login(values).unwrap();
+      dispatch(sessionReceived(session));
+      // TẠM: chưa có layout theo vai trò và trang Đổi mật khẩu (session.user.mustChangePassword);
+      // về trang xem trước để kiểm tra phiên đăng nhập
+      void navigate('/', { replace: true });
+    } catch (error) {
+      const apiError = toApiError(error);
+      if (applyFieldErrors(apiError, setError, ['email', 'password'])) return;
+      setError('root.server', { type: apiError.code, message: apiError.message });
+    }
   };
 
   return (
@@ -93,11 +109,21 @@ export function LoginPage() {
             />
           </FormField>
 
-          {formError && (
-            <FormAlert message={formError} onClose={() => clearErrors('root.server')}>
-              <Link to="/forgot-password" className="text-brand hover:underline">
-                Khôi phục mật khẩu
-              </Link>
+          {formError?.message && (
+            <FormAlert message={formError.message} onClose={() => clearErrors('root.server')}>
+              {formError.type === 'AUTH_EMAIL_NOT_VERIFIED' ? (
+                <Link
+                  to="/register/check-email"
+                  state={{ email: getValues('email').trim() }}
+                  className="text-brand hover:underline"
+                >
+                  Gửi lại email xác minh
+                </Link>
+              ) : formError.type === 'AUTH_INVALID_CREDENTIALS' ? (
+                <Link to="/forgot-password" className="text-brand hover:underline">
+                  Khôi phục mật khẩu
+                </Link>
+              ) : null}
             </FormAlert>
           )}
 

@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { ChevronRight } from 'lucide-react';
+import { SessionPanel } from './SessionPanel';
 
 interface PreviewItem {
   to: string;
@@ -9,7 +10,7 @@ interface PreviewItem {
 }
 
 const SCREENS: PreviewItem[] = [
-  { to: '/login', label: 'Đăng nhập', note: 'Bấm Đăng nhập để xem loading và khung lỗi' },
+  { to: '/login', label: 'Đăng nhập', note: 'Đã nối API thật, đăng nhập xong quay về trang này' },
   { to: '/register', label: 'Đăng ký học viên', note: 'Gõ mật khẩu để xem thanh độ mạnh' },
   {
     to: '/register/check-email',
@@ -34,8 +35,11 @@ export function AuthPreviewPage() {
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 py-10">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Xem trước giao diện Auth</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Chưa nối API, các nút gửi chỉ giả lập.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Đăng nhập đã nối API; các màn khác vẫn giả lập.
+        </p>
       </div>
+      <SessionPanel />
       <ul className="flex flex-col gap-2">
         {SCREENS.map((item) => (
           <li key={item.to}>
