@@ -11,10 +11,11 @@ import {
   Layers,
   X,
 } from 'lucide-react';
+import { useGetProfileQuery } from '@/api/generated';
 import { BrandLogo } from '@/components/brand/BrandLogo';
 import { cn } from '@/lib/utils';
 
-// TẠM: badge "24" và mục tiêu là dữ liệu mẫu, lấy từ API flashcard và hồ sơ khi có
+// TẠM: badge "24" là dữ liệu mẫu, lấy từ API flashcard khi có
 const NAV_ITEMS = [
   { to: '/app', label: 'Trang chủ', icon: House, end: true },
   { to: '/app/courses', label: 'Khóa học của tôi', icon: BookOpen },
@@ -26,15 +27,21 @@ const NAV_ITEMS = [
   { to: '/app/flashcards', label: 'Flashcard', icon: Layers, badge: '24' },
 ] as const;
 
-const TARGET_SCORE = 750;
-const TARGET_PROGRESS = 83; // % điểm dự đoán LR so với mục tiêu
-
 interface StudentSidebarProps {
   onNavigate?: () => void; // đóng ngăn kéo trên màn hẹp sau khi chọn mục
   onClose?: () => void; // có thì hiện nút X (ngăn kéo mobile)
 }
 
 export function StudentSidebar({ onNavigate, onClose }: StudentSidebarProps) {
+  // Dùng chung cache với trang Hồ sơ: lưu mục tiêu xong (tag Me) thì thẻ này cập nhật theo
+  const { data } = useGetProfileQuery();
+  const targetScore = data?.data.student?.targetScore ?? null;
+  const currentScore = data?.data.student?.currentScore ?? null;
+  const progress =
+    targetScore && currentScore !== null
+      ? Math.min(100, Math.round((currentScore / targetScore) * 100))
+      : 0;
+
   return (
     <aside className="flex h-full w-72 flex-col border-r border-border bg-white">
       <div className="flex h-18 shrink-0 items-center justify-between gap-2 border-b border-border px-5">
@@ -95,20 +102,19 @@ export function StudentSidebar({ onNavigate, onClose }: StudentSidebarProps) {
         <div className="rounded-2xl border border-primary/20 bg-accent p-4">
           <div className="flex items-center justify-between gap-2 text-xs font-bold">
             <span className="tracking-wider text-brand uppercase">Mục tiêu của bạn</span>
-            <span className="text-sm text-primary">{TARGET_SCORE}+ điểm</span>
+            <span className="text-sm text-primary">
+              {targetScore ? `${targetScore}+ điểm` : 'Chưa đặt'}
+            </span>
           </div>
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white">
-            <div
-              className="h-full rounded-full bg-primary"
-              style={{ width: `${TARGET_PROGRESS}%` }}
-            />
+            <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
           </div>
           <Link
             to="/app/profile"
             onClick={onNavigate}
             className="mt-3 flex items-center justify-between text-xs font-semibold text-brand hover:underline"
           >
-            Chỉnh mục tiêu
+            {targetScore ? 'Chỉnh mục tiêu' : 'Đặt mục tiêu ngay'}
             <ChevronRight className="size-4" />
           </Link>
         </div>

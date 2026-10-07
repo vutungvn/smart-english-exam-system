@@ -32,6 +32,10 @@ export const authSlice = createSlice({
       state.user = action.payload.user;
     },
     sessionCleared: () => ({ status: 'guest' as const, accessToken: null, user: null }),
+    // Sửa hồ sơ thành công: cập nhật tên hiển thị trên thanh trên, lời chào... mà không cần refresh
+    userUpdated: (state, action: PayloadAction<Pick<AuthSessionUser, 'fullName'>>) => {
+      if (state.user) state.user.fullName = action.payload.fullName;
+    },
   },
   selectors: {
     selectAuthStatus: (state) => state.status,
@@ -40,5 +44,5 @@ export const authSlice = createSlice({
   },
 });
 
-export const { sessionReceived, sessionCleared } = authSlice.actions;
+export const { sessionReceived, sessionCleared, userUpdated } = authSlice.actions;
 export const { selectAuthStatus, selectAccessToken, selectCurrentUser } = authSlice.selectors;

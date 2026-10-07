@@ -9,6 +9,8 @@ import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage';
 import { AuthPreviewPage } from '@/features/dev/AuthPreviewPage';
 import { LandingPage } from '@/features/landing/LandingPage';
+import { ChangePasswordPage } from '@/features/profile/ChangePasswordPage';
+import { ProfilePage } from '@/features/profile/ProfilePage';
 import { GuestOnly } from './guards/GuestOnly';
 import { RequireAuth } from './guards/RequireAuth';
 import { RequireRole } from './guards/RequireRole';
@@ -23,8 +25,6 @@ const STUDENT_PLACEHOLDERS = [
   { path: 'ai-analysis', title: 'Phân tích AI' },
   { path: 'assistant', title: 'Trợ giảng AI' },
   { path: 'flashcards', title: 'Flashcard' },
-  { path: 'profile', title: 'Hồ sơ cá nhân' },
-  { path: 'profile/password', title: 'Đổi mật khẩu' },
 ];
 
 export const router = createBrowserRouter([
@@ -40,15 +40,16 @@ export const router = createBrowserRouter([
           { path: '/login', element: <LoginPage /> },
           { path: '/register', element: <RegisterPage /> },
           { path: '/register/check-email', element: <CheckEmailPage /> },
-          { path: '/forgot-password', element: <ForgotPasswordPage /> },
         ],
       },
     ],
   },
-  // Mở từ liên kết trong email: ai cũng vào được, kể cả khi trình duyệt đang đăng nhập tài khoản khác
+  // Ai cũng vào được, kể cả khi đang đăng nhập: liên kết trong email, và Quên mật khẩu
+  // (người dùng đang đăng nhập quên mật khẩu hiện tại khi muốn đổi mật khẩu)
   {
     element: <AuthLayout />,
     children: [
+      { path: '/forgot-password', element: <ForgotPasswordPage /> },
       { path: '/verify-email', element: <VerifyEmailPage /> },
       { path: '/reset-password', element: <ResetPasswordPage /> },
     ],
@@ -74,6 +75,8 @@ export const router = createBrowserRouter([
                     Component: m.StudentDashboardPage,
                   })),
               },
+              { path: 'profile', element: <ProfilePage /> },
+              { path: 'profile/password', element: <ChangePasswordPage /> },
               ...STUDENT_PLACEHOLDERS.map(({ path, title }) => ({
                 path,
                 element: <ComingSoonPage title={title} backTo="/app" />,

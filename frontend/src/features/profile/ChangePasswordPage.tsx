@@ -1,0 +1,292 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  ArrowLeft,
+  Check,
+  CircleCheck,
+  Clock,
+  KeyRound,
+  Lightbulb,
+  LockKeyhole,
+  ShieldCheck,
+  TriangleAlert,
+} from 'lucide-react';
+import { baseApi } from '@/api/base-api';
+import { toApiError } from '@/api/errors';
+import { useChangePasswordMutation, useLoginMutation } from '@/api/generated';
+import { FormAlert } from '@/components/form/FormAlert';
+import { FormField } from '@/components/form/FormField';
+import { PasswordInput } from '@/components/form/PasswordInput';
+import { SubmitButton } from '@/components/form/SubmitButton';
+import { ButtonLink } from '@/components/ButtonLink';
+import { PasswordMatchHint, PasswordStrength } from '@/features/auth/components/PasswordStrength';
+import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
+import { applyFieldErrors } from '@/lib/form-errors';
+import { cn } from '@/lib/utils';
+import { selectCurrentUser, sessionCleared, sessionReceived } from '@/store/slice/auth-slice';
+import { PageHeader } from './components/PageHeader';
+import { SectionCard } from './components/SectionCard';
+import { changePasswordSchema, type ChangePasswordValues } from './schemas';
+
+const TIPS = [
+  'Dùng ít nhất 12 ký tự',
+  'Kết hợp chữ hoa, chữ thường và số',
+  'Không dùng lại mật khẩu ở trang web khác',
+  'Không dùng thông tin cá nhân như ngày sinh',
+];
+
+// Trang Đổi mật khẩu `/app/profile/password` (theo Stitch): PATCH /me/password
+export function ChangePasswordPage() {
+  const user = useAppSelector(selectCurrentUser);
+  const [done, setDone] = useState(false);
+
+  return (
+    <div className="mx-auto max-w-250 space-y-6">
+      <title>Đổi mật khẩu – Smart English Exam</title>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Trang chủ', to: '/app' },
+          { label: 'Hồ sơ cá nhân', to: '/app/profile' },
+          { label: 'Đổi mật khẩu' },
+        ]}
+        backTo={{ label: 'Quay lại hồ sơ', to: '/app/profile' }}
+        title="Đổi mật khẩu"
+        description={
+          <>
+            Cập nhật mật khẩu đăng nhập cho tài khoản{' '}
+            <span className="font-semibold break-all text-foreground">{user?.email}</span>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        {done ? <ChangePasswordDone /> : <ChangePasswordForm onDone={() => setDone(true)} />}
+        <PasswordTips />
+      </div>
+    </div>
+  );
+}
+
+function ChangePasswordForm({ onDone }: { onDone: () => void }) {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const user = useAppSelector(selectCurrentUser);
+  const [changePassword] = useChangePasswordMutation();
+  const [login] = useLoginMutation();
+  const {
+    register,
+    control,
+    handleSubmit,
+    trigger,
+    setError,
+    clearErrors,
+    formState: { errors, touchedFields, isSubmitting, isValid },
+  } = useForm({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+    mode: 'onTouched',
+  });
+  const [newPassword, confirmPassword] = useWatch({
+    control,
+    name: ['newPassword', 'confirmPassword'],
+  });
+  const passwordsMatch = confirmPassword !== '' && newPassword === confirmPassword;
+  const formError = errors.root?.server;
+
+  const onSubmit = async (values: ChangePasswordValues) => {
+    try {
+      await changePassword(values).unwrap();
+    } catch (error) {
+      const apiError = toApiError(error);
+      if (apiError.code === 'AUTH_CURRENT_PASSWORD_INCORRECT') {
+        setError(
+          'currentPassword',
+          { type: 'server', message: apiError.message },
+          { shouldFocus: true },
+        );
+        return;
+      }
+      const fields = ['currentPassword', 'newPassword', 'confirmPassword'] as const;
+      if (applyFieldErrors(apiError, setError, fields)) return;
+      setError('root.server', { type: apiError.code, message: apiError.message });
+      return;
+    }
+
+    // Backend đã thu hồi mọi phiên, kể cả phiên của trình duyệt này: đăng nhập lại bằng
+    // mật khẩu mới để người dùng không bị văng ra khi access token hết hạn
+    try {
+      const { data: session } = await login({
+        email: user?.email ?? '',
+        password: values.newPassword,
+      }).unwrap();
+      dispatch(sessionReceived(session));
+      onDone();
+    } catch {
+      // Hiếm khi xảy ra (mất mạng ngay lúc đó): xóa phiên, yêu cầu đăng nhập lại bằng mật khẩu mới
+      dispatch(sessionCleared());
+      dispatch(baseApi.util.resetApiState());
+      void navigate('/login', { replace: true });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <SectionCard
+        icon={KeyRound}
+        title="Thiết lập mật khẩu mới"
+        description="Bảo vệ tài khoản học tập với mật khẩu đạt độ bảo mật cao"
+        footer={
+          <>
+            <Link
+              to="/app/profile"
+              className="inline-flex h-10 items-center rounded-xl border border-border bg-white px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              Hủy
+            </Link>
+            <SubmitButton
+              loading={isSubmitting}
+              disabled={!isValid}
+              className="h-10 w-auto px-5 text-sm"
+            >
+              <ShieldCheck />
+              Đổi mật khẩu
+            </SubmitButton>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          <FormField
+            id="currentPassword"
+            label="Mật khẩu hiện tại"
+            required
+            error={errors.currentPassword?.message}
+            hint={
+              <Link
+                to="/forgot-password"
+                className="text-xs font-semibold text-primary hover:text-brand hover:underline"
+              >
+                Quên mật khẩu?
+              </Link>
+            }
+          >
+            <PasswordInput
+              id="currentPassword"
+              required
+              autoComplete="current-password"
+              placeholder="Nhập mật khẩu đang dùng"
+              aria-invalid={!!errors.currentPassword}
+              {...register('currentPassword')}
+            />
+          </FormField>
+
+          <FormField
+            id="newPassword"
+            label="Mật khẩu mới"
+            required
+            error={errors.newPassword?.message}
+          >
+            <PasswordInput
+              id="newPassword"
+              required
+              autoComplete="new-password"
+              placeholder="Tạo mật khẩu mới"
+              aria-invalid={!!errors.newPassword}
+              {...register('newPassword', {
+                // Sửa mật khẩu mới sau khi đã nhập ô xác nhận thì kiểm tra lại ô xác nhận
+                onChange: () => {
+                  if (touchedFields.confirmPassword) void trigger('confirmPassword');
+                },
+              })}
+            />
+            <PasswordStrength value={newPassword} />
+          </FormField>
+
+          <FormField
+            id="confirmPassword"
+            label="Xác nhận mật khẩu mới"
+            required
+            error={errors.confirmPassword?.message}
+          >
+            <PasswordInput
+              id="confirmPassword"
+              required
+              icon={passwordsMatch ? <CircleCheck className="text-success" /> : <LockKeyhole />}
+              autoComplete="new-password"
+              placeholder="Nhập lại mật khẩu mới"
+              aria-invalid={!!errors.confirmPassword}
+              className={cn(
+                passwordsMatch &&
+                  'border-success focus-visible:border-success focus-visible:ring-success/20',
+              )}
+              {...register('confirmPassword')}
+            />
+            <PasswordMatchHint password={newPassword} confirm={confirmPassword} />
+          </FormField>
+
+          <p className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />
+            Sau khi đổi mật khẩu, bạn sẽ được đăng xuất khỏi tất cả thiết bị khác. Trên thiết bị
+            này, hệ thống tự đăng nhập lại bằng mật khẩu mới.
+          </p>
+
+          {formError?.message && (
+            <FormAlert message={formError.message} onClose={() => clearErrors('root.server')} />
+          )}
+        </div>
+      </SectionCard>
+    </form>
+  );
+}
+
+function ChangePasswordDone() {
+  return (
+    <section className="flex flex-col items-center rounded-3xl border border-border bg-white px-6 py-12 text-center shadow-2xs">
+      <span className="flex size-14 items-center justify-center rounded-full bg-success text-white shadow-md ring-8 ring-success-soft/50">
+        <Check className="size-6" />
+      </span>
+      <h2 className="mt-5 text-2xl font-semibold tracking-tight text-foreground">
+        Đổi mật khẩu thành công!
+      </h2>
+      <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+        Các thiết bị khác đã được đăng xuất. Bạn vẫn tiếp tục học trên thiết bị này với mật khẩu
+        mới.
+      </p>
+      <div className="mt-6 flex w-full max-w-xs flex-col gap-3">
+        <ButtonLink to="/app/profile">
+          <ArrowLeft />
+          Về hồ sơ cá nhân
+        </ButtonLink>
+        <ButtonLink to="/app" variant="ghost">
+          Về trang chủ
+        </ButtonLink>
+      </div>
+    </section>
+  );
+}
+
+function PasswordTips() {
+  return (
+    <aside className="rounded-3xl border border-[#c5d0fa] bg-accent p-6">
+      <h2 className="flex items-center gap-3 font-bold text-foreground">
+        <span className="flex size-10 items-center justify-center rounded-xl bg-white text-primary shadow-2xs">
+          <Lightbulb className="size-5" />
+        </span>
+        Mẹo tạo mật khẩu an toàn
+      </h2>
+      <ul className="mt-5 space-y-3">
+        {TIPS.map((tip) => (
+          <li key={tip} className="flex items-start gap-2.5 text-sm text-foreground">
+            <CircleCheck className="mt-0.5 size-4 shrink-0 text-skill-listening" />
+            {tip}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-6 flex items-center gap-1.5 border-t border-primary/15 pt-4 text-xs text-subtle">
+        <Clock className="size-3.5" />
+        Đổi xong, các thiết bị khác cần đăng nhập lại
+      </p>
+    </aside>
+  );
+}
