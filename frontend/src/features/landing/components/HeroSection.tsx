@@ -18,6 +18,7 @@ import {
 import heroImage from '@/assets/landing/hero-student.jpg';
 import { cn } from '@/lib/utils';
 import { BrandPattern } from '@/components/brand/BrandPattern';
+import { useLandingSession } from '../use-landing-session';
 
 const HIGHLIGHTS = [
   'Miễn phí cho học viên',
@@ -43,6 +44,9 @@ const STATS = [
 ];
 
 export function HeroSection() {
+  const session = useLandingSession();
+  const signedIn = session.state === 'signed-in';
+
   return (
     <>
       <section className="relative overflow-hidden">
@@ -84,10 +88,10 @@ export function HeroSection() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                to="/register"
+                to={signedIn ? session.homePath : '/register'}
                 className="inline-flex h-13 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-primary to-brand px-7 font-semibold whitespace-nowrap text-white shadow-lg shadow-primary/30 transition hover:brightness-95 active:scale-[0.99]"
               >
-                Bắt đầu luyện thi
+                {signedIn ? 'Tiếp tục luyện thi' : 'Bắt đầu luyện thi'}
                 <ArrowRight className="size-4" />
               </Link>
               {/* TẠM: chưa có trang đề thi công khai, dẫn tới phần giới thiệu 4 kỹ năng */}

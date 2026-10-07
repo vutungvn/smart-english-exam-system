@@ -1,29 +1,8 @@
 import { Bell, Menu, Search } from 'lucide-react';
-import type { RoleCode } from '@/api/generated';
 import { BrandLogo } from '@/components/brand/BrandLogo';
-import { useAppSelector } from '@/hooks/hooks';
-import { selectCurrentUser } from '@/store/slice/auth-slice';
-
-const ROLE_LABELS: Record<RoleCode, string> = {
-  STUDENT: 'Học viên',
-  TEACHER: 'Giáo viên',
-  ADMIN: 'Quản trị viên',
-};
-
-// Chữ cái đầu của 2 từ cuối trong họ tên: "Nguyễn Minh Anh" → "MA"
-function getInitials(fullName: string): string {
-  return fullName
-    .trim()
-    .split(/\s+/)
-    .slice(-2)
-    .map((word) => word.charAt(0).toUpperCase())
-    .join('');
-}
+import { UserMenu } from './UserMenu';
 
 export function StudentTopbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
-  const user = useAppSelector(selectCurrentUser);
-  const fullName = user?.fullName ?? 'Học viên';
-
   return (
     <header className="sticky top-0 z-30 flex h-18 items-center gap-3 border-b border-border bg-white/80 px-4 backdrop-blur-md sm:px-6 lg:px-8">
       <button
@@ -64,15 +43,7 @@ export function StudentTopbar({ onOpenSidebar }: { onOpenSidebar: () => void }) 
 
         <span aria-hidden className="hidden h-8 w-px bg-border sm:block" />
 
-        <div className="flex items-center gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-primary bg-accent text-sm font-bold text-brand">
-            {getInitials(fullName)}
-          </span>
-          <span className="hidden leading-tight sm:block">
-            <span className="block text-sm font-semibold text-foreground">{fullName}</span>
-            {user && <span className="block text-xs text-subtle">{ROLE_LABELS[user.role]}</span>}
-          </span>
-        </div>
+        <UserMenu />
       </div>
     </header>
   );

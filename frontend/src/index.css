@@ -90,9 +90,22 @@
   --color-skill-writing: var(--skill-writing);
 }
 
-/* Chuyển động dùng chung: `animate-heartbeat` (đập 2 nhịp rồi nghỉ, như nhịp tim) */
+/* Chuyển động dùng chung:
+   - `animate-heartbeat`: đập 2 nhịp rồi nghỉ, như nhịp tim
+   - `animate-shine`: vệt sáng lướt qua nút rồi nghỉ, đặt trong phần tử cha có overflow-hidden */
 @theme {
   --animate-heartbeat: heartbeat 2.4s ease-in-out infinite;
+  --animate-shine: shine 3.5s ease-in-out infinite;
+
+  @keyframes shine {
+    0% {
+      transform: translateX(-120%) skewX(-20deg);
+    }
+    45%,
+    100% {
+      transform: translateX(420%) skewX(-20deg);
+    }
+  }
 
   @keyframes heartbeat {
     0%,

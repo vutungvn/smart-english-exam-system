@@ -9,11 +9,9 @@ import {
   FileText,
   House,
   Layers,
-  LogOut,
   X,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/brand/BrandLogo';
-import { useLogout } from '@/features/auth/hooks/use-logout';
 import { cn } from '@/lib/utils';
 
 // TẠM: badge "24" và mục tiêu là dữ liệu mẫu, lấy từ API flashcard và hồ sơ khi có
@@ -37,8 +35,6 @@ interface StudentSidebarProps {
 }
 
 export function StudentSidebar({ onNavigate, onClose }: StudentSidebarProps) {
-  const { logout, isLoggingOut } = useLogout();
-
   return (
     <aside className="flex h-full w-72 flex-col border-r border-border bg-white">
       <div className="flex h-18 shrink-0 items-center justify-between gap-2 border-b border-border px-5">
@@ -116,16 +112,6 @@ export function StudentSidebar({ onNavigate, onClose }: StudentSidebarProps) {
             <ChevronRight className="size-4" />
           </Link>
         </div>
-
-        <button
-          type="button"
-          onClick={() => void logout()}
-          disabled={isLoggingOut}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-danger-soft hover:text-destructive disabled:opacity-60"
-        >
-          <LogOut className="size-5" />
-          Đăng xuất
-        </button>
       </div>
     </aside>
   );
