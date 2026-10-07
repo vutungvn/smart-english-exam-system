@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router';
 import { ArrowLeft, ExternalLink, MailCheck, PencilLine, RotateCw } from 'lucide-react';
+import { toApiError } from '@/api/errors';
+import { useResendVerificationMutation } from '@/api/generated';
 import { ButtonLink } from '@/components/ButtonLink';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { ResultCard } from '../components/ResultCard';
 import { RESEND_COOLDOWN_SECONDS, useCooldown } from '../hooks/use-cooldown';
 import { getMailbox, MAIL_SUBJECTS } from '../mailbox';
@@ -22,13 +25,23 @@ export function CheckEmailPage() {
 function CheckEmailView({ email, justSent }: { email: string; justSent: boolean }) {
   // Vừa đăng ký xong thì email vừa được gửi → chờ hết đếm ngược mới cho gửi lại
   const cooldown = useCooldown(justSent ? RESEND_COOLDOWN_SECONDS : 0);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
+  const [resendVerification, { isLoading: resending }] = useResendVerificationMutation();
   const mailbox = getMailbox(email, MAIL_SUBJECTS.verifyEmail);
 
-  // TẠM (giai đoạn giao diện): chưa gọi POST /auth/resend-verification
-  const handleResend = () => {
-    cooldown.start(RESEND_COOLDOWN_SECONDS);
-    setNotice('Đã gửi lại email xác minh, hãy kiểm tra hộp thư.');
+  // Backend luôn trả thành công (không lộ email nào đã đăng ký); chỉ báo lỗi khi vượt 3 lần / 15 phút
+  const handleResend = async () => {
+    setNotice(null);
+    try {
+      await resendVerification({ email }).unwrap();
+      cooldown.start(RESEND_COOLDOWN_SECONDS);
+      setNotice({
+        tone: 'success',
+        text: 'Đã gửi lại email xác minh, hãy kiểm tra hộp thư (cả mục Spam).',
+      });
+    } catch (error) {
+      setNotice({ tone: 'error', text: toApiError(error).message });
+    }
   };
 
   return (
@@ -63,17 +76,27 @@ function CheckEmailView({ email, justSent }: { email: string; justSent: boolean 
           type="button"
           variant="ghost"
           className="text-brand"
-          disabled={cooldown.remaining > 0}
-          onClick={handleResend}
+          disabled={cooldown.remaining > 0 || resending}
+          onClick={() => void handleResend()}
         >
-          <RotateCw />
-          {cooldown.remaining > 0 ? `Gửi lại sau ${cooldown.remaining}s` : 'Gửi lại email xác minh'}
+          <RotateCw className={cn(resending && 'animate-spin')} />
+          {resending
+            ? 'Đang gửi...'
+            : cooldown.remaining > 0
+              ? `Gửi lại sau ${cooldown.remaining}s`
+              : 'Gửi lại email xác minh'}
         </Button>
       </div>
 
       {notice && (
-        <p role="status" className="text-xs font-medium text-success">
-          {notice}
+        <p
+          role={notice.tone === 'error' ? 'alert' : 'status'}
+          className={cn(
+            'text-xs font-medium',
+            notice.tone === 'error' ? 'text-destructive' : 'text-success',
+          )}
+        >
+          {notice.text}
         </p>
       )}
 

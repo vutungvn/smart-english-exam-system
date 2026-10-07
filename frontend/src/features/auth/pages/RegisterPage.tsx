@@ -2,11 +2,15 @@ import { Link, useNavigate } from 'react-router';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, CircleCheck, LockKeyhole, Mail, UserRound } from 'lucide-react';
+import { toApiError } from '@/api/errors';
+import { useRegisterMutation } from '@/api/generated';
+import { FormAlert } from '@/components/form/FormAlert';
 import { FieldError } from '@/components/form/FieldError';
 import { FormField } from '@/components/form/FormField';
 import { IconInput } from '@/components/form/IconInput';
 import { PasswordInput } from '@/components/form/PasswordInput';
 import { SubmitButton } from '@/components/form/SubmitButton';
+import { applyFieldErrors } from '@/lib/form-errors';
 import { cn } from '@/lib/utils';
 import { AuthCard } from '../components/AuthCard';
 import { AuthHeader } from '../components/AuthHeader';
@@ -15,12 +19,15 @@ import { registerSchema, type RegisterValues } from '../schemas';
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const [registerAccount] = useRegisterMutation();
   const {
     register,
     control,
     handleSubmit,
     trigger,
-    formState: { errors, touchedFields },
+    setError,
+    clearErrors,
+    formState: { errors, touchedFields, isSubmitting },
   } = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -39,9 +46,23 @@ export function RegisterPage() {
   });
   const passwordsMatch = confirmPassword !== '' && password === confirmPassword;
 
-  // TẠM (giai đoạn giao diện): chưa gọi API, chuyển thẳng sang màn Kiểm tra hộp thư
-  const onSubmit = ({ email }: RegisterValues) => {
-    void navigate('/register/check-email', { state: { email, justSent: true } });
+  const formError = errors.root?.server;
+
+  // Đăng ký thành công thì backend đã gửi thư xác minh tới Gmail → sang màn Kiểm tra hộp thư
+  const onSubmit = async (values: RegisterValues) => {
+    try {
+      const { data } = await registerAccount(values).unwrap();
+      void navigate('/register/check-email', { state: { email: data.email, justSent: true } });
+    } catch (error) {
+      const apiError = toApiError(error);
+      if (apiError.code === 'AUTH_EMAIL_ALREADY_EXISTS') {
+        setError('email', { type: 'server', message: apiError.message }, { shouldFocus: true });
+        return;
+      }
+      const fields = ['fullName', 'email', 'password', 'confirmPassword', 'acceptTerms'] as const;
+      if (applyFieldErrors(apiError, setError, fields)) return;
+      setError('root.server', { type: apiError.code, message: apiError.message });
+    }
   };
 
   return (
@@ -159,7 +180,11 @@ export function RegisterPage() {
             <FieldError message={errors.acceptTerms?.message} />
           </div>
 
-          <SubmitButton className="mt-1">
+          {formError?.message && (
+            <FormAlert message={formError.message} onClose={() => clearErrors('root.server')} />
+          )}
+
+          <SubmitButton loading={isSubmitting} className="mt-1">
             Đăng ký tài khoản
             <ArrowRight className="transition-transform group-hover/button:translate-x-1" />
           </SubmitButton>

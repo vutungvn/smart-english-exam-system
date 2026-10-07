@@ -8,11 +8,16 @@ import {
   PencilLine,
   RotateCw,
 } from 'lucide-react';
+import { toApiError } from '@/api/errors';
+import { useForgotPasswordMutation } from '@/api/generated';
 import { ButtonLink } from '@/components/ButtonLink';
+import { FormAlert } from '@/components/form/FormAlert';
 import { FormField } from '@/components/form/FormField';
 import { IconInput } from '@/components/form/IconInput';
 import { SubmitButton } from '@/components/form/SubmitButton';
 import { Button } from '@/components/ui/button';
+import { applyFieldErrors } from '@/lib/form-errors';
+import { cn } from '@/lib/utils';
 import { AuthCard } from '../components/AuthCard';
 import { AuthHeader } from '../components/AuthHeader';
 import { ResultCard } from '../components/ResultCard';
@@ -26,24 +31,49 @@ import { useState } from 'react';
 export function ForgotPasswordPage() {
   const cooldown = useCooldown();
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [resendError, setResendError] = useState<string | null>(null);
+  const [forgotPassword, { isLoading: sending }] = useForgotPasswordMutation();
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: '' },
     mode: 'onTouched',
   });
 
-  // TẠM (giai đoạn giao diện): chưa gọi POST /auth/forgot-password
-  const send = (email: string) => {
+  const formError = errors.root?.server;
+
+  // Backend luôn trả thành công dù email có tồn tại hay không (không lộ tài khoản);
+  // chỉ lỗi khi vượt 3 lần / 15 phút cho một email hoặc mất kết nối
+  const send = async (email: string) => {
+    await forgotPassword({ email }).unwrap();
     setSentTo(email);
     cooldown.start(RESEND_COOLDOWN_SECONDS);
   };
 
-  const onSubmit = ({ email }: ForgotPasswordValues) => send(email);
+  const onSubmit = async ({ email }: ForgotPasswordValues) => {
+    try {
+      await send(email);
+    } catch (error) {
+      const apiError = toApiError(error);
+      if (applyFieldErrors(apiError, setError, ['email'])) return;
+      setError('root.server', { type: apiError.code, message: apiError.message });
+    }
+  };
+
+  const handleResend = async (email: string) => {
+    setResendError(null);
+    try {
+      await send(email);
+    } catch (error) {
+      setResendError(toApiError(error).message);
+    }
+  };
 
   if (sentTo) {
     const mailbox = getMailbox(sentTo, MAIL_SUBJECTS.resetPassword);
@@ -73,17 +103,30 @@ export function ForgotPasswordPage() {
           variant="secondary"
           size="lg"
           className="h-11 rounded-xl font-semibold"
-          disabled={cooldown.remaining > 0}
-          onClick={() => send(sentTo)}
+          disabled={cooldown.remaining > 0 || sending}
+          onClick={() => void handleResend(sentTo)}
         >
-          <RotateCw />
-          {cooldown.remaining > 0 ? `Gửi lại sau ${cooldown.remaining}s` : 'Gửi lại liên kết'}
+          <RotateCw className={cn(sending && 'animate-spin')} />
+          {sending
+            ? 'Đang gửi...'
+            : cooldown.remaining > 0
+              ? `Gửi lại sau ${cooldown.remaining}s`
+              : 'Gửi lại liên kết'}
         </Button>
+
+        {resendError && (
+          <p role="alert" className="text-xs font-medium text-destructive">
+            {resendError}
+          </p>
+        )}
 
         <div className="flex items-center justify-between border-t pt-3 text-[11px] font-semibold text-muted-foreground">
           <button
             type="button"
-            onClick={() => setSentTo(null)}
+            onClick={() => {
+              setSentTo(null);
+              setResendError(null);
+            }}
             className="flex items-center gap-1 hover:text-brand"
           >
             <PencilLine className="size-3" />
@@ -127,7 +170,11 @@ export function ForgotPasswordPage() {
             />
           </FormField>
 
-          <SubmitButton>
+          {formError?.message && (
+            <FormAlert message={formError.message} onClose={() => clearErrors('root.server')} />
+          )}
+
+          <SubmitButton loading={isSubmitting}>
             Gửi yêu cầu <ArrowRight />
           </SubmitButton>
 
