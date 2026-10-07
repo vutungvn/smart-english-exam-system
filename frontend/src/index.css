@@ -40,6 +40,12 @@
   --success-soft: #6ffbbe;
   --danger-soft: rgb(255 218 214 / 0.4);
   --on-danger-soft: #93000a;
+
+  /* Màu nhận diện 4 kỹ năng TOEIC, dùng chung cho landing, dashboard, kết quả */
+  --skill-listening: #12b886;
+  --skill-reading: #4263eb;
+  --skill-speaking: #7950f2;
+  --skill-writing: #fab005;
 }
 
 @theme inline {
@@ -77,6 +83,30 @@
   --color-success-soft: var(--success-soft);
   --color-danger-soft: var(--danger-soft);
   --color-on-danger-soft: var(--on-danger-soft);
+
+  --color-skill-listening: var(--skill-listening);
+  --color-skill-reading: var(--skill-reading);
+  --color-skill-speaking: var(--skill-speaking);
+  --color-skill-writing: var(--skill-writing);
+}
+
+/* Chuyển động dùng chung: `animate-heartbeat` (đập 2 nhịp rồi nghỉ, như nhịp tim) */
+@theme {
+  --animate-heartbeat: heartbeat 2.4s ease-in-out infinite;
+
+  @keyframes heartbeat {
+    0%,
+    40%,
+    100% {
+      transform: scale(1);
+    }
+    10% {
+      transform: scale(1.18);
+    }
+    25% {
+      transform: scale(1.08);
+    }
+  }
 }
 
 @layer base {
@@ -85,6 +115,12 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Cuộn mượt khi bấm link neo (#tinh-nang...), tôn trọng người dùng tắt hiệu ứng chuyển động */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
   body {
     @apply bg-background text-foreground antialiased;

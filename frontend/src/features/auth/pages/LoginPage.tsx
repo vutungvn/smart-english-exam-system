@@ -42,9 +42,9 @@ export function LoginPage() {
     try {
       const { data: session } = await login(values).unwrap();
       dispatch(sessionReceived(session));
-      // TẠM: chưa có layout theo vai trò và trang Đổi mật khẩu (session.user.mustChangePassword);
-      // về trang xem trước để kiểm tra phiên đăng nhập
-      void navigate('/', { replace: true });
+      // TẠM: mới có khu vực học viên; giáo viên/admin về trang xem trước cho tới khi có layout riêng.
+      // Chưa xử lý mustChangePassword (chưa có trang Đổi mật khẩu)
+      void navigate(session.user.role === 'STUDENT' ? '/app' : '/dev/auth', { replace: true });
     } catch (error) {
       const apiError = toApiError(error);
       if (applyFieldErrors(apiError, setError, ['email', 'password'])) return;
