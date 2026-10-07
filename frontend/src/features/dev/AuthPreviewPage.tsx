@@ -10,23 +10,25 @@ interface PreviewItem {
 }
 
 const SCREENS: PreviewItem[] = [
-  { to: '/login', label: 'Đăng nhập', note: 'Đã nối API thật, đăng nhập xong quay về trang này' },
-  { to: '/register', label: 'Đăng ký học viên', note: 'Gõ mật khẩu để xem thanh độ mạnh' },
+  { to: '/login', label: 'Đăng nhập', note: 'Gọi API thật' },
+  { to: '/register', label: 'Đăng ký học viên', note: 'Gọi API thật, gửi thư xác minh tới Gmail' },
   {
     to: '/register/check-email',
     label: 'Kiểm tra hộp thư',
-    note: 'Nút gửi lại đang đếm ngược',
+    note: 'Nút gửi lại gọi API thật',
     state: { email: 'hocvien@gmail.com', justSent: true },
   },
-  { to: '/verify-email?token=demo', label: 'Xác minh email: thành công' },
-  { to: '/verify-email', label: 'Xác minh email: liên kết lỗi' },
-  { to: '/forgot-password', label: 'Quên mật khẩu', note: 'Gửi form để xem trạng thái Đã gửi' },
   {
-    to: '/reset-password?token=demo',
-    label: 'Đặt lại mật khẩu',
-    note: 'Gửi form để xem trạng thái thành công',
+    to: '/verify-email',
+    label: 'Xác minh email: liên kết lỗi',
+    note: 'Liên kết thật nằm trong thư',
   },
-  { to: '/reset-password', label: 'Đặt lại mật khẩu: liên kết hết hạn' },
+  { to: '/forgot-password', label: 'Quên mật khẩu', note: 'Gọi API thật, gửi liên kết tới Gmail' },
+  {
+    to: '/reset-password',
+    label: 'Đặt lại mật khẩu: liên kết hết hạn',
+    note: 'Liên kết thật nằm trong thư',
+  },
 ];
 
 // TẠM (giai đoạn giao diện): trang tiện kiểm tra các màn auth, bỏ khi có trang chủ thật
@@ -36,7 +38,7 @@ export function AuthPreviewPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Xem trước giao diện Auth</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Đăng nhập đã nối API; các màn khác vẫn giả lập.
+          Các màn auth đã nối API thật; liên kết xác minh, đặt lại mật khẩu được gửi qua Gmail.
         </p>
       </div>
       <SessionPanel />
