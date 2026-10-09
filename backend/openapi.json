@@ -2180,6 +2180,11 @@
             "type": "string",
             "example": "Nguyễn Văn A"
           },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Ảnh đại diện; tài khoản Google lấy ảnh từ Google, null thì FE hiện chữ cái đầu"
+          },
           "role": {
             "allOf": [
               {
@@ -2196,6 +2201,7 @@
           "id",
           "email",
           "fullName",
+          "avatarUrl",
           "role",
           "mustChangePassword"
         ]

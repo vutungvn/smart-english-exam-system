@@ -37,7 +37,7 @@ const BLOCKED_STATUSES: Partial<Record<UserStatus, { code: ErrorCode; reason: st
 };
 
 // Các cột cần để cấp phiên, dùng chung cho login và refresh
-type SessionUser = Pick<User, 'id' | 'email' | 'fullName' | 'mustChangePassword'> & {
+type SessionUser = Pick<User, 'id' | 'email' | 'fullName' | 'avatarUrl' | 'mustChangePassword'> & {
   role: { code: string };
 };
 
@@ -397,6 +397,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
+        avatarUrl: user.avatarUrl,
         role,
         mustChangePassword: user.mustChangePassword,
       },
