@@ -18,7 +18,8 @@ import { SectionCard } from './SectionCard';
 
 const HISTORY_LIMIT = 5;
 
-export function SecurityCard() {
+// hasPassword = false: tài khoản tạo bằng Google, chưa có mật khẩu để đổi
+export function SecurityCard({ hasPassword }: { hasPassword: boolean }) {
   const { data, isLoading, error, refetch, isFetching } = useGetLoginHistoryQuery({
     page: 1,
     limit: HISTORY_LIMIT,
@@ -39,7 +40,9 @@ export function SecurityCard() {
           <div>
             <p className="font-semibold text-foreground">Mật khẩu</p>
             <p className="text-sm text-muted-foreground">
-              Đổi mật khẩu định kỳ để bảo vệ tài khoản
+              {hasPassword
+                ? 'Đổi mật khẩu định kỳ để bảo vệ tài khoản'
+                : 'Bạn đang đăng nhập bằng Google, chưa có mật khẩu'}
             </p>
           </div>
         </div>
@@ -47,7 +50,7 @@ export function SecurityCard() {
           to="/app/profile/password"
           className="inline-flex h-10 w-fit items-center gap-1.5 rounded-xl border border-primary/30 bg-white px-4 text-sm font-semibold text-primary transition-colors hover:bg-accent"
         >
-          Đổi mật khẩu
+          {hasPassword ? 'Đổi mật khẩu' : 'Tạo mật khẩu'}
           <ArrowRight className="size-4" />
         </Link>
       </div>

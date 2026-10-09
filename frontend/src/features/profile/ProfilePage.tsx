@@ -59,7 +59,7 @@ export function ProfilePage() {
               {profile.student && <TargetScoreCard targetScore={profile.student.targetScore} />}
             </div>
           </div>
-          <SecurityCard />
+          <SecurityCard hasPassword={profile.hasPassword} />
         </>
       )}
     </div>

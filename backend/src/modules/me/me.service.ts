@@ -34,6 +34,8 @@ export class MeService {
         lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
+        passwordHash: true,
+        googleId: true,
         role: { select: { code: true } },
         student: { select: { currentLevel: true, currentScore: true, targetScore: true } },
       },
@@ -41,8 +43,13 @@ export class MeService {
 
     if (!user) throw new AppException(ErrorCode.NOT_FOUND, 'Tài khoản không còn tồn tại');
 
-    const { role, ...profile } = user;
-    return { ...profile, role: role.code as RoleCode };
+    const { role, passwordHash, googleId, ...profile } = user;
+    return {
+      ...profile,
+      role: role.code as RoleCode,
+      hasPassword: passwordHash !== null,
+      googleLinked: googleId !== null,
+    };
   }
 
   async getLoginHistory(
@@ -109,6 +116,7 @@ export class MeService {
       select: { passwordHash: true },
     });
     if (!user) throw new AppException(ErrorCode.NOT_FOUND, 'Tài khoản không còn tồn tại');
+    if (!user.passwordHash) throw new AppException(ErrorCode.AUTH_PASSWORD_NOT_SET);
 
     const currentMatches = await verifyPassword(dto.currentPassword, user.passwordHash);
     if (!currentMatches) throw new AppException(ErrorCode.AUTH_CURRENT_PASSWORD_INCORRECT);

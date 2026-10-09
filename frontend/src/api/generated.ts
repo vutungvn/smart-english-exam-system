@@ -196,7 +196,12 @@ export type ErrorCode =
   | 'AUTH_EMAIL_ALREADY_EXISTS'
   | 'AUTH_TOKEN_INVALID'
   | 'AUTH_TOO_MANY_LOGIN_ATTEMPTS'
-  | 'AUTH_CURRENT_PASSWORD_INCORRECT';
+  | 'AUTH_CURRENT_PASSWORD_INCORRECT'
+  | 'AUTH_PASSWORD_NOT_SET'
+  | 'AUTH_GOOGLE_DISABLED'
+  | 'AUTH_GOOGLE_FAILED'
+  | 'AUTH_GOOGLE_EMAIL_UNVERIFIED'
+  | 'AUTH_GOOGLE_STUDENT_ONLY';
 export type FieldErrorDto = {
   /** Trường lỗi, trường lồng nhau dạng address.city */
   field: string;
@@ -242,6 +247,8 @@ export type AuthSessionUser = {
   id: string;
   email: string;
   fullName: string;
+  /** Ảnh đại diện; tài khoản Google lấy ảnh từ Google, null thì FE hiện chữ cái đầu */
+  avatarUrl: string | null;
   role: RoleCode;
   /** true: FE chuyển thẳng tới trang Đổi mật khẩu (admin mặc định từ seed) */
   mustChangePassword: boolean;
@@ -270,6 +277,10 @@ export type MeProfile = {
   role: RoleCode;
   status: UserStatus;
   mustChangePassword: boolean;
+  /** false: tài khoản chỉ đăng nhập bằng Google, chưa đặt mật khẩu */
+  hasPassword: boolean;
+  /** true: đã liên kết đăng nhập bằng Google */
+  googleLinked: boolean;
   emailVerifiedAt: string | null;
   lastLoginAt: string | null;
   createdAt: string;

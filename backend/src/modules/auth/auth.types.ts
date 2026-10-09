@@ -18,6 +18,13 @@ export class AuthSessionUser {
   @ApiProperty({ example: 'Nguyễn Văn A' })
   fullName: string;
 
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Ảnh đại diện; tài khoản Google lấy ảnh từ Google, null thì FE hiện chữ cái đầu',
+  })
+  avatarUrl: string | null;
+
   @ApiProperty({ enum: RoleCode, enumName: 'RoleCode' })
   role: RoleCode;
 

@@ -2,6 +2,16 @@
 export const REFRESH_COOKIE_NAME = 'refresh_token';
 export const REFRESH_COOKIE_PATH = '/api/v1/auth';
 
+// Google OAuth: state (chống CSRF) và code_verifier (PKCE) giữ trong cookie ngắn hạn giữa 2 bước
+export const GOOGLE_STATE_COOKIE = 'google_oauth_state';
+export const GOOGLE_VERIFIER_COOKIE = 'google_oauth_verifier';
+// Chỉ gửi kèm /auth/google và /auth/google/callback
+export const GOOGLE_COOKIE_PATH = '/api/v1/auth/google';
+// Thời gian tối đa để người dùng chọn tài khoản trên trang Google
+export const GOOGLE_COOKIE_TTL_SECONDS = 10 * 60;
+// openid: có id_token; email, profile: lấy email, tên, ảnh
+export const GOOGLE_SCOPES = ['openid', 'email', 'profile'];
+
 // Link xác minh email có hiệu lực 24 giờ, dùng một lần
 export const VERIFY_EMAIL_TTL_SECONDS = 24 * 60 * 60;
 

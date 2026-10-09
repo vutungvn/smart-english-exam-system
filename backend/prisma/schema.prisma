@@ -88,7 +88,10 @@ model User {
   roleId             String     @map("role_id") @db.Uuid
   /// Luôn lưu chữ thường (D3), chuẩn hóa ở tầng Service trước khi ghi
   email              String     @unique(map: "uq_users_email") @db.VarChar(255)
-  passwordHash       String     @map("password_hash") @db.VarChar(255)
+  /// null khi tài khoản chỉ đăng nhập bằng Google; tạo mật khẩu qua luồng Quên mật khẩu
+  passwordHash       String?     @map("password_hash") @db.VarChar(255)
+  /// "sub" trong id_token của Google, cố định với mỗi tài khoản Google (email có thể đổi)
+  googleId           String?    @unique(map: "uq_users_google_id") @map("google_id") @db.VarChar(255)
   fullName           String     @map("full_name") @db.VarChar(100)
   avatarUrl          String?    @map("avatar_url") @db.VarChar(500)
   status             UserStatus @default(PENDING_VERIFICATION)

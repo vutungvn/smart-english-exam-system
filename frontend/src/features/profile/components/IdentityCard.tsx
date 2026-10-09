@@ -1,10 +1,12 @@
 import { CalendarDays, Check, Clock } from 'lucide-react';
 import type { MeProfile } from '@/api/generated';
 import { BrandPattern } from '@/components/brand/BrandPattern';
-import { getInitials, ROLE_LABELS } from '@/lib/user-display';
+import { GoogleIcon } from '@/components/icons/GoogleIcon';
+import { UserAvatar } from '@/components/UserAvatar';
+import { ROLE_LABELS } from '@/lib/user-display';
 import { formatDate, formatDateTime } from '../format';
 
-// Thẻ danh tính: dải gradient thương hiệu, avatar chữ cái đầu đè lên mép dưới dải
+// Thẻ danh tính: dải gradient thương hiệu, avatar (ảnh Google hoặc chữ cái đầu) đè lên mép dưới dải
 export function IdentityCard({ profile }: { profile: MeProfile }) {
   return (
     <section className="overflow-hidden rounded-3xl border border-border bg-white shadow-2xs">
@@ -13,9 +15,11 @@ export function IdentityCard({ profile }: { profile: MeProfile }) {
       </div>
 
       <div className="-mt-12 flex flex-col items-center px-6 pb-6 text-center">
-        <span className="relative flex size-24 items-center justify-center rounded-full border-4 border-white bg-accent text-3xl font-bold text-brand shadow-md">
-          {getInitials(profile.fullName)}
-        </span>
+        <UserAvatar
+          fullName={profile.fullName}
+          avatarUrl={profile.avatarUrl}
+          className="relative size-24 border-4 border-white text-3xl shadow-md"
+        />
         <h2 className="mt-3 text-xl font-bold text-foreground">{profile.fullName}</h2>
         <p className="mt-1 flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
           <span className="break-all">{profile.email}</span>
@@ -26,9 +30,17 @@ export function IdentityCard({ profile }: { profile: MeProfile }) {
             </span>
           )}
         </p>
-        <span className="mt-3 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-brand">
-          {ROLE_LABELS[profile.role]}
-        </span>
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-brand">
+            {ROLE_LABELS[profile.role]}
+          </span>
+          {profile.googleLinked && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+              <GoogleIcon className="size-3.5" />
+              Đã liên kết Google
+            </span>
+          )}
+        </div>
 
         <ul className="mt-5 w-full space-y-2 border-t border-border pt-5 text-left text-sm text-muted-foreground">
           <li className="flex items-center gap-2">

@@ -9,6 +9,7 @@ import { TokenService } from './token.service.js';
 import { OneTimeTokenService } from './one-time-token.service.js';
 import { AuthLimitService } from './auth-limit.service.js';
 import { AUTH_THROTTLE } from './auth.constants.js';
+import { GoogleOAuthService } from './google-oauth.service.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AUTH_THROTTLE } from './auth.constants.js';
     TokenService,
     OneTimeTokenService,
     AuthLimitService,
+    GoogleOAuthService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
   exports: [TokenService],

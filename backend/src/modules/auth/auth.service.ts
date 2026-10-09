@@ -20,6 +20,7 @@ import { verifyEmailTemplate } from './templates/verify-email.template.js';
 import { RESET_PASSWORD_TTL_SECONDS, VERIFY_EMAIL_TTL_SECONDS } from './auth.constants.js';
 import type { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { resetPasswordTemplate } from './templates/reset-password.template.js';
+import { GoogleProfile } from './google-oauth.service.js';
 
 // Trạng thái không được đăng nhập → mã lỗi trả về + lý do ghi vào login_histories.
 // Dùng chung cho 3 vai trò: học viên chưa xác minh, giáo viên chờ duyệt, tài khoản bị khóa.
@@ -36,9 +37,12 @@ const BLOCKED_STATUSES: Partial<Record<UserStatus, { code: ErrorCode; reason: st
 };
 
 // Các cột cần để cấp phiên, dùng chung cho login và refresh
-type SessionUser = Pick<User, 'id' | 'email' | 'fullName' | 'mustChangePassword'> & {
+type SessionUser = Pick<User, 'id' | 'email' | 'fullName' | 'avatarUrl' | 'mustChangePassword'> & {
   role: { code: string };
 };
+
+// Cột users.avatar_url là VARCHAR(500); ảnh Google dài hơn thì bỏ qua
+const AVATAR_URL_MAX_LENGTH = 500;
 
 // Thông báo theo số phút còn lại, details trả số giây để FE hiển thị đếm ngược
 function loginLockedError(seconds: number): AppException {
@@ -245,6 +249,113 @@ export class AuthService {
     return session;
   }
 
+  /**
+   * Đăng nhập bằng Google, chỉ dành cho học viên:
+   * - googleId đã liên kết → đăng nhập
+   * - email đã có (học viên) → liên kết Google vào tài khoản đó
+   * - chưa có → tạo học viên mới, ACTIVE ngay vì Google đã xác minh email
+   */
+  async loginWithGoogle(profile: GoogleProfile, meta: RequestMeta): Promise<IssuedSession> {
+    if (!profile.emailVerified) throw new AppException(ErrorCode.AUTH_GOOGLE_EMAIL_UNVERIFIED);
+
+    const email = normalizeEmail(profile.email);
+    const include = { role: { select: { code: true } } } as const;
+
+    // Ưu tiên googleId: người dùng đổi email trên Google vẫn vào đúng tài khoản cũ
+    const user =
+      (await this.prisma.user.findUnique({ where: { googleId: profile.googleId }, include })) ??
+      (await this.prisma.user.findUnique({ where: { email }, include }));
+
+    if (!user) return this.createGoogleStudent(profile, email, meta);
+
+    // Giáo viên, admin giữ đăng nhập bằng mật khẩu (giáo viên còn phải qua bước duyệt)
+    const roleCode = (user as SessionUser).role.code;
+    if (roleCode !== RoleCode.STUDENT) {
+      await this.recordLogin(user.id, meta, 'GOOGLE_NOT_ALLOWED');
+      throw new AppException(ErrorCode.AUTH_GOOGLE_STUDENT_ONLY);
+    }
+
+    // Email này đã liên kết với một tài khoản Google khác
+    if (user.googleId && user.googleId !== profile.googleId) {
+      await this.recordLogin(user.id, meta, 'GOOGLE_ACCOUNT_MISMATCH');
+      throw new AppException(
+        ErrorCode.AUTH_GOOGLE_FAILED,
+        'Email này đã liên kết với một tài khoản Google khác',
+      );
+    }
+
+    if (user.status === UserStatus.LOCKED) {
+      await this.recordLogin(user.id, meta, 'ACCOUNT_LOCKED');
+      throw new AppException(ErrorCode.AUTH_ACCOUNT_LOCKED);
+    }
+
+    const now = new Date();
+    const linked = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        googleId: profile.googleId,
+        lastLoginAt: now,
+        avatarUrl: user.avatarUrl ?? this.googleAvatar(profile),
+        // Tài khoản chưa xác minh email: người đặt mật khẩu chưa chứng minh sở hữu email này,
+        // có thể là kẻ đăng ký trước bằng email của nạn nhân → bỏ mật khẩu đó, kích hoạt bằng Google
+        ...(user.status === UserStatus.PENDING_VERIFICATION && {
+          status: UserStatus.ACTIVE,
+          emailVerifiedAt: now,
+          passwordHash: null,
+        }),
+      },
+      include,
+    });
+
+    await this.recordLogin(linked.id, meta);
+    return this.createSession(linked);
+  }
+
+  private async createGoogleStudent(
+    profile: GoogleProfile,
+    email: string,
+    meta: RequestMeta,
+  ): Promise<IssuedSession> {
+    const studentRoleId = await this.findRoleId(RoleCode.STUDENT);
+    const now = new Date();
+
+    let user: SessionUser & { id: string };
+
+    try {
+      user = await this.prisma.user.create({
+        data: {
+          roleId: studentRoleId,
+          email,
+          googleId: profile.googleId,
+          // Không có mật khẩu; muốn đăng nhập bằng mật khẩu thì dùng Quên mật khẩu
+          fullName: profile.fullName.trim().slice(0, 100) || email.split('@')[0],
+          avatarUrl: this.googleAvatar(profile),
+          status: UserStatus.ACTIVE,
+          emailVerifiedAt: now,
+          // Nút Google ở FE có dòng "Bằng việc tiếp tục, bạn đồng ý Điều khoản..."
+          termsAcceptedAt: now,
+          lastLoginAt: now,
+          student: { create: {} },
+        },
+        include: { role: { select: { code: true } } },
+      });
+    } catch (error) {
+      // Hai tab cùng đăng nhập lần đầu một lúc: tab sau trùng email/googleId, bấm lại là vào được
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new AppException(ErrorCode.AUTH_GOOGLE_FAILED);
+      }
+      throw error;
+    }
+
+    await this.recordLogin(user.id, meta);
+    return this.createSession(user);
+  }
+
+  private googleAvatar(profile: GoogleProfile): string | null {
+    const url = profile.avatarUrl;
+    return url && url.length <= AVATAR_URL_MAX_LENGTH ? url : null;
+  }
+
   async refresh(refreshToken: string | undefined): Promise<IssuedSession> {
     if (!refreshToken) throw new AppException(ErrorCode.AUTH_REFRESH_TOKEN_INVALID);
 
@@ -286,6 +397,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
+        avatarUrl: user.avatarUrl,
         role,
         mustChangePassword: user.mustChangePassword,
       },
