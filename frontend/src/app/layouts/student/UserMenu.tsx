@@ -1,16 +1,16 @@
 import { Link } from 'react-router';
 import { DropdownMenu } from 'radix-ui';
 import { ChevronDown, KeyRound, LogOut, UserRound } from 'lucide-react';
+import { UserAvatar } from '@/components/UserAvatar';
 import { useLogout } from '@/features/auth/hooks/use-logout';
 import { useAppSelector } from '@/hooks/hooks';
 import { cn } from '@/lib/utils';
-import { getInitials, ROLE_LABELS } from '@/lib/user-display';
+import { ROLE_LABELS } from '@/lib/user-display';
 import { selectCurrentUser } from '@/store/slice/auth-slice';
 
 const itemClass =
   'flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50';
 
-// TẠM: trang Hồ sơ và Đổi mật khẩu đang là trang giữ chỗ; backend đã có PATCH /me, PATCH /me/password
 const ACCOUNT_LINKS = [
   {
     to: '/app/profile',
@@ -26,19 +26,6 @@ const ACCOUNT_LINKS = [
   },
 ];
 
-function Avatar({ fullName, className }: { fullName: string; className?: string }) {
-  return (
-    <span
-      className={cn(
-        'flex shrink-0 items-center justify-center rounded-full border-2 border-primary bg-accent font-bold text-brand',
-        className,
-      )}
-    >
-      {getInitials(fullName)}
-    </span>
-  );
-}
-
 // Menu tài khoản ở thanh trên: Radix lo phần bàn phím (mũi tên, Enter), Esc và bấm ra ngoài để đóng
 export function UserMenu() {
   const user = useAppSelector(selectCurrentUser);
@@ -53,7 +40,11 @@ export function UserMenu() {
           aria-label={`Tài khoản ${fullName}`}
           className="group flex items-center gap-3 rounded-xl p-1 text-left transition-colors outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-primary/30 data-[state=open]:bg-accent sm:pr-2.5"
         >
-          <Avatar fullName={fullName} className="size-10 text-sm" />
+          <UserAvatar
+            fullName={fullName}
+            avatarUrl={user?.avatarUrl}
+            className="size-10 border-2 border-primary text-sm"
+          />
           <span className="hidden leading-tight sm:block">
             <span className="block max-w-40 truncate text-sm font-semibold text-foreground">
               {fullName}
@@ -72,7 +63,11 @@ export function UserMenu() {
           className="z-50 w-72 rounded-2xl border border-border bg-white p-2 shadow-xl shadow-slate-900/10 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
           <DropdownMenu.Label className="flex items-center gap-3 rounded-xl bg-accent/70 p-3">
-            <Avatar fullName={fullName} className="size-11" />
+            <UserAvatar
+              fullName={fullName}
+              avatarUrl={user?.avatarUrl}
+              className="size-11 border-2 border-primary"
+            />
             <span className="min-w-0">
               <span className="block truncate font-semibold text-foreground">{fullName}</span>
               {user && (

@@ -44,6 +44,8 @@ const FAILURE_LABELS: Record<string, string> = {
   EMAIL_NOT_VERIFIED: 'Chưa xác minh email',
   PENDING_APPROVAL: 'Chờ duyệt',
   ACCOUNT_LOCKED: 'Tài khoản bị khóa',
+  GOOGLE_NOT_ALLOWED: 'Google chỉ dành cho học viên',
+  GOOGLE_ACCOUNT_MISMATCH: 'Sai tài khoản Google',
 };
 
 export function describeFailure(reason: string | null): string {

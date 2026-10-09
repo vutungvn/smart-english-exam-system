@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { ArrowRight, LogOut, Menu, X } from 'lucide-react';
 import { BrandLogo } from '@/components/brand/BrandLogo';
+import { UserAvatar } from '@/components/UserAvatar';
 import { useLogout } from '@/features/auth/hooks/use-logout';
 import { cn } from '@/lib/utils';
-import { getInitials } from '@/lib/user-display';
 import { useLandingSession } from '../use-landing-session';
 import { EnterAppLink } from './EnterAppLink';
 
@@ -87,9 +87,11 @@ export function LandingHeader() {
           {session.state === 'signed-in' && (
             <>
               <span className="hidden items-center gap-2.5 md:flex" title={session.user.fullName}>
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-primary bg-accent text-xs font-bold text-brand">
-                  {getInitials(session.user.fullName)}
-                </span>
+                <UserAvatar
+                  fullName={session.user.fullName}
+                  avatarUrl={session.user.avatarUrl}
+                  className="size-9 border-2 border-primary text-xs"
+                />
                 <span className="max-w-40 truncate text-sm font-semibold text-foreground">
                   {session.user.fullName}
                 </span>
@@ -156,9 +158,11 @@ export function LandingHeader() {
         {session.state === 'signed-in' && (
           <div className="mx-auto w-full max-w-300 border-t border-border px-4 py-4 sm:px-6">
             <p className="flex items-center gap-3 px-1">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-primary bg-accent text-sm font-bold text-brand">
-                {getInitials(session.user.fullName)}
-              </span>
+              <UserAvatar
+                fullName={session.user.fullName}
+                avatarUrl={session.user.avatarUrl}
+                className="size-10 border-2 border-primary text-sm"
+              />
               <span className="min-w-0">
                 <span className="block truncate font-semibold text-foreground">
                   {session.user.fullName}

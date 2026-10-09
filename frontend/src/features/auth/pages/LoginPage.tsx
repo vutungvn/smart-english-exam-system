@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, KeyRound, Mail, ShieldCheck } from 'lucide-react';
@@ -9,11 +9,11 @@ import { FormField } from '@/components/form/FormField';
 import { IconInput } from '@/components/form/IconInput';
 import { PasswordInput } from '@/components/form/PasswordInput';
 import { SubmitButton } from '@/components/form/SubmitButton';
-import { GoogleIcon } from '@/components/icons/GoogleIcon';
-import { Button } from '@/components/ui/button';
 import { applyFieldErrors } from '@/lib/form-errors';
 import { AuthCard } from '../components/AuthCard';
 import { AuthHeader } from '../components/AuthHeader';
+import { GoogleButton } from '../components/GoogleButton';
+import { describeOAuthError, OAUTH_ERROR_PARAM } from '../oauth-errors';
 import { loginSchema, type LoginValues } from '../schemas';
 import { useAppDispatch } from '@/hooks/hooks';
 import { sessionReceived } from '@/store/slice/auth-slice';
@@ -24,6 +24,8 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const oauthError = searchParams.get(OAUTH_ERROR_PARAM);
   const [login] = useLoginMutation();
   const {
     register,
@@ -72,6 +74,22 @@ export function LoginPage() {
       </AuthHeader>
 
       <AuthCard className="space-y-5">
+        {/* Đăng nhập Google thất bại: backend đưa về /login?oauthError=<mã lỗi> */}
+        {oauthError && (
+          <FormAlert
+            message={describeOAuthError(oauthError)}
+            onClose={() =>
+              setSearchParams(
+                (params) => {
+                  params.delete(OAUTH_ERROR_PARAM);
+                  return params;
+                },
+                { replace: true },
+              )
+            }
+          />
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
           <FormField id="email" label="Email" required error={errors.email?.message}>
             <IconInput
@@ -144,15 +162,7 @@ export function LoginPage() {
           <div className="h-px flex-1 bg-border" />
         </div>
 
-        {/* TẠM: backend chưa có đăng nhập Google (kế hoạch: Google OAuth, mức nên có) */}
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 w-full gap-3 rounded-xl border-slate-200/90 bg-white text-sm font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:shadow-xs"
-        >
-          <GoogleIcon className="size-4" />
-          Tiếp tục với Google
-        </Button>
+        <GoogleButton />
       </AuthCard>
 
       <p className="mt-6 text-center text-sm text-slate-600">

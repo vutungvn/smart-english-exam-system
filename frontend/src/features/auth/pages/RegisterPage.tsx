@@ -14,6 +14,7 @@ import { applyFieldErrors } from '@/lib/form-errors';
 import { cn } from '@/lib/utils';
 import { AuthCard } from '../components/AuthCard';
 import { AuthHeader } from '../components/AuthHeader';
+import { GoogleButton } from '../components/GoogleButton';
 import { PasswordStrength } from '../components/PasswordStrength';
 import { registerSchema, type RegisterValues } from '../schemas';
 
@@ -189,6 +190,16 @@ export function RegisterPage() {
             <ArrowRight className="transition-transform group-hover/button:translate-x-1" />
           </SubmitButton>
         </form>
+
+        <div className="flex items-center gap-3 py-3 tall:py-4">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-[11px] font-bold tracking-wider text-subtle/80 uppercase">
+            Hoặc đăng ký nhanh
+          </span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <GoogleButton label="Đăng ký với Google" />
       </AuthCard>
 
       <p className="mt-3 text-center text-sm text-slate-600 tall:mt-6">
