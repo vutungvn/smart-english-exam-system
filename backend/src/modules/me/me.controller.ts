@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpStatus, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
@@ -12,8 +12,16 @@ import {
   ApiPaginatedEnvelope,
 } from '../../common/swagger/api-envelope.decorator.js';
 import { ApiErrors } from '../../common/swagger/api-errors.decorator.js';
+import type { ApiErrorExample } from '../../common/swagger/api-errors.decorator.js';
+import { ErrorCode } from '../../common/errors/error-codes.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+
+// Tài khoản bị xóa trong lúc access token vẫn còn hạn
+const USER_NOT_FOUND: ApiErrorExample = {
+  code: ErrorCode.NOT_FOUND,
+  message: 'Tài khoản không còn tồn tại',
+};
 
 @ApiTags('Me')
 @ApiBearerAuth()
@@ -24,7 +32,7 @@ export class MeController {
   @Get()
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ cá nhân' })
   @ApiEnvelope(MeProfile)
-  @ApiErrors(HttpStatus.NOT_FOUND)
+  @ApiErrors(USER_NOT_FOUND)
   getProfile(@CurrentUser() user: AuthUser): Promise<MeProfile> {
     return this.meService.getProfile(user.id);
   }
@@ -45,7 +53,10 @@ export class MeController {
     description: 'Trường nào không gửi thì giữ nguyên; targetScore chỉ dành cho học viên.',
   })
   @ApiEnvelope(MeProfile)
-  @ApiErrors(HttpStatus.FORBIDDEN)
+  @ApiErrors(
+    { code: ErrorCode.FORBIDDEN, message: 'Chỉ học viên mới đặt được điểm mục tiêu' },
+    USER_NOT_FOUND,
+  )
   updateProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateProfileDto): Promise<MeProfile> {
     return this.meService.updateProfile(user, dto);
   }
@@ -57,6 +68,11 @@ export class MeController {
       'Thành công thì đăng xuất mọi thiết bị; FE gọi lại POST /auth/login bằng mật khẩu mới.',
   })
   @ApiNullEnvelope()
+  @ApiErrors(
+    ErrorCode.AUTH_CURRENT_PASSWORD_INCORRECT,
+    { code: ErrorCode.BAD_REQUEST, message: 'Mật khẩu mới phải khác mật khẩu hiện tại' },
+    USER_NOT_FOUND,
+  )
   changePassword(@CurrentUser() user: AuthUser, @Body() dto: ChangePasswordDto): Promise<void> {
     return this.meService.changePassword(user.id, dto);
   }

@@ -17,6 +17,7 @@ import type { CookieOptions, Request, Response } from 'express';
 import { IsPublic } from '../../common/decorators/public.decorator.js';
 import { ApiEnvelope, ApiNullEnvelope } from '../../common/swagger/api-envelope.decorator.js';
 import { ApiErrors } from '../../common/swagger/api-errors.decorator.js';
+import type { ApiErrorSpec } from '../../common/swagger/api-errors.decorator.js';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import type { Env } from '../../config/env.schema.js';
@@ -29,6 +30,15 @@ import { RegisterDto } from './dto/register.dto.js';
 import { VerifyEmailDto } from './dto/verify-email.dto.js';
 import { EmailDto } from './dto/email.dto.js';
 import { ResetPasswordDto, ResetPasswordTokenDto } from './dto/reset-password.dto.js';
+
+// Gửi mail (gửi lại xác minh, quên mật khẩu): 429 do giới hạn theo IP hoặc theo email
+const EMAIL_REQUEST_ERRORS: ApiErrorSpec[] = [
+  ErrorCode.TOO_MANY_REQUESTS,
+  {
+    code: ErrorCode.TOO_MANY_REQUESTS,
+    message: 'Bạn đã yêu cầu quá nhiều lần, vui lòng thử lại sau 15 phút',
+  },
+];
 
 @ApiTags('Auth')
 @IsPublic()
@@ -57,7 +67,7 @@ export class AuthController {
   @Throttle({ default: AUTH_THROTTLE.sensitive })
   @ApiOperation({ summary: 'Đăng ký tài khoản học viên và gửi email xác minh' })
   @ApiEnvelope(RegisterResult, { status: HttpStatus.CREATED })
-  @ApiErrors(HttpStatus.CONFLICT, HttpStatus.TOO_MANY_REQUESTS)
+  @ApiErrors(ErrorCode.AUTH_EMAIL_ALREADY_EXISTS, ErrorCode.TOO_MANY_REQUESTS)
   register(@Body() dto: RegisterDto): Promise<RegisterResult> {
     return this.authService.register(dto);
   }
@@ -66,6 +76,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Xác minh email bằng token trong liên kết, kích hoạt tài khoản' })
   @ApiNullEnvelope()
+  @ApiErrors(ErrorCode.AUTH_TOKEN_INVALID, ErrorCode.TOO_MANY_REQUESTS)
   verifyEmail(@Body() dto: VerifyEmailDto): Promise<void> {
     return this.authService.verifyEmail(dto.token);
   }
@@ -78,7 +89,7 @@ export class AuthController {
     description: 'Luôn trả thành công để không lộ email nào đã đăng ký; tối đa 3 lần mỗi 15 phút.',
   })
   @ApiNullEnvelope()
-  @ApiErrors(HttpStatus.TOO_MANY_REQUESTS)
+  @ApiErrors(...EMAIL_REQUEST_ERRORS)
   resendVerification(@Body() dto: EmailDto): Promise<void> {
     return this.authService.resendVerification(dto.email);
   }
@@ -91,7 +102,7 @@ export class AuthController {
     description: 'Luôn trả thành công để không lộ email nào đã đăng ký; tối đa 3 lần mỗi 15 phút.',
   })
   @ApiNullEnvelope()
-  @ApiErrors(HttpStatus.TOO_MANY_REQUESTS)
+  @ApiErrors(...EMAIL_REQUEST_ERRORS)
   forgotPassword(@Body() dto: EmailDto): Promise<void> {
     return this.authService.forgotPassword(dto.email);
   }
@@ -99,6 +110,7 @@ export class AuthController {
   @Get('reset-password/validate')
   @ApiOperation({ summary: 'Kiểm tra liên kết đặt lại mật khẩu còn hiệu lực (không hủy token)' })
   @ApiNullEnvelope()
+  @ApiErrors(ErrorCode.AUTH_TOKEN_INVALID, ErrorCode.TOO_MANY_REQUESTS)
   validateResetToken(@Query() dto: ResetPasswordTokenDto): Promise<void> {
     return this.authService.validateResetToken(dto.token);
   }
@@ -107,6 +119,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đặt mật khẩu mới bằng token, đăng xuất mọi thiết bị' })
   @ApiNullEnvelope()
+  @ApiErrors(ErrorCode.AUTH_TOKEN_INVALID, ErrorCode.TOO_MANY_REQUESTS)
   resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
     return this.authService.resetPassword(dto);
   }
@@ -116,7 +129,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đăng nhập bằng email và mật khẩu (dùng chung cho mọi vai trò)' })
   @ApiEnvelope(AuthSession)
-  @ApiErrors(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN, HttpStatus.TOO_MANY_REQUESTS)
+  @ApiErrors(
+    ErrorCode.AUTH_INVALID_CREDENTIALS,
+    ErrorCode.AUTH_EMAIL_NOT_VERIFIED,
+    ErrorCode.AUTH_ACCOUNT_PENDING_APPROVAL,
+    ErrorCode.AUTH_ACCOUNT_LOCKED,
+    {
+      code: ErrorCode.AUTH_TOO_MANY_LOGIN_ATTEMPTS,
+      details: { retryAfterSeconds: 900 },
+    },
+    ErrorCode.TOO_MANY_REQUESTS,
+  )
   async login(
     @Body() dto: LoginDto,
     @Req() req: Request,
@@ -132,7 +155,7 @@ export class AuthController {
   @ApiCookieAuth(REFRESH_COOKIE_NAME)
   @ApiOperation({ summary: 'Cấp lại access token, xoay vòng refresh token trong cookie' })
   @ApiEnvelope(AuthSession)
-  @ApiErrors(HttpStatus.UNAUTHORIZED)
+  @ApiErrors(ErrorCode.AUTH_REFRESH_TOKEN_INVALID, ErrorCode.TOO_MANY_REQUESTS)
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -158,6 +181,7 @@ export class AuthController {
   @ApiCookieAuth(REFRESH_COOKIE_NAME)
   @ApiOperation({ summary: 'Đăng xuất, thu hồi refresh token của phiên hiện tại' })
   @ApiNullEnvelope()
+  @ApiErrors(ErrorCode.TOO_MANY_REQUESTS)
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
     await this.authService.logout(this.readRefreshCookie(req));
     this.clearRefreshCookie(res);

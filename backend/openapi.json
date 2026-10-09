@@ -47,31 +47,76 @@
             }
           },
           "400": {
-            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR, AUTH_TOKEN_INVALID, AUTH_CURRENT_PASSWORD_INCORRECT",
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "fullName",
+                            "message": "fullName không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "409": {
-            "description": "Lỗi, error.code thuộc: CONFLICT, VERSION_CONFLICT, AUTH_EMAIL_ALREADY_EXISTS",
+            "description": "Lỗi, error.code thuộc: AUTH_EMAIL_ALREADY_EXISTS",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_EMAIL_ALREADY_EXISTS": {
+                    "summary": "AUTH_EMAIL_ALREADY_EXISTS: Email đã được sử dụng",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "AUTH_EMAIL_ALREADY_EXISTS",
+                        "message": "Email đã được sử dụng"
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "429": {
-            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS, AUTH_TOO_MANY_LOGIN_ATTEMPTS",
+            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOO_MANY_REQUESTS": {
+                    "summary": "TOO_MANY_REQUESTS: Bạn thao tác quá nhanh, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "TOO_MANY_REQUESTS",
+                        "message": "Bạn thao tác quá nhanh, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -82,6 +127,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -141,11 +199,64 @@
             }
           },
           "400": {
-            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR, AUTH_TOKEN_INVALID, AUTH_CURRENT_PASSWORD_INCORRECT",
+            "description": "Lỗi, error.code thuộc: AUTH_TOKEN_INVALID, VALIDATION_ERROR",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_TOKEN_INVALID": {
+                    "summary": "AUTH_TOKEN_INVALID: Liên kết không hợp lệ hoặc đã hết hạn",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "AUTH_TOKEN_INVALID",
+                        "message": "Liên kết không hợp lệ hoặc đã hết hạn"
+                      }
+                    }
+                  },
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "token",
+                            "message": "token không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOO_MANY_REQUESTS": {
+                    "summary": "TOO_MANY_REQUESTS: Bạn thao tác quá nhanh, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "TOO_MANY_REQUESTS",
+                        "message": "Bạn thao tác quá nhanh, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -156,6 +267,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -216,21 +340,64 @@
             }
           },
           "400": {
-            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR, AUTH_TOKEN_INVALID, AUTH_CURRENT_PASSWORD_INCORRECT",
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "email",
+                            "message": "email không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "429": {
-            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS, AUTH_TOO_MANY_LOGIN_ATTEMPTS",
+            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOO_MANY_REQUESTS": {
+                    "summary": "TOO_MANY_REQUESTS: Bạn thao tác quá nhanh, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "TOO_MANY_REQUESTS",
+                        "message": "Bạn thao tác quá nhanh, vui lòng thử lại sau"
+                      }
+                    }
+                  },
+                  "TOO_MANY_REQUESTS_2": {
+                    "summary": "TOO_MANY_REQUESTS: Bạn đã yêu cầu quá nhiều lần, vui lòng thử lại sau 15 phút",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "TOO_MANY_REQUESTS",
+                        "message": "Bạn đã yêu cầu quá nhiều lần, vui lòng thử lại sau 15 phút"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -241,6 +408,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -301,21 +481,64 @@
             }
           },
           "400": {
-            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR, AUTH_TOKEN_INVALID, AUTH_CURRENT_PASSWORD_INCORRECT",
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "email",
+                            "message": "email không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "429": {
-            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS, AUTH_TOO_MANY_LOGIN_ATTEMPTS",
+            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOO_MANY_REQUESTS": {
+                    "summary": "TOO_MANY_REQUESTS: Bạn thao tác quá nhanh, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "TOO_MANY_REQUESTS",
+                        "message": "Bạn thao tác quá nhanh, vui lòng thử lại sau"
+                      }
+                    }
+                  },
+                  "TOO_MANY_REQUESTS_2": {
+                    "summary": "TOO_MANY_REQUESTS: Bạn đã yêu cầu quá nhiều lần, vui lòng thử lại sau 15 phút",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "TOO_MANY_REQUESTS",
+                        "message": "Bạn đã yêu cầu quá nhiều lần, vui lòng thử lại sau 15 phút"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -326,6 +549,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -385,11 +621,64 @@
             }
           },
           "400": {
-            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR, AUTH_TOKEN_INVALID, AUTH_CURRENT_PASSWORD_INCORRECT",
+            "description": "Lỗi, error.code thuộc: AUTH_TOKEN_INVALID, VALIDATION_ERROR",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_TOKEN_INVALID": {
+                    "summary": "AUTH_TOKEN_INVALID: Liên kết không hợp lệ hoặc đã hết hạn",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "AUTH_TOKEN_INVALID",
+                        "message": "Liên kết không hợp lệ hoặc đã hết hạn"
+                      }
+                    }
+                  },
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "token",
+                            "message": "token không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOO_MANY_REQUESTS": {
+                    "summary": "TOO_MANY_REQUESTS: Bạn thao tác quá nhanh, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "TOO_MANY_REQUESTS",
+                        "message": "Bạn thao tác quá nhanh, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -400,6 +689,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -459,11 +761,64 @@
             }
           },
           "400": {
-            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR, AUTH_TOKEN_INVALID, AUTH_CURRENT_PASSWORD_INCORRECT",
+            "description": "Lỗi, error.code thuộc: AUTH_TOKEN_INVALID, VALIDATION_ERROR",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_TOKEN_INVALID": {
+                    "summary": "AUTH_TOKEN_INVALID: Liên kết không hợp lệ hoặc đã hết hạn",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "AUTH_TOKEN_INVALID",
+                        "message": "Liên kết không hợp lệ hoặc đã hết hạn"
+                      }
+                    }
+                  },
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "token",
+                            "message": "token không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOO_MANY_REQUESTS": {
+                    "summary": "TOO_MANY_REQUESTS: Bạn thao tác quá nhanh, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "TOO_MANY_REQUESTS",
+                        "message": "Bạn thao tác quá nhanh, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -474,6 +829,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -531,41 +899,135 @@
             }
           },
           "400": {
-            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR, AUTH_TOKEN_INVALID, AUTH_CURRENT_PASSWORD_INCORRECT",
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "email",
+                            "message": "email không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "description": "Lỗi, error.code thuộc: UNAUTHORIZED, AUTH_INVALID_CREDENTIALS, AUTH_REFRESH_TOKEN_INVALID",
+            "description": "Lỗi, error.code thuộc: AUTH_INVALID_CREDENTIALS",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_INVALID_CREDENTIALS": {
+                    "summary": "AUTH_INVALID_CREDENTIALS: Email hoặc mật khẩu không chính xác",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "AUTH_INVALID_CREDENTIALS",
+                        "message": "Email hoặc mật khẩu không chính xác"
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_EMAIL_NOT_VERIFIED, AUTH_ACCOUNT_PENDING_APPROVAL, AUTH_ACCOUNT_LOCKED",
+            "description": "Lỗi, error.code thuộc: AUTH_EMAIL_NOT_VERIFIED, AUTH_ACCOUNT_PENDING_APPROVAL, AUTH_ACCOUNT_LOCKED",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_EMAIL_NOT_VERIFIED": {
+                    "summary": "AUTH_EMAIL_NOT_VERIFIED: Tài khoản chưa xác minh email, vui lòng kiểm tra hộp thư",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_EMAIL_NOT_VERIFIED",
+                        "message": "Tài khoản chưa xác minh email, vui lòng kiểm tra hộp thư"
+                      }
+                    }
+                  },
+                  "AUTH_ACCOUNT_PENDING_APPROVAL": {
+                    "summary": "AUTH_ACCOUNT_PENDING_APPROVAL: Tài khoản đang chờ quản trị viên phê duyệt",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_ACCOUNT_PENDING_APPROVAL",
+                        "message": "Tài khoản đang chờ quản trị viên phê duyệt"
+                      }
+                    }
+                  },
+                  "AUTH_ACCOUNT_LOCKED": {
+                    "summary": "AUTH_ACCOUNT_LOCKED: Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_ACCOUNT_LOCKED",
+                        "message": "Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên"
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "429": {
-            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS, AUTH_TOO_MANY_LOGIN_ATTEMPTS",
+            "description": "Lỗi, error.code thuộc: AUTH_TOO_MANY_LOGIN_ATTEMPTS, TOO_MANY_REQUESTS",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_TOO_MANY_LOGIN_ATTEMPTS": {
+                    "summary": "AUTH_TOO_MANY_LOGIN_ATTEMPTS: Bạn đã nhập sai mật khẩu quá nhiều lần, vui lòng thử lại sau 15 phút",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "AUTH_TOO_MANY_LOGIN_ATTEMPTS",
+                        "message": "Bạn đã nhập sai mật khẩu quá nhiều lần, vui lòng thử lại sau 15 phút",
+                        "details": {
+                          "retryAfterSeconds": 900
+                        }
+                      }
+                    }
+                  },
+                  "TOO_MANY_REQUESTS": {
+                    "summary": "TOO_MANY_REQUESTS: Bạn thao tác quá nhanh, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "TOO_MANY_REQUESTS",
+                        "message": "Bạn thao tác quá nhanh, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -576,6 +1038,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -623,11 +1098,47 @@
             }
           },
           "401": {
-            "description": "Lỗi, error.code thuộc: UNAUTHORIZED, AUTH_INVALID_CREDENTIALS, AUTH_REFRESH_TOKEN_INVALID",
+            "description": "Lỗi, error.code thuộc: AUTH_REFRESH_TOKEN_INVALID",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_REFRESH_TOKEN_INVALID": {
+                    "summary": "AUTH_REFRESH_TOKEN_INVALID: Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "AUTH_REFRESH_TOKEN_INVALID",
+                        "message": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOO_MANY_REQUESTS": {
+                    "summary": "TOO_MANY_REQUESTS: Bạn thao tác quá nhanh, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "TOO_MANY_REQUESTS",
+                        "message": "Bạn thao tác quá nhanh, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -638,6 +1149,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -691,12 +1215,48 @@
               }
             }
           },
+          "429": {
+            "description": "Lỗi, error.code thuộc: TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOO_MANY_REQUESTS": {
+                    "summary": "TOO_MANY_REQUESTS: Bạn thao tác quá nhanh, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "TOO_MANY_REQUESTS",
+                        "message": "Bạn thao tác quá nhanh, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -749,11 +1309,24 @@
             }
           },
           "401": {
-            "description": "Lỗi, error.code thuộc: UNAUTHORIZED, AUTH_INVALID_CREDENTIALS, AUTH_REFRESH_TOKEN_INVALID",
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -764,6 +1337,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "NOT_FOUND": {
+                    "summary": "NOT_FOUND: Tài khoản không còn tồn tại",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "NOT_FOUND",
+                        "message": "Tài khoản không còn tồn tại"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -774,6 +1360,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -835,31 +1434,99 @@
             }
           },
           "400": {
-            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR, AUTH_TOKEN_INVALID, AUTH_CURRENT_PASSWORD_INCORRECT",
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "fullName",
+                            "message": "fullName không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "description": "Lỗi, error.code thuộc: UNAUTHORIZED, AUTH_INVALID_CREDENTIALS, AUTH_REFRESH_TOKEN_INVALID",
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_EMAIL_NOT_VERIFIED, AUTH_ACCOUNT_PENDING_APPROVAL, AUTH_ACCOUNT_LOCKED",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Chỉ học viên mới đặt được điểm mục tiêu",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Chỉ học viên mới đặt được điểm mục tiêu"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "NOT_FOUND": {
+                    "summary": "NOT_FOUND: Tài khoản không còn tồn tại",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "NOT_FOUND",
+                        "message": "Tài khoản không còn tồn tại"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -870,6 +1537,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -951,21 +1631,53 @@
             }
           },
           "400": {
-            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR, AUTH_TOKEN_INVALID, AUTH_CURRENT_PASSWORD_INCORRECT",
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "page",
+                            "message": "page không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "description": "Lỗi, error.code thuộc: UNAUTHORIZED, AUTH_INVALID_CREDENTIALS, AUTH_REFRESH_TOKEN_INVALID",
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -976,6 +1688,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -1041,21 +1766,98 @@
             }
           },
           "400": {
-            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR, AUTH_TOKEN_INVALID, AUTH_CURRENT_PASSWORD_INCORRECT",
+            "description": "Lỗi, error.code thuộc: AUTH_CURRENT_PASSWORD_INCORRECT, BAD_REQUEST, VALIDATION_ERROR",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_CURRENT_PASSWORD_INCORRECT": {
+                    "summary": "AUTH_CURRENT_PASSWORD_INCORRECT: Mật khẩu hiện tại không đúng",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "AUTH_CURRENT_PASSWORD_INCORRECT",
+                        "message": "Mật khẩu hiện tại không đúng"
+                      }
+                    }
+                  },
+                  "BAD_REQUEST": {
+                    "summary": "BAD_REQUEST: Mật khẩu mới phải khác mật khẩu hiện tại",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "BAD_REQUEST",
+                        "message": "Mật khẩu mới phải khác mật khẩu hiện tại"
+                      }
+                    }
+                  },
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "currentPassword",
+                            "message": "currentPassword không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "description": "Lỗi, error.code thuộc: UNAUTHORIZED, AUTH_INVALID_CREDENTIALS, AUTH_REFRESH_TOKEN_INVALID",
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "NOT_FOUND": {
+                    "summary": "NOT_FOUND: Tài khoản không còn tồn tại",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "NOT_FOUND",
+                        "message": "Tài khoản không còn tồn tại"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -1066,6 +1868,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
                 }
               }
             }
