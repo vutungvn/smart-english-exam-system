@@ -30,6 +30,11 @@ export const ErrorCode = {
   AUTH_TOKEN_INVALID: 'AUTH_TOKEN_INVALID',
   AUTH_TOO_MANY_LOGIN_ATTEMPTS: 'AUTH_TOO_MANY_LOGIN_ATTEMPTS',
   AUTH_CURRENT_PASSWORD_INCORRECT: 'AUTH_CURRENT_PASSWORD_INCORRECT',
+  AUTH_PASSWORD_NOT_SET: 'AUTH_PASSWORD_NOT_SET',
+  AUTH_GOOGLE_DISABLED: 'AUTH_GOOGLE_DISABLED',
+  AUTH_GOOGLE_FAILED: 'AUTH_GOOGLE_FAILED',
+  AUTH_GOOGLE_EMAIL_UNVERIFIED: 'AUTH_GOOGLE_EMAIL_UNVERIFIED',
+  AUTH_GOOGLE_STUDENT_ONLY: 'AUTH_GOOGLE_STUDENT_ONLY',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -118,6 +123,26 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.AUTH_CURRENT_PASSWORD_INCORRECT]: {
     status: HttpStatus.BAD_REQUEST,
     message: 'Mật khẩu hiện tại không đúng',
+  },
+  [ErrorCode.AUTH_PASSWORD_NOT_SET]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: 'Tài khoản chưa có mật khẩu, hãy dùng Quên mật khẩu để tạo mật khẩu',
+  },
+  [ErrorCode.AUTH_GOOGLE_DISABLED]: {
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    message: 'Đăng nhập bằng Google chưa được bật',
+  },
+  [ErrorCode.AUTH_GOOGLE_FAILED]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: 'Đăng nhập bằng Google không thành công, vui lòng thử lại',
+  },
+  [ErrorCode.AUTH_GOOGLE_EMAIL_UNVERIFIED]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'Email của tài khoản Google chưa được xác minh',
+  },
+  [ErrorCode.AUTH_GOOGLE_STUDENT_ONLY]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'Đăng nhập bằng Google chỉ dành cho học viên, vui lòng dùng email và mật khẩu',
   },
 };
 

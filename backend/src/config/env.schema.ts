@@ -24,6 +24,10 @@ export const envSchema = z
     MAIL_FROM: z.string().min(1),
     // URL frontend, dùng tạo link trong email
     APP_URL: z.url().default('http://localhost:5173'),
+    // Google OAuth: để trống cả hai thì /auth/google báo AUTH_GOOGLE_DISABLED
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    GOOGLE_CALLBACK_URL: z.url().default('http://localhost:5173/api/v1/auth/google/callback'),
   })
   .refine((env) => env.JWT_ACCESS_SECRET !== env.JWT_REFRESH_SECRET, {
     message: 'JWT_ACCESS_SECRET và JWT_REFRESH_SECRET phải khác nhau',
@@ -32,6 +36,10 @@ export const envSchema = z
   .refine((env) => Boolean(env.SMTP_USER) === Boolean(env.SMTP_PASS), {
     message: 'SMTP_USER và SMTP_PASS phải cùng có hoặc cùng để trống',
     path: ['SMTP_PASS'],
+  })
+  .refine((env) => Boolean(env.GOOGLE_CLIENT_ID) === Boolean(env.GOOGLE_CLIENT_SECRET), {
+    message: 'GOOGLE_CLIENT_ID và GOOGLE_CLIENT_SECRET phải cùng có hoặc cùng để trống',
+    path: ['GOOGLE_CLIENT_SECRET'],
   });
 
 export type Env = z.infer<typeof envSchema>;

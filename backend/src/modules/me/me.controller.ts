@@ -70,6 +70,7 @@ export class MeController {
   @ApiNullEnvelope()
   @ApiErrors(
     ErrorCode.AUTH_CURRENT_PASSWORD_INCORRECT,
+    ErrorCode.AUTH_PASSWORD_NOT_SET,
     { code: ErrorCode.BAD_REQUEST, message: 'Mật khẩu mới phải khác mật khẩu hiện tại' },
     USER_NOT_FOUND,
   )

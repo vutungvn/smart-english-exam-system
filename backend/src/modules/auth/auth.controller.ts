@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Logger,
   Post,
   Query,
   Req,
@@ -12,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
-import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { CookieOptions, Request, Response } from 'express';
 import { IsPublic } from '../../common/decorators/public.decorator.js';
 import { ApiEnvelope, ApiNullEnvelope } from '../../common/swagger/api-envelope.decorator.js';
@@ -21,7 +22,15 @@ import type { ApiErrorSpec } from '../../common/swagger/api-errors.decorator.js'
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import type { Env } from '../../config/env.schema.js';
-import { AUTH_THROTTLE, REFRESH_COOKIE_NAME, REFRESH_COOKIE_PATH } from './auth.constants.js';
+import {
+  AUTH_THROTTLE,
+  GOOGLE_COOKIE_PATH,
+  GOOGLE_COOKIE_TTL_SECONDS,
+  GOOGLE_STATE_COOKIE,
+  GOOGLE_VERIFIER_COOKIE,
+  REFRESH_COOKIE_NAME,
+  REFRESH_COOKIE_PATH,
+} from './auth.constants.js';
 import { AuthService } from './auth.service.js';
 import { AuthSession, RegisterResult } from './auth.types.js';
 import type { RequestMeta } from './auth.types.js';
@@ -30,6 +39,7 @@ import { RegisterDto } from './dto/register.dto.js';
 import { VerifyEmailDto } from './dto/verify-email.dto.js';
 import { EmailDto } from './dto/email.dto.js';
 import { ResetPasswordDto, ResetPasswordTokenDto } from './dto/reset-password.dto.js';
+import { GoogleOAuthService } from './google-oauth.service.js';
 
 // Gửi mail (gửi lại xác minh, quên mật khẩu): 429 do giới hạn theo IP hoặc theo email
 const EMAIL_REQUEST_ERRORS: ApiErrorSpec[] = [
@@ -46,21 +56,38 @@ const EMAIL_REQUEST_ERRORS: ApiErrorSpec[] = [
 @UseGuards(ThrottlerGuard)
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
   private readonly refreshCookieOptions: CookieOptions;
   private readonly refreshCookieMaxAge: number;
+  private readonly googleCookieOptions: CookieOptions;
+  private readonly appUrl: string;
 
   constructor(
     private readonly authService: AuthService,
+    private readonly googleOAuth: GoogleOAuthService,
     config: ConfigService<Env, true>,
   ) {
+    const secure = config.get('NODE_ENV', { infer: true }) === 'production';
+
     this.refreshCookieOptions = {
       httpOnly: true, // JavaScript phía trình duyệt không đọc được, chống XSS lấy token
       sameSite: 'strict', // không gửi kèm request từ trang khác, chống CSRF
       path: REFRESH_COOKIE_PATH, // chỉ gửi kèm các route /api/v1/auth/*
       // Dev chạy http nên chỉ bật Secure ở production
-      secure: config.get('NODE_ENV', { infer: true }) === 'production',
+      secure,
     };
     this.refreshCookieMaxAge = config.get('JWT_REFRESH_TTL', { infer: true }) * 1000;
+
+    this.googleCookieOptions = {
+      httpOnly: true,
+      // Callback là điều hướng từ accounts.google.com sang: cookie Strict sẽ KHÔNG được gửi kèm,
+      // Lax thì được (chỉ với điều hướng GET cấp cao nhất)
+      sameSite: 'lax',
+      path: GOOGLE_COOKIE_PATH,
+      secure,
+    };
+
+    this.appUrl = config.get('APP_URL', { infer: true }).replace(/\/+$/, '');
   }
 
   @Post('register')
@@ -185,6 +212,71 @@ export class AuthController {
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
     await this.authService.logout(this.readRefreshCookie(req));
     this.clearRefreshCookie(res);
+  }
+
+  // Hai route Google là điều hướng trình duyệt (302), không gọi bằng fetch nên ẩn khỏi Swagger,
+  // tránh codegen sinh hook RTK Query không dùng được
+  @Get('google')
+  @ApiExcludeEndpoint()
+  async googleStart(@Res() res: Response): Promise<void> {
+    if (!this.googleOAuth.enabled) {
+      return this.redirectToLogin(res, ErrorCode.AUTH_GOOGLE_DISABLED);
+    }
+
+    const { url, state, codeVerifier } = await this.googleOAuth.createAuthRequest();
+    const options = { ...this.googleCookieOptions, maxAge: GOOGLE_COOKIE_TTL_SECONDS * 1000 };
+
+    res.cookie(GOOGLE_STATE_COOKIE, state, options);
+    res.cookie(GOOGLE_VERIFIER_COOKIE, codeVerifier, options);
+    res.redirect(url);
+  }
+
+  @Get('google/callback')
+  @ApiExcludeEndpoint()
+  async googleCallback(
+    @Query('code') code: string | undefined,
+    @Query('state') state: string | undefined,
+    @Query('error') googleError: string | undefined,
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
+    const cookies = req.cookies as Record<string, string | undefined> | undefined;
+    const savedState = cookies?.[GOOGLE_STATE_COOKIE];
+    const codeVerifier = cookies?.[GOOGLE_VERIFIER_COOKIE];
+
+    // Dùng một lần: xóa ngay dù thành công hay thất bại
+    res.clearCookie(GOOGLE_STATE_COOKIE, this.googleCookieOptions);
+    res.clearCookie(GOOGLE_VERIFIER_COOKIE, this.googleCookieOptions);
+
+    // Người dùng bấm Hủy trên trang Google: quay lại trang đăng nhập, không coi là lỗi
+    if (googleError === 'access_denied') return res.redirect(`${this.appUrl}/login`);
+
+    try {
+      if (!code || !state || !savedState || !codeVerifier || state !== savedState) {
+        throw new AppException(ErrorCode.AUTH_GOOGLE_FAILED);
+      }
+
+      const profile = await this.googleOAuth.exchangeCode(code, codeVerifier);
+
+      const { refreshToken } = await this.authService.loginWithGoogle(
+        profile,
+        this.requestMeta(req),
+      );
+
+      // Không đưa access token lên URL: FE tải /app, restoreSession() tự gọi /auth/refresh
+      this.setRefreshCookie(res, refreshToken);
+      res.redirect(`${this.appUrl}/app`);
+    } catch (error) {
+      if (error instanceof AppException) return this.redirectToLogin(res, error.code);
+      // Chỉ log message: object lỗi của gaxios chứa cả client_secret và code_verifier trong config
+      this.logger.error(`Google OAuth lỗi: ${error instanceof Error ? error.message : 'unknown'}`);
+      this.redirectToLogin(res, ErrorCode.AUTH_GOOGLE_FAILED);
+    }
+  }
+
+  // Route điều hướng không trả JSON lỗi được: chuyển mã lỗi sang FE qua query
+  private redirectToLogin(res: Response, code: ErrorCode): void {
+    res.redirect(`${this.appUrl}/login?oauthError=${code}`);
   }
 
   private setRefreshCookie(res: Response, token: string): void {

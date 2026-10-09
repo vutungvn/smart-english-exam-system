@@ -1766,7 +1766,7 @@
             }
           },
           "400": {
-            "description": "Lỗi, error.code thuộc: AUTH_CURRENT_PASSWORD_INCORRECT, BAD_REQUEST, VALIDATION_ERROR",
+            "description": "Lỗi, error.code thuộc: AUTH_CURRENT_PASSWORD_INCORRECT, AUTH_PASSWORD_NOT_SET, BAD_REQUEST, VALIDATION_ERROR",
             "content": {
               "application/json": {
                 "schema": {
@@ -1781,6 +1781,17 @@
                       "error": {
                         "code": "AUTH_CURRENT_PASSWORD_INCORRECT",
                         "message": "Mật khẩu hiện tại không đúng"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_NOT_SET": {
+                    "summary": "AUTH_PASSWORD_NOT_SET: Tài khoản chưa có mật khẩu, hãy dùng Quên mật khẩu để tạo mật khẩu",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "AUTH_PASSWORD_NOT_SET",
+                        "message": "Tài khoản chưa có mật khẩu, hãy dùng Quên mật khẩu để tạo mật khẩu"
                       }
                     }
                   },
@@ -1944,7 +1955,12 @@
           "AUTH_EMAIL_ALREADY_EXISTS",
           "AUTH_TOKEN_INVALID",
           "AUTH_TOO_MANY_LOGIN_ATTEMPTS",
-          "AUTH_CURRENT_PASSWORD_INCORRECT"
+          "AUTH_CURRENT_PASSWORD_INCORRECT",
+          "AUTH_PASSWORD_NOT_SET",
+          "AUTH_GOOGLE_DISABLED",
+          "AUTH_GOOGLE_FAILED",
+          "AUTH_GOOGLE_EMAIL_UNVERIFIED",
+          "AUTH_GOOGLE_STUDENT_ONLY"
         ]
       },
       "FieldErrorDto": {
@@ -2296,6 +2312,14 @@
           "mustChangePassword": {
             "type": "boolean"
           },
+          "hasPassword": {
+            "type": "boolean",
+            "description": "false: tài khoản chỉ đăng nhập bằng Google, chưa đặt mật khẩu"
+          },
+          "googleLinked": {
+            "type": "boolean",
+            "description": "true: đã liên kết đăng nhập bằng Google"
+          },
           "emailVerifiedAt": {
             "type": "string",
             "format": "date-time",
@@ -2333,6 +2357,8 @@
           "role",
           "status",
           "mustChangePassword",
+          "hasPassword",
+          "googleLinked",
           "emailVerifiedAt",
           "lastLoginAt",
           "createdAt",

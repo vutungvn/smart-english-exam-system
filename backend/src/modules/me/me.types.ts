@@ -37,6 +37,12 @@ export class MeProfile {
   @ApiProperty()
   mustChangePassword: boolean;
 
+  @ApiProperty({ description: 'false: tài khoản chỉ đăng nhập bằng Google, chưa đặt mật khẩu' })
+  hasPassword: boolean;
+
+  @ApiProperty({ description: 'true: đã liên kết đăng nhập bằng Google' })
+  googleLinked: boolean;
+
   @ApiProperty({ type: String, format: 'date-time', nullable: true })
   emailVerifiedAt: Date | null;
 
