@@ -295,7 +295,9 @@ export class AuthService {
       data: {
         googleId: profile.googleId,
         lastLoginAt: now,
-        avatarUrl: user.avatarUrl ?? this.googleAvatar(profile),
+        // Chỉ lấy ảnh Google ở lần liên kết đầu tiên: sau đó người dùng đã tự đổi hoặc xóa ảnh
+        // thì giữ nguyên lựa chọn đó, không để ảnh Google tự quay lại mỗi lần đăng nhập
+        ...(!user.googleId && !user.avatarUrl && { avatarUrl: this.googleAvatar(profile) }),
         // Tài khoản chưa xác minh email: người đặt mật khẩu chưa chứng minh sở hữu email này,
         // có thể là kẻ đăng ký trước bằng email của nạn nhân → bỏ mật khẩu đó, kích hoạt bằng Google
         ...(user.status === UserStatus.PENDING_VERIFICATION && {

@@ -35,6 +35,10 @@ export const ErrorCode = {
   AUTH_GOOGLE_FAILED: 'AUTH_GOOGLE_FAILED',
   AUTH_GOOGLE_EMAIL_UNVERIFIED: 'AUTH_GOOGLE_EMAIL_UNVERIFIED',
   AUTH_GOOGLE_STUDENT_ONLY: 'AUTH_GOOGLE_STUDENT_ONLY',
+
+  // Tệp
+  STORAGE_UNAVAILABLE: 'STORAGE_UNAVAILABLE',
+  AVATAR_INVALID_IMAGE: 'AVATAR_INVALID_IMAGE',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -143,6 +147,15 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.AUTH_GOOGLE_STUDENT_ONLY]: {
     status: HttpStatus.FORBIDDEN,
     message: 'Đăng nhập bằng Google chỉ dành cho học viên, vui lòng dùng email và mật khẩu',
+  },
+  // Tệp
+  [ErrorCode.STORAGE_UNAVAILABLE]: {
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    message: 'Kho lưu trữ tệp tạm thời không khả dụng, vui lòng thử lại sau',
+  },
+  [ErrorCode.AVATAR_INVALID_IMAGE]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: 'Ảnh không hợp lệ, chỉ nhận ảnh JPEG, PNG hoặc WebP',
   },
 };
 

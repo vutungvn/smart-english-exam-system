@@ -1,5 +1,17 @@
-import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
 import { MeService } from './me.service.js';
@@ -16,6 +28,9 @@ import type { ApiErrorExample } from '../../common/swagger/api-errors.decorator.
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { AVATAR_MAX_BYTES, AvatarService } from './avatar.service.js';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { InMemoryFile } from '../../common/types/in-memory-file.js';
 
 // Tài khoản bị xóa trong lúc access token vẫn còn hạn
 const USER_NOT_FOUND: ApiErrorExample = {
@@ -27,7 +42,10 @@ const USER_NOT_FOUND: ApiErrorExample = {
 @ApiBearerAuth()
 @Controller('me')
 export class MeController {
-  constructor(private readonly meService: MeService) {}
+  constructor(
+    private readonly meService: MeService,
+    private readonly avatarService: AvatarService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ cá nhân' })
@@ -76,5 +94,50 @@ export class MeController {
   )
   changePassword(@CurrentUser() user: AuthUser, @Body() dto: ChangePasswordDto): Promise<void> {
     return this.meService.changePassword(user.id, dto);
+  }
+
+  @Post('avatar')
+  @HttpCode(HttpStatus.OK)
+  // Giữ tệp trong bộ nhớ (không ghi ra đĩa); quá 5 MB thì multer dừng đọc và trả 413
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: AVATAR_MAX_BYTES, files: 1 } }))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Ảnh JPEG, PNG hoặc WebP, tối đa 5 MB',
+        },
+      },
+    },
+  })
+  @ApiOperation({
+    summary: 'Tải lên ảnh đại diện',
+    description: 'Server cắt vuông ở giữa, thu về 256×256 WebP và bỏ EXIF; ảnh cũ bị xóa.',
+  })
+  @ApiEnvelope(MeProfile)
+  @ApiErrors(
+    ErrorCode.AVATAR_INVALID_IMAGE,
+    { code: ErrorCode.AVATAR_INVALID_IMAGE, message: 'Vui lòng chọn một ảnh để tải lên' },
+    ErrorCode.PAYLOAD_TOO_LARGE,
+    ErrorCode.STORAGE_UNAVAILABLE,
+    USER_NOT_FOUND,
+  )
+  uploadAvatar(
+    @CurrentUser() user: AuthUser,
+    @UploadedFile() file: InMemoryFile | undefined,
+  ): Promise<MeProfile> {
+    return this.avatarService.upload(user.id, file);
+  }
+
+  @Delete('avatar')
+  @ApiOperation({ summary: 'Xóa ảnh đại diện, quay về hiển thị chữ cái đầu' })
+  @ApiEnvelope(MeProfile)
+  @ApiErrors(USER_NOT_FOUND)
+  removeAvatar(@CurrentUser() user: AuthUser): Promise<MeProfile> {
+    return this.avatarService.remove(user.id);
   }
 }

@@ -9,6 +9,8 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { MeModule } from './modules/me/me.module.js';
 import { RedisModule } from './infra/redis/redis.module.js';
 import { MailModule } from './infra/mail/mail.module.js';
+import { MediaModule } from './modules/media/media.module.js';
+import { StorageModule } from './infra/storage/storage.module.js';
 
 @Module({
   imports: [
@@ -20,9 +22,11 @@ import { MailModule } from './infra/mail/mail.module.js';
     PrismaModule,
     RedisModule,
     MailModule,
+    StorageModule,
     CommonModule,
     AuthModule,
     MeModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
