@@ -81,6 +81,14 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/api/v1/me/password`, method: 'PATCH', body: queryArg }),
         invalidatesTags: ['Me'],
       }),
+      uploadAvatar: build.mutation<UploadAvatarApiResponse, UploadAvatarApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/me/avatar`, method: 'POST', body: queryArg }),
+        invalidatesTags: ['Me'],
+      }),
+      removeAvatar: build.mutation<RemoveAvatarApiResponse, RemoveAvatarApiArg>({
+        query: () => ({ url: `/api/v1/me/avatar`, method: 'DELETE' }),
+        invalidatesTags: ['Me'],
+      }),
     }),
     overrideExisting: false,
   });
@@ -168,6 +176,21 @@ export type ChangePasswordApiResponse = /** status 200 Thành công */ {
   data: object | null;
 };
 export type ChangePasswordApiArg = ChangePasswordDto;
+export type UploadAvatarApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: MeProfile;
+};
+export type UploadAvatarApiArg = {
+  /** Ảnh JPEG, PNG hoặc WebP, tối đa 5 MB */
+  file: Blob;
+};
+export type RemoveAvatarApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: MeProfile;
+};
+export type RemoveAvatarApiArg = void;
 export type UserStatus = 'PENDING_VERIFICATION' | 'PENDING_APPROVAL' | 'ACTIVE' | 'LOCKED';
 export type RegisterResult = {
   id: string;
@@ -201,7 +224,9 @@ export type ErrorCode =
   | 'AUTH_GOOGLE_DISABLED'
   | 'AUTH_GOOGLE_FAILED'
   | 'AUTH_GOOGLE_EMAIL_UNVERIFIED'
-  | 'AUTH_GOOGLE_STUDENT_ONLY';
+  | 'AUTH_GOOGLE_STUDENT_ONLY'
+  | 'STORAGE_UNAVAILABLE'
+  | 'AVATAR_INVALID_IMAGE';
 export type FieldErrorDto = {
   /** Trường lỗi, trường lồng nhau dạng address.city */
   field: string;
@@ -329,4 +354,6 @@ export const {
   useUpdateProfileMutation,
   useGetLoginHistoryQuery,
   useChangePasswordMutation,
+  useUploadAvatarMutation,
+  useRemoveAvatarMutation,
 } = injectedRtkApi;

@@ -1907,6 +1907,337 @@
           "Me"
         ]
       }
+    },
+    "/api/v1/me/avatar": {
+      "post": {
+        "description": "Server cắt vuông ở giữa, thu về 256×256 WebP và bỏ EXIF; ảnh cũ bị xóa.",
+        "operationId": "uploadAvatar",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Ảnh JPEG, PNG hoặc WebP, tối đa 5 MB"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MeProfile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: AVATAR_INVALID_IMAGE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AVATAR_INVALID_IMAGE": {
+                    "summary": "AVATAR_INVALID_IMAGE: Ảnh không hợp lệ, chỉ nhận ảnh JPEG, PNG hoặc WebP",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "AVATAR_INVALID_IMAGE",
+                        "message": "Ảnh không hợp lệ, chỉ nhận ảnh JPEG, PNG hoặc WebP"
+                      }
+                    }
+                  },
+                  "AVATAR_INVALID_IMAGE_2": {
+                    "summary": "AVATAR_INVALID_IMAGE: Vui lòng chọn một ảnh để tải lên",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "AVATAR_INVALID_IMAGE",
+                        "message": "Vui lòng chọn một ảnh để tải lên"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "NOT_FOUND": {
+                    "summary": "NOT_FOUND: Tài khoản không còn tồn tại",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "NOT_FOUND",
+                        "message": "Tài khoản không còn tồn tại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Lỗi, error.code thuộc: PAYLOAD_TOO_LARGE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "PAYLOAD_TOO_LARGE": {
+                    "summary": "PAYLOAD_TOO_LARGE: Dữ liệu gửi lên quá lớn",
+                    "value": {
+                      "success": false,
+                      "status": 413,
+                      "error": {
+                        "code": "PAYLOAD_TOO_LARGE",
+                        "message": "Dữ liệu gửi lên quá lớn"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Lỗi, error.code thuộc: STORAGE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "STORAGE_UNAVAILABLE": {
+                    "summary": "STORAGE_UNAVAILABLE: Kho lưu trữ tệp tạm thời không khả dụng, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 503,
+                      "error": {
+                        "code": "STORAGE_UNAVAILABLE",
+                        "message": "Kho lưu trữ tệp tạm thời không khả dụng, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tải lên ảnh đại diện",
+        "tags": [
+          "Me"
+        ]
+      },
+      "delete": {
+        "operationId": "removeAvatar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MeProfile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "NOT_FOUND": {
+                    "summary": "NOT_FOUND: Tài khoản không còn tồn tại",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "NOT_FOUND",
+                        "message": "Tài khoản không còn tồn tại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xóa ảnh đại diện, quay về hiển thị chữ cái đầu",
+        "tags": [
+          "Me"
+        ]
+      }
     }
   },
   "info": {
@@ -1960,7 +2291,9 @@
           "AUTH_GOOGLE_DISABLED",
           "AUTH_GOOGLE_FAILED",
           "AUTH_GOOGLE_EMAIL_UNVERIFIED",
-          "AUTH_GOOGLE_STUDENT_ONLY"
+          "AUTH_GOOGLE_STUDENT_ONLY",
+          "STORAGE_UNAVAILABLE",
+          "AVATAR_INVALID_IMAGE"
         ]
       },
       "FieldErrorDto": {

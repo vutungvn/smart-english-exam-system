@@ -20,7 +20,7 @@ export class MailService implements OnModuleInit {
       host: config.get('SMTP_HOST', { infer: true }),
       port: config.get('SMTP_PORT', { infer: true }),
       secure: config.get('SMTP_SECURE', { infer: true }),
-      // Mailpit không cần đăng nhập nên chỉ gắn auth khi có đủ user và pass
+      // SMTP không cần đăng nhập thì để trống user/pass, chỉ gắn auth khi có đủ cả hai
       auth: user && pass ? { user, pass } : undefined,
     });
     this.from = config.get('MAIL_FROM', { infer: true });

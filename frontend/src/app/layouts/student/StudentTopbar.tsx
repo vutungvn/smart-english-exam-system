@@ -1,5 +1,6 @@
 import { Bell, Menu, Search } from 'lucide-react';
 import { BrandLogo } from '@/components/brand/BrandLogo';
+import { LanguageMenu, ThemeMenu } from './TopbarPreferences';
 import { UserMenu } from './UserMenu';
 
 export function StudentTopbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
@@ -30,7 +31,10 @@ export function StudentTopbar({ onOpenSidebar }: { onOpenSidebar: () => void }) 
         />
       </label>
 
-      <div className="ml-auto flex items-center gap-2 sm:gap-4">
+      <div className="ml-auto flex items-center gap-1 sm:gap-2">
+        <LanguageMenu />
+        <ThemeMenu />
+
         {/* TẠM: chấm đỏ là dữ liệu mẫu, nối API thông báo sau */}
         <button
           type="button"
@@ -41,7 +45,7 @@ export function StudentTopbar({ onOpenSidebar }: { onOpenSidebar: () => void }) 
           <span className="absolute top-2 right-2.5 size-2 rounded-full bg-destructive ring-2 ring-white" />
         </button>
 
-        <span aria-hidden className="hidden h-8 w-px bg-border sm:block" />
+        <span aria-hidden className="mx-2 hidden h-8 w-px bg-border sm:block" />
 
         <UserMenu />
       </div>

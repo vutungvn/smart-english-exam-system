@@ -16,9 +16,9 @@ export const envSchema = z
 
     SMTP_HOST: z.string().min(1),
     SMTP_PORT: z.coerce.number().int().min(1).max(65535),
-    // true: mã hóa TLS ngay từ đầu (Gmail cổng 465); false: cổng 587 hoặc Mailpit
+    // true: mã hóa TLS ngay từ đầu (Gmail cổng 465); false: cổng 587 (STARTTLS)
     SMTP_SECURE: z.stringbool().default(false),
-    // Để trống khi dùng Mailpit (không cần đăng nhập)
+    // Để trống khi SMTP không cần đăng nhập
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
     MAIL_FROM: z.string().min(1),
@@ -28,6 +28,20 @@ export const envSchema = z
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
     GOOGLE_CALLBACK_URL: z.url().default('http://localhost:5173/api/v1/auth/google/callback'),
+
+    // Kho tệp S3 (D21): dev dùng RustFS trong infra/docker-compose.yml; deploy có thể đổi sang R2/AWS S3
+    S3_ENDPOINT: z.url().default('http://localhost:9000'),
+    // RustFS bỏ qua region nhưng SDK bắt buộc có; Cloudflare R2 dùng "auto"
+    S3_REGION: z.string().min(1).default('us-east-1'),
+    S3_ACCESS_KEY: z.string().min(1),
+    S3_SECRET_KEY: z.string().min(8, 'S3_SECRET_KEY phải dài ít nhất 8 ký tự'),
+    // Quy tắc tên bucket của S3: chữ thường, số, dấu chấm, gạch ngang; 3–63 ký tự
+    S3_BUCKET: z
+      .string()
+      .regex(/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/, 'Tên bucket không hợp lệ')
+      .default('smart-english-exam'),
+    // true cho RustFS/MinIO (endpoint/bucket/key); false cho AWS S3 (bucket.endpoint/key)
+    S3_FORCE_PATH_STYLE: z.stringbool().default(true),
   })
   .refine((env) => env.JWT_ACCESS_SECRET !== env.JWT_REFRESH_SECRET, {
     message: 'JWT_ACCESS_SECRET và JWT_REFRESH_SECRET phải khác nhau',
