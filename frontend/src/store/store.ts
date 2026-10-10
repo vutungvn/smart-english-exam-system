@@ -1,6 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { authSlice } from './slice/auth-slice';
 import { baseApi } from '@/api/base-api';
+// Nạp phần sửa endpoint (gửi FormData...) trước khi bất kỳ hook RTK Query nào được gọi
+import '@/api/enhance';
 
 export const store = configureStore({
   reducer: {

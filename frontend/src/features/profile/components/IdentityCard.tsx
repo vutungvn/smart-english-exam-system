@@ -2,11 +2,11 @@ import { CalendarDays, Check, Clock } from 'lucide-react';
 import type { MeProfile } from '@/api/generated';
 import { BrandPattern } from '@/components/brand/BrandPattern';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
-import { UserAvatar } from '@/components/UserAvatar';
 import { ROLE_LABELS } from '@/lib/user-display';
 import { formatDate, formatDateTime } from '../format';
+import { AvatarEditor } from './AvatarEditor';
 
-// Thẻ danh tính: dải gradient thương hiệu, avatar (ảnh Google hoặc chữ cái đầu) đè lên mép dưới dải
+// Thẻ danh tính: dải gradient thương hiệu, avatar (bấm để đổi ảnh) đè lên mép dưới dải
 export function IdentityCard({ profile }: { profile: MeProfile }) {
   return (
     <section className="overflow-hidden rounded-3xl border border-border bg-white shadow-2xs">
@@ -15,12 +15,8 @@ export function IdentityCard({ profile }: { profile: MeProfile }) {
       </div>
 
       <div className="-mt-12 flex flex-col items-center px-6 pb-6 text-center">
-        <UserAvatar
-          fullName={profile.fullName}
-          avatarUrl={profile.avatarUrl}
-          className="relative size-24 border-4 border-white text-3xl shadow-md"
-        />
-        <h2 className="mt-3 text-xl font-bold text-foreground">{profile.fullName}</h2>
+        <AvatarEditor fullName={profile.fullName} avatarUrl={profile.avatarUrl} />
+        <h2 className="mt-4 text-xl font-bold text-foreground">{profile.fullName}</h2>
         <p className="mt-1 flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
           <span className="break-all">{profile.email}</span>
           {profile.emailVerifiedAt && (
