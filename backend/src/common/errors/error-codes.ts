@@ -39,6 +39,13 @@ export const ErrorCode = {
   // Tệp
   STORAGE_UNAVAILABLE: 'STORAGE_UNAVAILABLE',
   AVATAR_INVALID_IMAGE: 'AVATAR_INVALID_IMAGE',
+
+  // Ngân hàng câu hỏi
+  SUBJECT_NOT_FOUND: 'SUBJECT_NOT_FOUND',
+  QUESTION_NOT_FOUND: 'QUESTION_NOT_FOUND',
+  QUESTION_GROUP_NOT_FOUND: 'QUESTION_GROUP_NOT_FOUND',
+  QUESTION_GROUP_NOT_EMPTY: 'QUESTION_GROUP_NOT_EMPTY',
+  QUESTION_GROUP_ORDER_TAKEN: 'QUESTION_GROUP_ORDER_TAKEN',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -156,6 +163,27 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.AVATAR_INVALID_IMAGE]: {
     status: HttpStatus.BAD_REQUEST,
     message: 'Ảnh không hợp lệ, chỉ nhận ảnh JPEG, PNG hoặc WebP',
+  },
+  // Ngân hàng câu hỏi
+  [ErrorCode.SUBJECT_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy chương trình thi',
+  },
+  [ErrorCode.QUESTION_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy câu hỏi',
+  },
+  [ErrorCode.QUESTION_GROUP_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy nhóm câu hỏi',
+  },
+  [ErrorCode.QUESTION_GROUP_NOT_EMPTY]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Nhóm còn câu hỏi, hãy xóa các câu trong nhóm trước',
+  },
+  [ErrorCode.QUESTION_GROUP_ORDER_TAKEN]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Vị trí này trong nhóm đã có câu hỏi khác',
   },
 };
 

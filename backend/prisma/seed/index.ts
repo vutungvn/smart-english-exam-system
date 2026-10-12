@@ -5,6 +5,7 @@ import { PrismaClient } from '../../src/generated/prisma/client.js';
 import { seedAdmin } from './admin.seed.js';
 import { seedRoles } from './roles.seed.js';
 import { seedTeacher } from './teacher.seed.js';
+import { seedSubjects } from './subjects.seed.js';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -17,6 +18,7 @@ try {
   await seedRoles(prisma);
   await seedAdmin(prisma);
   await seedTeacher(prisma);
+  await seedSubjects(prisma);
   console.log('Seed xong');
 } finally {
   await prisma.$disconnect();

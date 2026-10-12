@@ -6,7 +6,7 @@ import { hashPassword } from '../../src/modules/auth/password.js';
 // Tài khoản giáo viên chỉ để thử nghiệm ở dev; tài khoản thật do admin tạo (module quản trị người dùng)
 const DEMO_TEACHER = {
   email: 'teacher@gmail.com',
-  password: 'Teacher123',
+  password: '12345678',
   fullName: 'Giáo viên mẫu',
   organization: 'Smart English Exam',
   specialization: 'TOEIC 4 kỹ năng',
