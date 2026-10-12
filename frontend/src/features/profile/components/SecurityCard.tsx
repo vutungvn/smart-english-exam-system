@@ -15,11 +15,13 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { describeFailure, describeUserAgent, formatDateTime } from '../format';
 import { SectionCard } from './SectionCard';
+import { useAreaPath } from '@/features/auth/home-path';
 
 const HISTORY_LIMIT = 5;
 
 // hasPassword = false: tài khoản tạo bằng Google, chưa có mật khẩu để đổi
 export function SecurityCard({ hasPassword }: { hasPassword: boolean }) {
+  const areaPath = useAreaPath();
   const { data, isLoading, error, refetch, isFetching } = useGetLoginHistoryQuery({
     page: 1,
     limit: HISTORY_LIMIT,
@@ -47,7 +49,7 @@ export function SecurityCard({ hasPassword }: { hasPassword: boolean }) {
           </div>
         </div>
         <Link
-          to="/app/profile/password"
+          to={`${areaPath}/profile/password`}
           className="inline-flex h-10 w-fit items-center gap-1.5 rounded-xl border border-primary/30 bg-white px-4 text-sm font-semibold text-primary transition-colors hover:bg-accent"
         >
           {hasPassword ? 'Đổi mật khẩu' : 'Tạo mật khẩu'}

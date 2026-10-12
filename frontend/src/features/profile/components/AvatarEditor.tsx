@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { userUpdated } from '@/store/slice/auth-slice';
 import { AVATAR_ACCEPT, describeAvatarError, formatFileSize, validateAvatarFile } from '../avatar';
 import { useSavedFlag } from '../hooks/use-saved-flag';
-import { ProfileDialog } from './ProfileDialog';
+import { AppDialog } from '@/components/AppDialog';
 
 // Ảnh vừa chọn, chờ xem trước rồi mới tải lên; id đổi theo mỗi lần chọn để làm mới hộp thoại
 interface PendingImage {
@@ -183,7 +183,7 @@ function UploadDialog({ image, fullName, onPickAnother, onClose, onSaved }: Uplo
   };
 
   return (
-    <ProfileDialog
+    <AppDialog
       open
       onOpenChange={(open) => !open && onClose()}
       busy={isLoading}
@@ -264,7 +264,7 @@ function UploadDialog({ image, fullName, onPickAnother, onClose, onSaved }: Uplo
           <FormAlert message={describeAvatarError(error)} onClose={reset} />
         </div>
       )}
-    </ProfileDialog>
+    </AppDialog>
   );
 }
 
@@ -289,7 +289,7 @@ function RemoveDialog({ open, onOpenChange, onRemoved }: RemoveDialogProps) {
   };
 
   return (
-    <ProfileDialog
+    <AppDialog
       open={open}
       onOpenChange={(next) => {
         if (!next) reset();
@@ -326,6 +326,6 @@ function RemoveDialog({ open, onOpenChange, onRemoved }: RemoveDialogProps) {
       ) : (
         <p className="text-sm text-muted-foreground">Ảnh hiện tại sẽ bị xóa khỏi hệ thống.</p>
       )}
-    </ProfileDialog>
+    </AppDialog>
   );
 }

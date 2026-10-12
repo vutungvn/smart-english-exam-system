@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { DropdownMenu } from 'radix-ui';
 import { ChevronDown, KeyRound, LogOut, UserRound } from 'lucide-react';
 import { UserAvatar } from '@/components/UserAvatar';
+import { useAreaPath } from '@/features/auth/home-path';
 import { useLogout } from '@/features/auth/hooks/use-logout';
 import { useAppSelector } from '@/hooks/hooks';
 import { cn } from '@/lib/utils';
@@ -11,26 +12,28 @@ import { selectCurrentUser } from '@/store/slice/auth-slice';
 const itemClass =
   'flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50';
 
+// Đường dẫn tương đối với gốc khu vực của vai trò (/app, /teacher)
 const ACCOUNT_LINKS = [
   {
-    to: '/app/profile',
+    path: '/profile',
     icon: UserRound,
     label: 'Hồ sơ cá nhân',
-    hint: 'Họ tên, mục tiêu điểm',
+    hint: 'Họ tên, ảnh đại diện',
   },
   {
-    to: '/app/profile/password',
+    path: '/profile/password',
     icon: KeyRound,
     label: 'Đổi mật khẩu',
     hint: 'Cập nhật mật khẩu đăng nhập',
   },
 ];
 
-// Menu tài khoản ở thanh trên: Radix lo phần bàn phím (mũi tên, Enter), Esc và bấm ra ngoài để đóng
+// Menu tài khoản ở thanh trên (dùng chung mọi vai trò): Radix lo bàn phím, Esc và bấm ra ngoài để đóng
 export function UserMenu() {
   const user = useAppSelector(selectCurrentUser);
+  const areaPath = useAreaPath();
   const { logout, isLoggingOut } = useLogout();
-  const fullName = user?.fullName ?? 'Học viên';
+  const fullName = user?.fullName ?? 'Tài khoản';
 
   return (
     <DropdownMenu.Root>
@@ -83,16 +86,16 @@ export function UserMenu() {
 
           <DropdownMenu.Separator className="my-2 h-px bg-border" />
 
-          {ACCOUNT_LINKS.map(({ to, icon: Icon, label, hint }) => (
+          {ACCOUNT_LINKS.map(({ path, icon: Icon, label, hint }) => (
             <DropdownMenu.Item
-              key={to}
+              key={path}
               asChild
               className={cn(
                 itemClass,
                 'text-foreground data-highlighted:bg-accent data-highlighted:text-brand',
               )}
             >
-              <Link to={to}>
+              <Link to={areaPath + path}>
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-background text-slate-600">
                   <Icon className="size-4" />
                 </span>

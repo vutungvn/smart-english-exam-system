@@ -11,10 +11,16 @@ import { AuthPreviewPage } from '@/features/dev/AuthPreviewPage';
 import { LandingPage } from '@/features/landing/LandingPage';
 import { ChangePasswordPage } from '@/features/profile/ChangePasswordPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
+import { QuestionBankPage } from '@/features/question-bank/pages/QuestionBankPage';
+import { QuestionFormPage } from '@/features/question-bank/pages/QuestionFormPage';
+import { QuestionGroupDetailPage } from '@/features/question-bank/pages/QuestionGroupDetailPage';
+import { QuestionGroupFormPage } from '@/features/question-bank/pages/QuestionGroupFormPage';
+import { QuestionGroupsPage } from '@/features/question-bank/pages/QuestionGroupsPage';
 import { GuestOnly } from './guards/GuestOnly';
 import { RequireAuth } from './guards/RequireAuth';
 import { RequireRole } from './guards/RequireRole';
 import { StudentLayout } from './layouts/student/StudentLayout';
+import { TeacherLayout } from './layouts/teacher/TeacherLayout';
 
 // TẠM: các mục menu học viên chưa làm, hiện trang "đang phát triển" trong layout
 const STUDENT_PLACEHOLDERS = [
@@ -25,6 +31,12 @@ const STUDENT_PLACEHOLDERS = [
   { path: 'ai-analysis', title: 'Phân tích AI' },
   { path: 'assistant', title: 'Trợ giảng AI' },
   { path: 'flashcards', title: 'Flashcard' },
+];
+
+// TẠM: mục menu giáo viên chưa làm
+const TEACHER_PLACEHOLDERS = [
+  { path: 'import', title: 'Nhập câu hỏi từ tệp' },
+  { path: 'exams', title: 'Đề thi' },
 ];
 
 export const router = createBrowserRouter([
@@ -80,6 +92,32 @@ export const router = createBrowserRouter([
               ...STUDENT_PLACEHOLDERS.map(({ path, title }) => ({
                 path,
                 element: <ComingSoonPage title={title} backTo="/app" />,
+              })),
+            ],
+          },
+        ],
+      },
+      // Khu vực giáo viên
+      {
+        element: <RequireRole roles={['TEACHER']} />,
+        children: [
+          {
+            path: '/teacher',
+            element: <TeacherLayout />,
+            children: [
+              { index: true, element: <Navigate to="questions" replace /> },
+              { path: 'questions', element: <QuestionBankPage /> },
+              { path: 'questions/new', element: <QuestionFormPage /> },
+              { path: 'questions/:id', element: <QuestionFormPage /> },
+              { path: 'question-groups', element: <QuestionGroupsPage /> },
+              { path: 'question-groups/new', element: <QuestionGroupFormPage /> },
+              { path: 'question-groups/:id', element: <QuestionGroupDetailPage /> },
+              { path: 'question-groups/:id/edit', element: <QuestionGroupFormPage /> },
+              { path: 'profile', element: <ProfilePage /> },
+              { path: 'profile/password', element: <ChangePasswordPage /> },
+              ...TEACHER_PLACEHOLDERS.map(({ path, title }) => ({
+                path,
+                element: <ComingSoonPage title={title} backTo="/teacher/questions" />,
               })),
             ],
           },
