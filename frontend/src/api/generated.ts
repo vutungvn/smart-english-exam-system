@@ -1,5 +1,5 @@
 import { baseApi as api } from './base-api';
-export const addTagTypes = ['Auth', 'Me'] as const;
+export const addTagTypes = ['Auth', 'Me', 'Subjects', 'Questions', 'Question Groups'] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
     addTagTypes,
@@ -88,6 +88,111 @@ const injectedRtkApi = api
       removeAvatar: build.mutation<RemoveAvatarApiResponse, RemoveAvatarApiArg>({
         query: () => ({ url: `/api/v1/me/avatar`, method: 'DELETE' }),
         invalidatesTags: ['Me'],
+      }),
+      listSubjects: build.query<ListSubjectsApiResponse, ListSubjectsApiArg>({
+        query: () => ({ url: `/api/v1/subjects` }),
+        providesTags: ['Subjects'],
+      }),
+      listTopics: build.query<ListTopicsApiResponse, ListTopicsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/subjects/${queryArg.id}/topics`,
+          params: {
+            skill: queryArg.skill,
+            part: queryArg.part,
+          },
+        }),
+        providesTags: ['Subjects'],
+      }),
+      listQuestions: build.query<ListQuestionsApiResponse, ListQuestionsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/questions`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+            skill: queryArg.skill,
+            part: queryArg.part,
+            topicId: queryArg.topicId,
+            type: queryArg['type'],
+            difficulty: queryArg.difficulty,
+            status: queryArg.status,
+            groupId: queryArg.groupId,
+            q: queryArg.q,
+            mine: queryArg.mine,
+            sort: queryArg.sort,
+          },
+        }),
+        providesTags: ['Questions'],
+      }),
+      createQuestion: build.mutation<CreateQuestionApiResponse, CreateQuestionApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/teacher/questions`, method: 'POST', body: queryArg }),
+        invalidatesTags: ['Questions'],
+      }),
+      getQuestion: build.query<GetQuestionApiResponse, GetQuestionApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/teacher/questions/${queryArg}` }),
+        providesTags: ['Questions'],
+      }),
+      updateQuestion: build.mutation<UpdateQuestionApiResponse, UpdateQuestionApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/questions/${queryArg.id}`,
+          method: 'PATCH',
+          body: queryArg.updateQuestionDto,
+        }),
+        invalidatesTags: ['Questions'],
+      }),
+      deleteQuestion: build.mutation<DeleteQuestionApiResponse, DeleteQuestionApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/teacher/questions/${queryArg}`, method: 'DELETE' }),
+        invalidatesTags: ['Questions'],
+      }),
+      listQuestionGroups: build.query<ListQuestionGroupsApiResponse, ListQuestionGroupsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/question-groups`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+            skill: queryArg.skill,
+            part: queryArg.part,
+            topicId: queryArg.topicId,
+            status: queryArg.status,
+            mine: queryArg.mine,
+          },
+        }),
+        providesTags: ['Question Groups'],
+      }),
+      createQuestionGroup: build.mutation<
+        CreateQuestionGroupApiResponse,
+        CreateQuestionGroupApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/question-groups`,
+          method: 'POST',
+          body: queryArg,
+        }),
+        invalidatesTags: ['Question Groups'],
+      }),
+      getQuestionGroup: build.query<GetQuestionGroupApiResponse, GetQuestionGroupApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/teacher/question-groups/${queryArg}` }),
+        providesTags: ['Question Groups'],
+      }),
+      updateQuestionGroup: build.mutation<
+        UpdateQuestionGroupApiResponse,
+        UpdateQuestionGroupApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/question-groups/${queryArg.id}`,
+          method: 'PATCH',
+          body: queryArg.updateQuestionGroupDto,
+        }),
+        invalidatesTags: ['Question Groups'],
+      }),
+      deleteQuestionGroup: build.mutation<
+        DeleteQuestionGroupApiResponse,
+        DeleteQuestionGroupApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/question-groups/${queryArg}`,
+          method: 'DELETE',
+        }),
+        invalidatesTags: ['Question Groups'],
       }),
     }),
     overrideExisting: false,
@@ -191,6 +296,121 @@ export type RemoveAvatarApiResponse = /** status 200 Thành công */ {
   data: MeProfile;
 };
 export type RemoveAvatarApiArg = void;
+export type ListSubjectsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: SubjectItem[];
+};
+export type ListSubjectsApiArg = void;
+export type ListTopicsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: TopicItem[];
+};
+export type ListTopicsApiArg = {
+  id: string;
+  skill?: Skill;
+  part?: number;
+};
+export type ListQuestionsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionSummary[];
+  meta: PaginationMetaDto;
+};
+export type ListQuestionsApiArg = {
+  page?: number;
+  limit?: number;
+  skill?: Skill;
+  part?: number;
+  topicId?: string;
+  type?: QuestionType;
+  difficulty?: Difficulty;
+  status?: QuestionStatus;
+  /** Chỉ lấy câu thuộc nhóm này */
+  groupId?: string;
+  /** Tìm trong nội dung câu hỏi (không phân biệt hoa thường) */
+  q?: string;
+  /** true: chỉ câu do tôi tạo */
+  mine?: boolean;
+  sort?:
+    | 'createdAt:desc'
+    | 'createdAt:asc'
+    | 'updatedAt:desc'
+    | 'updatedAt:asc'
+    | 'part:asc'
+    | 'part:desc';
+};
+export type CreateQuestionApiResponse = /** status 201 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionDetail;
+};
+export type CreateQuestionApiArg = CreateQuestionDto;
+export type GetQuestionApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionDetail;
+};
+export type GetQuestionApiArg = string;
+export type UpdateQuestionApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionDetail;
+};
+export type UpdateQuestionApiArg = {
+  id: string;
+  updateQuestionDto: UpdateQuestionDto;
+};
+export type DeleteQuestionApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: object | null;
+};
+export type DeleteQuestionApiArg = string;
+export type ListQuestionGroupsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionGroupSummary[];
+  meta: PaginationMetaDto;
+};
+export type ListQuestionGroupsApiArg = {
+  page?: number;
+  limit?: number;
+  skill?: Skill;
+  part?: number;
+  topicId?: string;
+  status?: QuestionStatus;
+  /** true: chỉ nhóm do tôi tạo */
+  mine?: boolean;
+};
+export type CreateQuestionGroupApiResponse = /** status 201 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionGroupDetail;
+};
+export type CreateQuestionGroupApiArg = CreateQuestionGroupDto;
+export type GetQuestionGroupApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionGroupDetail;
+};
+export type GetQuestionGroupApiArg = string;
+export type UpdateQuestionGroupApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionGroupDetail;
+};
+export type UpdateQuestionGroupApiArg = {
+  id: string;
+  updateQuestionGroupDto: UpdateQuestionGroupDto;
+};
+export type DeleteQuestionGroupApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: object | null;
+};
+export type DeleteQuestionGroupApiArg = string;
 export type UserStatus = 'PENDING_VERIFICATION' | 'PENDING_APPROVAL' | 'ACTIVE' | 'LOCKED';
 export type RegisterResult = {
   id: string;
@@ -226,7 +446,12 @@ export type ErrorCode =
   | 'AUTH_GOOGLE_EMAIL_UNVERIFIED'
   | 'AUTH_GOOGLE_STUDENT_ONLY'
   | 'STORAGE_UNAVAILABLE'
-  | 'AVATAR_INVALID_IMAGE';
+  | 'AVATAR_INVALID_IMAGE'
+  | 'SUBJECT_NOT_FOUND'
+  | 'QUESTION_NOT_FOUND'
+  | 'QUESTION_GROUP_NOT_FOUND'
+  | 'QUESTION_GROUP_NOT_EMPTY'
+  | 'QUESTION_GROUP_ORDER_TAKEN';
 export type FieldErrorDto = {
   /** Trường lỗi, trường lồng nhau dạng address.city */
   field: string;
@@ -340,6 +565,185 @@ export type ChangePasswordDto = {
   newPassword: string;
   confirmPassword: string;
 };
+export type SubjectCategory = 'TOEIC' | 'IELTS';
+export type SubjectItem = {
+  id: string;
+  code: string;
+  name: string;
+  category: SubjectCategory;
+};
+export type Skill = 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING';
+export type TopicItem = {
+  id: string;
+  skill: Skill;
+  /** Các Part dùng được chủ đề này */
+  parts: number[];
+  name: string;
+  description: string | null;
+};
+export type TopicRef = {
+  id: string;
+  name: string;
+};
+export type AuthorRef = {
+  id: string;
+  fullName: string;
+};
+export type QuestionType =
+  'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'SPOKEN_RESPONSE' | 'WRITTEN_RESPONSE';
+export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
+export type QuestionStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+export type QuestionSummary = {
+  id: string;
+  topic: TopicRef;
+  author: AuthorRef;
+  groupId: string | null;
+  orderInGroup: number | null;
+  type: QuestionType;
+  skill: Skill;
+  part: number;
+  difficulty: Difficulty;
+  status: QuestionStatus;
+  content: string;
+  createdAt: string;
+  /** Gửi lại nguyên giá trị này khi PATCH để kiểm tra xung đột (khóa lạc quan) */
+  updatedAt: string;
+};
+export type QuestionOptionItem = {
+  id: string;
+  label: string;
+  content: string;
+  isCorrect: boolean;
+};
+export type QuestionDetail = {
+  id: string;
+  topic: TopicRef;
+  author: AuthorRef;
+  groupId: string | null;
+  orderInGroup: number | null;
+  type: QuestionType;
+  skill: Skill;
+  part: number;
+  difficulty: Difficulty;
+  status: QuestionStatus;
+  content: string;
+  createdAt: string;
+  /** Gửi lại nguyên giá trị này khi PATCH để kiểm tra xung đột (khóa lạc quan) */
+  updatedAt: string;
+  explanation: string | null;
+  sampleAnswer: string | null;
+  prepSeconds: number | null;
+  responseSeconds: number | null;
+  /** Gán khi làm chức năng tải media */
+  audioKey: string | null;
+  /** Gán khi làm chức năng tải media */
+  imageKey: string | null;
+  /** Rỗng với câu trả lời mở */
+  options: QuestionOptionItem[];
+};
+export type QuestionOptionDto = {
+  /** Theo thứ tự hiển thị: A, B, C, D */
+  label: string;
+  content: string;
+  isCorrect: boolean;
+};
+export type CreateQuestionDto = {
+  /** Lấy từ GET /subjects/{id}/topics?skill=&part= */
+  topicId: string;
+  skill: Skill;
+  /** LR 1–7; Speaking 1–5; Writing 1–3 */
+  part: number;
+  type: QuestionType;
+  difficulty: Difficulty;
+  status?: QuestionStatus;
+  content: string;
+  explanation?: string | null;
+  /** Bắt buộc với Speaking, Writing; bỏ trống với câu trắc nghiệm */
+  sampleAnswer?: string | null;
+  prepSeconds?: number | null;
+  responseSeconds?: number | null;
+  groupId?: string | null;
+  orderInGroup?: number | null;
+  /** Câu trắc nghiệm: đủ số phương án của Part, đúng 1 đáp án đúng. Câu mở: bỏ trống */
+  options?: QuestionOptionDto[];
+};
+export type UpdateQuestionDto = {
+  /** Lấy từ GET /subjects/{id}/topics?skill=&part= */
+  topicId?: string;
+  skill?: Skill;
+  /** LR 1–7; Speaking 1–5; Writing 1–3 */
+  part?: number;
+  type?: QuestionType;
+  difficulty?: Difficulty;
+  status?: QuestionStatus;
+  content?: string;
+  explanation?: string | null;
+  /** Bắt buộc với Speaking, Writing; bỏ trống với câu trắc nghiệm */
+  sampleAnswer?: string | null;
+  prepSeconds?: number | null;
+  responseSeconds?: number | null;
+  groupId?: string | null;
+  orderInGroup?: number | null;
+  /** Câu trắc nghiệm: đủ số phương án của Part, đúng 1 đáp án đúng. Câu mở: bỏ trống */
+  options?: QuestionOptionDto[];
+  /** updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409 */
+  updatedAt: string;
+};
+export type QuestionGroupSummary = {
+  id: string;
+  topic: TopicRef;
+  author: AuthorRef;
+  skill: Skill;
+  part: number;
+  passage: string | null;
+  transcript: string | null;
+  audioKey: string | null;
+  imageKey: string | null;
+  status: QuestionStatus;
+  /** Số câu còn hiệu lực trong nhóm */
+  questionCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+export type QuestionGroupDetail = {
+  id: string;
+  topic: TopicRef;
+  author: AuthorRef;
+  skill: Skill;
+  part: number;
+  passage: string | null;
+  transcript: string | null;
+  audioKey: string | null;
+  imageKey: string | null;
+  status: QuestionStatus;
+  /** Số câu còn hiệu lực trong nhóm */
+  questionCount: number;
+  createdAt: string;
+  updatedAt: string;
+  /** Các câu trong nhóm, theo thứ tự */
+  questions: QuestionSummary[];
+};
+export type CreateQuestionGroupDto = {
+  topicId: string;
+  skill: Skill;
+  /** Nhóm dùng cho Listening 3, 4; Reading 6, 7; Speaking 4 */
+  part: number;
+  /** Bắt buộc với Reading 6, 7 và Speaking 4 */
+  passage?: string | null;
+  /** Bắt buộc với Listening 3, 4. Chỉ hiện ở màn xem lại */
+  transcript?: string | null;
+  status?: QuestionStatus;
+};
+export type UpdateQuestionGroupDto = {
+  topicId?: string;
+  /** Bắt buộc với Reading 6, 7 và Speaking 4 */
+  passage?: string | null;
+  /** Bắt buộc với Listening 3, 4. Chỉ hiện ở màn xem lại */
+  transcript?: string | null;
+  status?: QuestionStatus;
+  /** updatedAt lần đọc gần nhất */
+  updatedAt: string;
+};
 export const {
   useRegisterMutation,
   useVerifyEmailMutation,
@@ -356,4 +760,16 @@ export const {
   useChangePasswordMutation,
   useUploadAvatarMutation,
   useRemoveAvatarMutation,
+  useListSubjectsQuery,
+  useListTopicsQuery,
+  useListQuestionsQuery,
+  useCreateQuestionMutation,
+  useGetQuestionQuery,
+  useUpdateQuestionMutation,
+  useDeleteQuestionMutation,
+  useListQuestionGroupsQuery,
+  useCreateQuestionGroupMutation,
+  useGetQuestionGroupQuery,
+  useUpdateQuestionGroupMutation,
+  useDeleteQuestionGroupMutation,
 } = injectedRtkApi;

@@ -6,9 +6,15 @@ interface BrandLogoProps {
   inverse?: boolean; // dùng trên nền tối (footer)
   compact?: boolean; // màn hẹp (< 640px) chỉ hiện icon, nhường chỗ cho nút Đăng nhập/Đăng ký
   to?: string; // trang chủ theo khu vực: `/` (công khai), `/app` (học viên)...
+  subtitle?: string; // dòng nhỏ dưới tên, ví dụ "Khu vực giáo viên"
 }
 
-export function BrandLogo({ inverse = false, compact = false, to = '/' }: BrandLogoProps) {
+export function BrandLogo({
+  inverse = false,
+  compact = false,
+  to = '/',
+  subtitle = 'Luyện thi TOEIC cùng AI',
+}: BrandLogoProps) {
   return (
     <Link
       to={to}
@@ -28,7 +34,7 @@ export function BrandLogo({ inverse = false, compact = false, to = '/' }: BrandL
           Smart English Exam
         </span>
         <span className={cn('block text-xs', inverse ? 'text-white/60' : 'text-subtle')}>
-          Luyện thi TOEIC cùng AI
+          {subtitle}
         </span>
       </span>
     </Link>

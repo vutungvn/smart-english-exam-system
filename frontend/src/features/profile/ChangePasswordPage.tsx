@@ -37,7 +37,8 @@ import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
 import { applyFieldErrors } from '@/lib/form-errors';
 import { cn } from '@/lib/utils';
 import { selectCurrentUser, sessionCleared, sessionReceived } from '@/store/slice/auth-slice';
-import { PageHeader } from './components/PageHeader';
+import { PageHeader } from '@/components/PageHeader';
+import { useAreaPath } from '@/features/auth/home-path';
 import { SectionCard } from './components/SectionCard';
 import { changePasswordSchema, type ChangePasswordValues } from './schemas';
 
@@ -51,6 +52,7 @@ const TIPS = [
 // Trang Đổi mật khẩu `/app/profile/password` (theo Stitch): PATCH /me/password.
 // Tài khoản tạo bằng Google chưa có mật khẩu (hasPassword = false): tạo qua email đặt lại mật khẩu
 export function ChangePasswordPage() {
+  const areaPath = useAreaPath();
   const user = useAppSelector(selectCurrentUser);
   const { data, isLoading } = useGetProfileQuery();
   const [done, setDone] = useState(false);
@@ -77,11 +79,11 @@ export function ChangePasswordPage() {
       <title>{`${title} – Smart English Exam`}</title>
       <PageHeader
         breadcrumbs={[
-          { label: 'Trang chủ', to: '/app' },
-          { label: 'Hồ sơ cá nhân', to: '/app/profile' },
+          { label: 'Trang chủ', to: areaPath },
+          { label: 'Hồ sơ cá nhân', to: `${areaPath}/profile` },
           { label: title },
         ]}
-        backTo={{ label: 'Quay lại hồ sơ', to: '/app/profile' }}
+        backTo={{ label: 'Quay lại hồ sơ', to: `${areaPath}/profile` }}
         title={title}
         description={
           <>
@@ -100,6 +102,7 @@ export function ChangePasswordPage() {
 }
 
 function ChangePasswordForm({ onDone }: { onDone: () => void }) {
+  const areaPath = useAreaPath();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector(selectCurrentUser);
@@ -170,7 +173,7 @@ function ChangePasswordForm({ onDone }: { onDone: () => void }) {
         footer={
           <>
             <Link
-              to="/app/profile"
+              to={`${areaPath}/profile`}
               className="inline-flex h-10 items-center rounded-xl border border-border bg-white px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
             >
               Hủy
@@ -271,6 +274,7 @@ function ChangePasswordForm({ onDone }: { onDone: () => void }) {
 }
 
 function ChangePasswordDone() {
+  const areaPath = useAreaPath();
   return (
     <section className="flex flex-col items-center rounded-3xl border border-border bg-white px-6 py-12 text-center shadow-2xs">
       <span className="flex size-14 items-center justify-center rounded-full bg-success text-white shadow-md ring-8 ring-success-soft/50">
@@ -284,11 +288,11 @@ function ChangePasswordDone() {
         mới.
       </p>
       <div className="mt-6 flex w-full max-w-xs flex-col gap-3">
-        <ButtonLink to="/app/profile">
+        <ButtonLink to={`${areaPath}/profile`}>
           <ArrowLeft />
           Về hồ sơ cá nhân
         </ButtonLink>
-        <ButtonLink to="/app" variant="ghost">
+        <ButtonLink to={areaPath} variant="ghost">
           Về trang chủ
         </ButtonLink>
       </div>
@@ -305,6 +309,7 @@ const CREATE_PASSWORD_STEPS = [
 // Không có mật khẩu hiện tại để nhập, nên dùng lại luồng Quên mật khẩu: gửi liên kết tới email,
 // đặt mật khẩu ở trang /reset-password (backend đăng xuất mọi thiết bị sau khi đặt xong)
 function CreatePasswordCard({ email }: { email: string }) {
+  const areaPath = useAreaPath();
   const [forgotPassword, { isLoading, isSuccess, error, reset }] = useForgotPasswordMutation();
   const mailbox = getMailbox(email, MAIL_SUBJECTS.resetPassword);
 
@@ -316,7 +321,7 @@ function CreatePasswordCard({ email }: { email: string }) {
       footer={
         <>
           <Link
-            to="/app/profile"
+            to={`${areaPath}/profile`}
             className="inline-flex h-10 items-center rounded-xl border border-border bg-white px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Quay lại

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { AbilityCard } from './components/AbilityCard';
 import { IdentityCard } from './components/IdentityCard';
-import { PageHeader } from './components/PageHeader';
+import { PageHeader } from '@/components/PageHeader';
+import { useAreaPath } from '@/features/auth/home-path';
 import { PersonalInfoCard } from './components/PersonalInfoCard';
 import { SecurityCard } from './components/SecurityCard';
 import { TargetScoreCard } from './components/TargetScoreCard';
@@ -14,12 +15,13 @@ import { TargetScoreCard } from './components/TargetScoreCard';
 export function ProfilePage() {
   const { data, isLoading, error, refetch, isFetching } = useGetProfileQuery();
   const profile = data?.data;
+  const areaPath = useAreaPath();
 
   return (
     <div className="mx-auto max-w-300 space-y-6">
       <title>Hồ sơ cá nhân – Smart English Exam</title>
       <PageHeader
-        breadcrumbs={[{ label: 'Trang chủ', to: '/app' }, { label: 'Hồ sơ cá nhân' }]}
+        breadcrumbs={[{ label: 'Trang chủ', to: areaPath }, { label: 'Hồ sơ cá nhân' }]}
         title="Hồ sơ cá nhân"
         description="Quản lý thông tin tài khoản và mục tiêu luyện thi của bạn"
       />

@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router';
+import { Link } from 'react-router';
 import {
   BookOpen,
   Bot,
@@ -9,30 +9,38 @@ import {
   FileText,
   House,
   Layers,
-  X,
 } from 'lucide-react';
 import { useGetProfileQuery } from '@/api/generated';
-import { BrandLogo } from '@/components/brand/BrandLogo';
-import { cn } from '@/lib/utils';
+import { AppSidebar, type SidebarSection } from '../shared/AppSidebar';
+import type { SidebarSlotProps } from '../shared/AppShell';
 
 // TẠM: badge "24" là dữ liệu mẫu, lấy từ API flashcard khi có
-const NAV_ITEMS = [
-  { to: '/app', label: 'Trang chủ', icon: House, end: true },
-  { to: '/app/courses', label: 'Khóa học của tôi', icon: BookOpen },
-  { to: '/app/exams', label: 'Luyện đề thi', icon: FileText },
-  { to: '/app/results', label: 'Kết quả & xem lại', icon: CircleCheck },
-  { to: '/app/progress', label: 'Tiến độ học tập', icon: ChartNoAxesColumn },
-  { to: '/app/ai-analysis', label: 'Phân tích AI', icon: BrainCircuit },
-  { to: '/app/assistant', label: 'Trợ giảng AI', icon: Bot, badge: 'AI', badgeTone: 'ai' },
-  { to: '/app/flashcards', label: 'Flashcard', icon: Layers, badge: '24' },
-] as const;
+const SECTIONS: SidebarSection[] = [
+  [
+    { to: '/app', label: 'Trang chủ', icon: House, end: true },
+    { to: '/app/courses', label: 'Khóa học của tôi', icon: BookOpen },
+    { to: '/app/exams', label: 'Luyện đề thi', icon: FileText },
+    { to: '/app/results', label: 'Kết quả & xem lại', icon: CircleCheck },
+    { to: '/app/progress', label: 'Tiến độ học tập', icon: ChartNoAxesColumn },
+    { to: '/app/ai-analysis', label: 'Phân tích AI', icon: BrainCircuit },
+    { to: '/app/assistant', label: 'Trợ giảng AI', icon: Bot, badge: 'AI', badgeTone: 'ai' },
+    { to: '/app/flashcards', label: 'Flashcard', icon: Layers, badge: '24' },
+  ],
+];
 
-interface StudentSidebarProps {
-  onNavigate?: () => void; // đóng ngăn kéo trên màn hẹp sau khi chọn mục
-  onClose?: () => void; // có thì hiện nút X (ngăn kéo mobile)
+export function StudentSidebar(props: SidebarSlotProps) {
+  return (
+    <AppSidebar
+      {...props}
+      homePath="/app"
+      ariaLabel="Khu vực học viên"
+      sections={SECTIONS}
+      footer={<TargetScoreCard onNavigate={props.onNavigate} />}
+    />
+  );
 }
 
-export function StudentSidebar({ onNavigate, onClose }: StudentSidebarProps) {
+function TargetScoreCard({ onNavigate }: { onNavigate?: () => void }) {
   // Dùng chung cache với trang Hồ sơ: lưu mục tiêu xong (tag Me) thì thẻ này cập nhật theo
   const { data } = useGetProfileQuery();
   const targetScore = data?.data.student?.targetScore ?? null;
@@ -43,82 +51,24 @@ export function StudentSidebar({ onNavigate, onClose }: StudentSidebarProps) {
       : 0;
 
   return (
-    <aside className="flex h-full w-72 flex-col border-r border-border bg-white">
-      <div className="flex h-18 shrink-0 items-center justify-between gap-2 border-b border-border px-5">
-        <BrandLogo to="/app" />
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng menu"
-            className="flex size-9 items-center justify-center rounded-lg text-slate-500 hover:bg-accent hover:text-brand"
-          >
-            <X className="size-5" />
-          </button>
-        )}
+    <div className="rounded-2xl border border-primary/20 bg-accent p-4">
+      <div className="flex items-center justify-between gap-2 text-xs font-bold">
+        <span className="tracking-wider text-brand uppercase">Mục tiêu của bạn</span>
+        <span className="text-sm text-primary">
+          {targetScore ? `${targetScore}+ điểm` : 'Chưa đặt'}
+        </span>
       </div>
-
-      <nav aria-label="Khu vực học viên" className="flex-1 overflow-y-auto px-4 py-6">
-        <ul className="space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.to}>
-                <NavLink
-                  to={item.to}
-                  end={'end' in item}
-                  onClick={onNavigate}
-                  className={({ isActive }) =>
-                    cn(
-                      'relative flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-accent font-semibold text-brand before:absolute before:inset-y-2 before:left-0 before:w-1 before:rounded-full before:bg-primary'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-foreground',
-                    )
-                  }
-                >
-                  <Icon className="size-5 shrink-0" />
-                  <span className="flex-1">{item.label}</span>
-                  {'badge' in item && (
-                    <span
-                      className={cn(
-                        'rounded-full px-2 py-0.5 text-[11px] font-bold',
-                        'badgeTone' in item
-                          ? 'bg-skill-listening/12 text-emerald-700'
-                          : 'bg-accent text-brand',
-                      )}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-                </NavLink>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      <div className="shrink-0 space-y-2 border-t border-border p-4">
-        <div className="rounded-2xl border border-primary/20 bg-accent p-4">
-          <div className="flex items-center justify-between gap-2 text-xs font-bold">
-            <span className="tracking-wider text-brand uppercase">Mục tiêu của bạn</span>
-            <span className="text-sm text-primary">
-              {targetScore ? `${targetScore}+ điểm` : 'Chưa đặt'}
-            </span>
-          </div>
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white">
-            <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
-          </div>
-          <Link
-            to="/app/profile"
-            onClick={onNavigate}
-            className="mt-3 flex items-center justify-between text-xs font-semibold text-brand hover:underline"
-          >
-            {targetScore ? 'Chỉnh mục tiêu' : 'Đặt mục tiêu ngay'}
-            <ChevronRight className="size-4" />
-          </Link>
-        </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white">
+        <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
       </div>
-    </aside>
+      <Link
+        to="/app/profile"
+        onClick={onNavigate}
+        className="mt-3 flex items-center justify-between text-xs font-semibold text-brand hover:underline"
+      >
+        {targetScore ? 'Chỉnh mục tiêu' : 'Đặt mục tiêu ngay'}
+        <ChevronRight className="size-4" />
+      </Link>
+    </div>
   );
 }

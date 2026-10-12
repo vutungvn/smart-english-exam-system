@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Dialog } from 'radix-ui';
 import { X } from 'lucide-react';
 
-interface ProfileDialogProps {
+interface AppDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
@@ -13,8 +13,8 @@ interface ProfileDialogProps {
   children: ReactNode;
 }
 
-// Khung hộp thoại của trang Hồ sơ: Radix lo khóa focus, Esc, trả focus về nút đã mở
-export function ProfileDialog({
+// Khung hộp thoại dùng chung: Radix lo khóa focus, Esc, trả focus về nút đã mở
+export function AppDialog({
   open,
   onOpenChange,
   title,
@@ -22,7 +22,7 @@ export function ProfileDialog({
   busy = false,
   footer,
   children,
-}: ProfileDialogProps) {
+}: AppDialogProps) {
   return (
     <Dialog.Root open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
       <Dialog.Portal>
