@@ -1,10 +1,9 @@
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import type { Difficulty, QuestionStatus, Skill } from '@/api/generated';
-import { NativeSelect } from '@/components/form/NativeSelect';
-import { cn } from '@/lib/utils';
 import { useToeicTopics } from '../hooks/use-toeic-topics';
 import type { QuestionFilters as Filters, QuestionSort } from '../hooks/use-question-filters';
+import { FilterSelect, SegmentedControl, ToggleSwitch } from './FilterControls';
 import {
   DIFFICULTY_META,
   findPartRule,
@@ -37,9 +36,6 @@ const SORT_OPTIONS: QuestionSort[] = [
   'part:asc',
 ];
 
-const segmentBase =
-  'h-9 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-3 focus-visible:ring-primary/30';
-
 export function QuestionFilters({ filters, hasFilters, onChange, onClear }: QuestionFiltersProps) {
   const { topics, isLoading: topicsLoading } = useToeicTopics(filters.skill, filters.part);
 
@@ -53,31 +49,16 @@ export function QuestionFilters({ filters, hasFilters, onChange, onClear }: Ques
 
         {/* Kỹ năng dạng nút bấm: chỉ 4 lựa chọn, thấy hết không cần mở danh sách.
             Màn hẹp không đủ chỗ: lọc kỹ năng bằng 4 thẻ số liệu phía trên */}
-        <div
-          role="radiogroup"
-          aria-label="Kỹ năng"
-          className="hidden gap-1 rounded-xl bg-slate-100 p-1 sm:flex"
-        >
-          {[undefined, ...SKILLS].map((skill) => {
-            const active = filters.skill === skill;
-            return (
-              <button
-                key={skill ?? 'all'}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => onChange({ skill })}
-                className={cn(
-                  segmentBase,
-                  'flex-1',
-                  active ? 'bg-white text-brand shadow-sm' : 'text-slate-600 hover:text-foreground',
-                )}
-              >
-                {skill ? SKILL_META[skill].label : 'Tất cả'}
-              </button>
-            );
-          })}
-        </div>
+        <SegmentedControl
+          label="Kỹ năng"
+          value={filters.skill}
+          onChange={(skill) => onChange({ skill })}
+          options={[
+            { label: 'Tất cả' },
+            ...SKILLS.map((skill) => ({ value: skill, label: SKILL_META[skill].label })),
+          ]}
+          className="hidden sm:flex"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-6">
@@ -150,20 +131,12 @@ export function QuestionFilters({ filters, hasFilters, onChange, onClear }: Ques
           ))}
         </FilterSelect>
 
-        <label className="col-span-2 flex h-10 cursor-pointer items-center justify-between gap-3 self-end lg:col-span-1 rounded-xl border border-border px-3 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300">
-          Chỉ câu của tôi
-          <input
-            type="checkbox"
-            role="switch"
-            checked={filters.mine}
-            onChange={(event) => onChange({ mine: event.target.checked })}
-            className="peer sr-only"
-          />
-          <span
-            aria-hidden
-            className="relative h-5 w-9 shrink-0 rounded-full bg-slate-200 transition-colors peer-checked:bg-primary peer-focus-visible:ring-3 peer-focus-visible:ring-primary/30 after:absolute after:top-0.5 after:left-0.5 after:size-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-4"
-          />
-        </label>
+        <ToggleSwitch
+          label="Chỉ câu của tôi"
+          checked={filters.mine}
+          onChange={(mine) => onChange({ mine })}
+          className="col-span-2 self-end lg:col-span-1"
+        />
       </div>
 
       {hasFilters && (
@@ -175,41 +148,6 @@ export function QuestionFilters({ filters, hasFilters, onChange, onClear }: Ques
         />
       )}
     </section>
-  );
-}
-
-function FilterSelect({
-  label,
-  value,
-  disabled,
-  placeholder,
-  onChange,
-  children,
-}: {
-  label: string;
-  value: string;
-  disabled?: boolean;
-  placeholder?: string;
-  onChange: (value: string) => void;
-  children: ReactNode;
-}) {
-  // Gắn nhãn bằng htmlFor: bọc <select> trong <label> làm tên ô bị lẫn chữ của các lựa chọn
-  const id = useId();
-  return (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <label htmlFor={id} className="text-xs font-semibold text-slate-700">
-        {label}
-      </label>
-      <NativeSelect
-        id={id}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {placeholder !== undefined && <option value="">{placeholder}</option>}
-        {children}
-      </NativeSelect>
-    </div>
   );
 }
 

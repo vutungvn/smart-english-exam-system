@@ -103,7 +103,11 @@ export type QuestionFormValues = z.infer<typeof questionFormSchema>;
 
 const EMPTY_OPTIONS = OPTION_LABELS.map(() => ({ content: '' }));
 
-export function emptyFormValues(preset?: { skill?: Skill; part?: number }): QuestionFormValues {
+export function emptyFormValues(preset?: {
+  skill?: Skill;
+  part?: number;
+  groupId?: string;
+}): QuestionFormValues {
   const rule = preset?.skill && preset.part ? findPartRule(preset.skill, preset.part) : undefined;
   return {
     skill: preset?.skill ?? '',
@@ -118,7 +122,8 @@ export function emptyFormValues(preset?: { skill?: Skill; part?: number }): Ques
     prepSeconds: rule?.defaultSeconds ? String(rule.defaultSeconds.prep) : '',
     responseSeconds: rule?.defaultSeconds ? String(rule.defaultSeconds.response) : '',
     explanation: '',
-    groupId: '',
+    // Nhóm chỉ có nghĩa với Part nhóm; thứ tự, chủ đề điền theo nhóm khi danh sách nhóm tải xong
+    groupId: rule?.group === 'required' ? (preset?.groupId ?? '') : '',
     orderInGroup: '',
   };
 }

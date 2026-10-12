@@ -16,5 +16,9 @@ export const enhancedApi = api.enhanceEndpoints({
         return { url: '/api/v1/me/avatar', method: 'POST', body };
       },
     },
+    // Thêm/sửa/xóa câu làm đổi số câu và danh sách câu của nhóm: tải lại cả dữ liệu nhóm
+    createQuestion: { invalidatesTags: ['Questions', 'Question Groups'] },
+    updateQuestion: { invalidatesTags: ['Questions', 'Question Groups'] },
+    deleteQuestion: { invalidatesTags: ['Questions', 'Question Groups'] },
   },
 });

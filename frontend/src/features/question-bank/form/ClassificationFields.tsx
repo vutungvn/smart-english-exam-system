@@ -30,8 +30,8 @@ export function ClassificationFields() {
     getValues,
     formState: { errors, isSubmitted },
   } = useFormContext<QuestionFormValues>();
-  const [skill, part] = useWatch<QuestionFormValues, ['skill', 'part']>({
-    name: ['skill', 'part'],
+  const [skill, part, topicId] = useWatch<QuestionFormValues, ['skill', 'part', 'topicId']>({
+    name: ['skill', 'part', 'topicId'],
   });
   const rule = skill ? findPartRule(skill, part) : undefined;
   const { topics, isLoading: topicsLoading } = useToeicTopics(
@@ -182,7 +182,10 @@ export function ClassificationFields() {
             id="topicId"
             disabled={!rule || topicsLoading}
             aria-invalid={!!errors.topicId}
+            // Danh sách lựa chọn tải sau: điều khiển giá trị theo state của form, nếu không thẻ select
+            // giữ placeholder vì lúc RHF gán giá trị chưa có <option> tương ứng
             {...register('topicId')}
+            value={topicId}
           >
             <option value="">
               {!rule ? 'Chọn Part trước' : topicsLoading ? 'Đang tải chủ đề…' : 'Chọn chủ đề'}

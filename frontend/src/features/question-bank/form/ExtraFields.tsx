@@ -1,21 +1,45 @@
+import { useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { Clock, Headphones, ImageIcon, Info, Layers } from 'lucide-react';
-import { useListQuestionGroupsQuery, type QuestionGroupSummary } from '@/api/generated';
+import { Link } from 'react-router';
+import { ArrowUpRight, Clock, Headphones, ImageIcon, Info, Layers, Plus } from 'lucide-react';
+import {
+  useGetQuestionGroupQuery,
+  useListQuestionGroupsQuery,
+  type QuestionGroupSummary,
+} from '@/api/generated';
 import { FormField } from '@/components/form/FormField';
 import { NativeSelect } from '@/components/form/NativeSelect';
-import type { PartRule } from '../toeic';
+import { groupPath, newGroupPath } from '../paths';
+import { groupText, type PartRule } from '../toeic';
 import { Counter } from './AnswerFields';
 import { EXPLANATION_MAX, type QuestionFormValues } from './question-form';
 import { inputClass, textareaClass } from './styles';
 
 function groupLabel(group: QuestionGroupSummary): string {
-  const text = (group.passage ?? group.transcript ?? '').replace(/\s+/g, ' ').trim();
-  const excerpt = text.length > 60 ? `${text.slice(0, 60)}…` : text || 'Chưa có nội dung';
-  return `${excerpt} (${group.questionCount} câu)`;
+  const text = groupText(group).replace(/\s+/g, ' ');
+  const excerpt = text.length > 40 ? `${text.slice(0, 40)}…` : text;
+  return `${group.topic.name}${excerpt ? ` – ${excerpt}` : ''} (${group.questionCount} câu)`;
+}
+
+const MAX_ORDER = 20; // khớp @Max(20) của orderInGroup ở backend
+
+/** Vị trí trống nhỏ nhất (1–20); undefined khi nhóm đã kín */
+function firstFreeOrder(used: number[]): number | undefined {
+  for (let order = 1; order <= MAX_ORDER; order++) {
+    if (!used.includes(order)) return order;
+  }
+  return undefined;
+}
+
+interface GroupFieldsProps {
+  rule: PartRule;
+  editing: boolean;
+  /** Câu đang sửa: vị trí của chính nó không tính là đã có câu */
+  questionId?: string;
 }
 
 // Part nhóm (L3, L4, R6, R7, S4): chọn nhóm của mình cùng kỹ năng/Part và vị trí trong nhóm
-export function GroupFields({ rule, editing }: { rule: PartRule; editing: boolean }) {
+export function GroupFields({ rule, editing, questionId }: GroupFieldsProps) {
   const {
     register,
     setValue,
@@ -34,6 +58,47 @@ export function GroupFields({ rule, editing }: { rule: PartRule; editing: boolea
   const foreignGroup = groupId && !isLoading && !groups.some((g) => g.id === groupId);
   const contentName = rule.groupContent === 'transcript' ? 'lời thoại' : 'đoạn văn';
 
+  // Vị trí đã có câu lấy từ chi tiết nhóm: "số câu + 1" sai khi nhóm từng bị xóa câu ở giữa
+  // (có 1, 2, 3, xóa 2 → còn 2 câu nhưng vị trí 3 vẫn đã có câu)
+  const { data: detail } = useGetQuestionGroupQuery(groupId, {
+    skip: !groupId || !!foreignGroup,
+  });
+  const loadedGroup = detail?.data.id === groupId ? detail.data : undefined;
+  const usedOrders = (loadedGroup?.questions ?? [])
+    .filter((question) => question.id !== questionId)
+    .map((question) => question.orderInGroup)
+    .filter((order): order is number => order !== null)
+    .sort((a, b) => a - b);
+  const suggestedOrder = loadedGroup ? firstFreeOrder(usedOrders) : undefined;
+
+  /** Câu mới đổi nhóm: lấy chủ đề của nhóm, xóa thứ tự cũ để điền lại theo nhóm mới */
+  const changeGroup = (id: string) => {
+    if (editing) return;
+    setValue('orderInGroup', '', { shouldDirty: true });
+    const group = groups.find((g) => g.id === id);
+    if (group && !getValues('topicId')) {
+      setValue('topicId', group.topic.id, { shouldDirty: true });
+    }
+  };
+
+  // Mở từ nút "Thêm câu vào nhóm" (?groupId=): danh sách nhóm tải xong thì lấy chủ đề của nhóm
+  useEffect(() => {
+    const group = groups.find((g) => g.id === groupId);
+    if (group && !editing && !getValues('topicId')) {
+      setValue('topicId', group.topic.id, { shouldDirty: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ chạy khi danh sách nhóm vừa tải
+  }, [data]);
+
+  // Câu mới: chi tiết nhóm tải xong (lần đầu, đổi nhóm, hoặc tải lại sau "Lưu & tạo tiếp")
+  // thì điền vị trí trống đầu tiên nếu ô thứ tự đang trống
+  useEffect(() => {
+    if (!editing && suggestedOrder && !getValues('orderInGroup')) {
+      setValue('orderInGroup', String(suggestedOrder), { shouldDirty: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ điền khi dữ liệu nhóm đổi, không điền lại lúc người dùng xóa ô
+  }, [loadedGroup]);
+
   return (
     <div className="space-y-4">
       <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_160px]">
@@ -42,15 +107,12 @@ export function GroupFields({ rule, editing }: { rule: PartRule; editing: boolea
             id="groupId"
             disabled={isLoading}
             aria-invalid={!!errors.groupId}
+            // Danh sách lựa chọn tải sau: điều khiển giá trị theo state của form, nếu không thẻ select
+            // giữ placeholder vì lúc RHF gán giá trị chưa có <option> tương ứng
             {...register('groupId', {
-              // Câu mới: gợi ý vị trí kế tiếp trong nhóm
-              onChange: (event: { target: { value: string } }) => {
-                const group = groups.find((g) => g.id === event.target.value);
-                if (group && !editing && !getValues('orderInGroup')) {
-                  setValue('orderInGroup', String(group.questionCount + 1), { shouldDirty: true });
-                }
-              },
+              onChange: (event: { target: { value: string } }) => changeGroup(event.target.value),
             })}
+            value={groupId}
           >
             <option value="">
               {isLoading
@@ -86,6 +148,27 @@ export function GroupFields({ rule, editing }: { rule: PartRule; editing: boolea
         </FormField>
       </div>
 
+      {loadedGroup && (
+        <p className="text-xs text-subtle">
+          {usedOrders.length
+            ? `Vị trí đã có câu: ${usedOrders.join(', ')}. `
+            : 'Nhóm chưa có câu nào. '}
+          {suggestedOrder
+            ? `Vị trí trống đầu tiên: ${suggestedOrder}.`
+            : `Nhóm đã dùng hết ${MAX_ORDER} vị trí.`}
+        </p>
+      )}
+
+      {groupId && !foreignGroup && (
+        <Link
+          to={groupPath(groupId)}
+          className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-brand"
+        >
+          Xem nội dung nhóm
+          <ArrowUpRight className="size-4" />
+        </Link>
+      )}
+
       {isError ? (
         <p className="text-xs text-destructive">
           Không tải được danh sách nhóm, vui lòng tải lại trang.
@@ -95,8 +178,17 @@ export function GroupFields({ rule, editing }: { rule: PartRule; editing: boolea
         groups.length === 0 && (
           <p className="flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
             <Layers className="mt-0.5 size-4 shrink-0" />
-            Bạn chưa có nhóm câu nào cho Part {rule.part}. Mỗi nhóm chứa {contentName} dùng chung;
-            trang tạo nhóm câu sẽ có ở mục “Nhóm câu hỏi”.
+            <span className="min-w-0 flex-1">
+              Bạn chưa có nhóm câu nào cho Part {rule.part}. Mỗi nhóm chứa {contentName} dùng chung
+              cho các câu hỏi.{' '}
+              <Link
+                to={newGroupPath({ skill: rule.skill, part: rule.part })}
+                className="inline-flex items-center gap-0.5 font-semibold underline-offset-4 hover:underline"
+              >
+                <Plus className="size-3.5" />
+                Tạo nhóm câu
+              </Link>
+            </span>
           </p>
         )
       )}

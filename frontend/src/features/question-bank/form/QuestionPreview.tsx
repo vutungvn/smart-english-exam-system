@@ -57,7 +57,7 @@ function StudentPreview({ values, rule }: { values: QuestionFormValues; rule?: P
 
         <p
           className={cn(
-            'mt-3 text-sm leading-relaxed break-words whitespace-pre-wrap',
+            'mt-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap',
             values.content.trim() ? 'text-foreground' : 'text-subtle italic',
           )}
         >
@@ -77,7 +77,7 @@ function StudentPreview({ values, rule }: { values: QuestionFormValues; rule?: P
                 </span>
                 <span
                   className={cn(
-                    'min-w-0 break-words',
+                    'min-w-0 wrap-break-word',
                     !values.options[index]?.content.trim() && 'text-subtle',
                   )}
                 >

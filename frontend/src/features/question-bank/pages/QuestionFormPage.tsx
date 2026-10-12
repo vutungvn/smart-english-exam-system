@@ -37,10 +37,9 @@ import {
   type QuestionFormValues,
 } from '../form/question-form';
 import { QuestionSidePanel } from '../form/QuestionPreview';
+import { groupPath, QUESTION_LIST_PATH } from '../paths';
 import { findPartRule, OPTION_LABELS, SKILLS, STATUS_META } from '../toeic';
 import type { QuestionBankLocationState } from './QuestionBankPage';
-
-const LIST_PATH = '/teacher/questions';
 
 // Lỗi VALIDATION_ERROR của server gắn được vào các ô này
 const SERVER_FIELDS: Path<QuestionFormValues>[] = [
@@ -71,7 +70,14 @@ function CreateQuestion() {
   const [params] = useSearchParams();
   const skill = SKILLS.find((s) => s === params.get('skill')) as Skill | undefined;
   const part = Number(params.get('part')) || undefined;
-  return <QuestionEditor defaultValues={emptyFormValues({ skill, part })} />;
+  // Từ trang nhóm bấm "Thêm câu vào nhóm": chọn sẵn nhóm, lưu xong quay về trang nhóm
+  const groupId = params.get('groupId') ?? undefined;
+  return (
+    <QuestionEditor
+      defaultValues={emptyFormValues({ skill, part, groupId })}
+      backPath={groupId ? groupPath(groupId) : undefined}
+    />
+  );
 }
 
 function EditQuestion({ id }: { id: string }) {
@@ -88,7 +94,7 @@ function EditQuestion({ id }: { id: string }) {
             title="Không tìm thấy câu hỏi"
             description="Câu hỏi không tồn tại hoặc đã bị xóa."
           >
-            <ButtonLink to={LIST_PATH} className="h-10 w-auto px-5">
+            <ButtonLink to={QUESTION_LIST_PATH} className="h-10 w-auto px-5">
               Về ngân hàng câu hỏi
             </ButtonLink>
           </EmptyState>
@@ -114,9 +120,11 @@ interface QuestionEditorProps {
   question?: QuestionDetail;
   /** Tải lại bản mới nhất từ server (sau khi gặp 409) */
   reload?: () => Promise<QuestionFormValues>;
+  /** Trang quay về khi Hủy, sau khi tạo/xóa (mặc định: câu thuộc nhóm thì về nhóm, không thì về danh sách) */
+  backPath?: string;
 }
 
-function QuestionEditor({ defaultValues, question, reload }: QuestionEditorProps) {
+function QuestionEditor({ defaultValues, question, reload, backPath }: QuestionEditorProps) {
   const navigate = useNavigate();
   const user = useAppSelector(selectCurrentUser);
   const [createQuestion] = useCreateQuestionMutation();
@@ -128,6 +136,8 @@ function QuestionEditor({ defaultValues, question, reload }: QuestionEditorProps
   const [deleting, setDeleting] = useState(false);
 
   const editing = !!question;
+  const returnPath =
+    backPath ?? (question?.groupId ? groupPath(question.groupId) : QUESTION_LIST_PATH);
   const readOnly = editing && question.author.id !== user?.id;
 
   const form = useForm({
@@ -194,10 +204,9 @@ function QuestionEditor({ defaultValues, question, reload }: QuestionEditorProps
       await createQuestion(payload).unwrap();
       if (!createAnother) {
         const state: QuestionBankLocationState = { flash: 'Đã tạo câu hỏi mới' };
-        return void navigate(LIST_PATH, { state });
+        return void navigate(returnPath, { state });
       }
       // Soạn tiếp câu cùng loại: giữ phân loại, nhóm; xóa nội dung
-      const order = Number(values.orderInGroup);
       reset({
         ...emptyFormValues({ skill: currentRule.skill, part: currentRule.part }),
         topicId: values.topicId,
@@ -206,7 +215,8 @@ function QuestionEditor({ defaultValues, question, reload }: QuestionEditorProps
         prepSeconds: values.prepSeconds,
         responseSeconds: values.responseSeconds,
         groupId: values.groupId,
-        orderInGroup: order && order < 20 ? String(order + 1) : '',
+        // Để trống: GroupFields điền vị trí trống đầu tiên khi nhóm tải lại (đã thêm câu vừa tạo)
+        orderInGroup: '',
       });
       setSavedMessage('Đã tạo câu hỏi, mời soạn câu tiếp theo');
       markSaved();
@@ -238,7 +248,11 @@ function QuestionEditor({ defaultValues, question, reload }: QuestionEditorProps
         className="space-y-6"
       >
         <PageHeader
-          breadcrumbs={[{ label: 'Ngân hàng câu hỏi', to: LIST_PATH }, { label: title }]}
+          breadcrumbs={[
+            { label: 'Ngân hàng câu hỏi', to: QUESTION_LIST_PATH },
+            ...(returnPath !== QUESTION_LIST_PATH ? [{ label: 'Nhóm câu', to: returnPath }] : []),
+            { label: title },
+          ]}
           title={title}
           description={
             question
@@ -312,7 +326,7 @@ function QuestionEditor({ defaultValues, question, reload }: QuestionEditorProps
                 title="Nhóm câu"
                 description={`Part ${rule.part} gồm nhiều câu dùng chung ${rule.groupContent === 'transcript' ? 'một đoạn hội thoại/bài nói' : 'một đoạn văn'}.`}
               >
-                <GroupFields rule={rule} editing={editing} />
+                <GroupFields rule={rule} editing={editing} questionId={question?.id} />
               </FormSection>
             )}
 
@@ -347,7 +361,7 @@ function QuestionEditor({ defaultValues, question, reload }: QuestionEditorProps
           {readOnly ? (
             <>
               <p className="mr-auto text-sm text-muted-foreground">Chế độ chỉ xem</p>
-              <ButtonLink to={LIST_PATH} variant="secondary" className="h-10 w-auto px-4">
+              <ButtonLink to={returnPath} variant="secondary" className="h-10 w-auto px-4">
                 Về danh sách
               </ButtonLink>
             </>
@@ -377,7 +391,7 @@ function QuestionEditor({ defaultValues, question, reload }: QuestionEditorProps
               {/* Màn hẹp: bỏ nút Hủy (quay lại bằng breadcrumb), hai nút lưu chia đều một hàng */}
               <div className="flex w-full gap-3 sm:w-auto">
                 <Link
-                  to={LIST_PATH}
+                  to={returnPath}
                   className="hidden h-10 items-center rounded-xl px-4 text-sm font-semibold text-slate-600 hover:bg-accent sm:flex"
                 >
                   {isDirty ? 'Hủy' : 'Đóng'}
@@ -413,7 +427,7 @@ function QuestionEditor({ defaultValues, question, reload }: QuestionEditorProps
           onClose={() => setDeleting(false)}
           onDeleted={() => {
             const state: QuestionBankLocationState = { flash: 'Đã xóa câu hỏi' };
-            void navigate(LIST_PATH, { state });
+            void navigate(returnPath, { state });
           }}
         />
       )}

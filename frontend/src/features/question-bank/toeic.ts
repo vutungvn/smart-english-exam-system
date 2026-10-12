@@ -170,6 +170,33 @@ export function partsOfSkill(skill: Skill): PartRule[] {
 
 export const SKILLS: readonly Skill[] = ['LISTENING', 'READING', 'SPEAKING', 'WRITING'];
 
+/** Part dùng nhóm câu: L3, L4, R6, R7, S4 */
+export const GROUP_PART_RULES = PART_RULES.filter((rule) => rule.group === 'required');
+/** Writing không có Part nhóm */
+export const GROUP_SKILLS: readonly Skill[] = ['LISTENING', 'READING', 'SPEAKING'];
+
+export function groupPartsOfSkill(skill: Skill): PartRule[] {
+  return GROUP_PART_RULES.filter((rule) => rule.skill === skill);
+}
+
+/** Số câu mỗi nhóm theo định dạng TOEIC (chỉ để gợi ý, backend không chặn) */
+const GROUP_SIZES: Record<string, { min: number; max: number }> = {
+  'LISTENING-3': { min: 3, max: 3 },
+  'LISTENING-4': { min: 3, max: 3 },
+  'READING-6': { min: 4, max: 4 },
+  'READING-7': { min: 2, max: 5 },
+  'SPEAKING-4': { min: 3, max: 3 },
+};
+
+export function groupSize(skill: Skill, part: number): { min: number; max: number } | undefined {
+  return GROUP_SIZES[`${skill}-${part}`];
+}
+
+/** "3 câu" hoặc "2–5 câu" */
+export function groupSizeLabel(size: { min: number; max: number }): string {
+  return size.min === size.max ? `${size.min} câu` : `${size.min}–${size.max} câu`;
+}
+
 interface SkillMeta {
   label: string;
   subtitle: string;
@@ -236,4 +263,9 @@ export const OPTION_LABELS = ['A', 'B', 'C', 'D'] as const;
 /** "Part 5 · Incomplete Sentences" */
 export function partLabel(rule: Pick<PartRule, 'part' | 'name'>): string {
   return `Part ${rule.part} · ${rule.name}`;
+}
+
+/** Nội dung chính của nhóm để trích ngắn: lời thoại (Listening) hoặc đoạn văn */
+export function groupText(group: { passage: string | null; transcript: string | null }): string {
+  return (group.transcript ?? group.passage ?? '').trim();
 }
