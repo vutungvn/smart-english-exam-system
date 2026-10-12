@@ -62,6 +62,21 @@ export function ApiPaginatedEnvelope<T>(
   );
 }
 
+/** Response danh sách ngắn không phân trang (danh mục): { success, status, data: Model[] } */
+export function ApiListEnvelope<T>(
+  model: Type<T>,
+  { status = HttpStatus.OK, description = 'Thành công' }: EnvelopeOptions = {},
+): MethodDecorator & ClassDecorator {
+  return applyDecorators(
+    ApiExtraModels(model),
+    ApiResponse({
+      status,
+      description,
+      schema: envelopeSchema(status, { type: 'array', items: { $ref: getSchemaPath(model) } }),
+    }),
+  );
+}
+
 /** Response của route trả void: { success, status, data: null } */
 export function ApiNullEnvelope({
   status = HttpStatus.OK,

@@ -5,6 +5,18 @@ import { ConfigService } from '@nestjs/config';
 import { Env } from './config/env.schema.js';
 import { configureApp, setupSwagger } from './app.setup.js';
 
+// Prisma 7 (adapter-pg) chạy song song truy vấn con trên cùng kết nối của transaction
+// (ví dụ create lồng nhau kèm select quan hệ); pg vẫn tự xếp hàng nên kết quả đúng.
+// Bỏ đoạn này khi Prisma sửa lỗi phía adapter.
+const PG_QUERY_QUEUE_WARNING =
+  'Calling client.query() when the client is already executing a query';
+const emitWarning = process.emitWarning.bind(process) as (...args: unknown[]) => void;
+process.emitWarning = (warning: string | Error, ...rest: unknown[]) => {
+  const message = typeof warning === 'string' ? warning : warning.message;
+  if (message.startsWith(PG_QUERY_QUEUE_WARNING)) return;
+  emitWarning(warning, ...rest);
+};
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 

@@ -39,6 +39,52 @@ enum Level {
   @@map("level")
 }
 
+/// Chương trình thi (D16, D17): chỉ làm TOEIC, IELTS để sẵn giá trị
+enum SubjectCategory {
+  TOEIC
+  IELTS
+
+  @@map("subject_category")
+}
+
+/// 4 kỹ năng TOEIC (D17)
+enum Skill {
+  LISTENING
+  READING
+  SPEAKING
+  WRITING
+
+  @@map("skill")
+}
+
+/// D11: LR dùng SINGLE_CHOICE; Speaking, Writing là câu trả lời mở chấm bằng AI.
+/// MULTIPLE_CHOICE giữ trong enum nhưng chưa Part nào dùng; bỏ FILL_IN_BLANK
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  SPOKEN_RESPONSE
+  WRITTEN_RESPONSE
+
+  @@map("question_type")
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+
+  @@map("difficulty")
+}
+
+/// DRAFT: đang soạn · ACTIVE: được đưa vào đề · INACTIVE: ngừng dùng nhưng đề cũ vẫn tham chiếu
+enum QuestionStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+
+  @@map("question_status")
+}
+
 // ================================================================
 // Nhóm Người dùng và phân quyền
 // ================================================================
@@ -134,6 +180,8 @@ model Teacher {
   isApproved     Boolean @default(false) @map("is_approved")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_teachers_user_id")
+  questions      Question[]
+  questionGroups QuestionGroup[]
 
   @@map("teachers")
 }
@@ -168,3 +216,126 @@ model LoginHistory {
   @@index([userId, createdAt(sort: Desc)], map: "ix_login_histories_user_created")
   @@map("login_histories")
 }
+
+// ================================================================
+// Nhóm Chương trình thi và ngân hàng câu hỏi
+// ================================================================
+
+/// Chương trình thi (TOEIC; IELTS sau này). Tên bảng giữ "subjects" như tài liệu CSDL
+model Subject {
+  id        String          @id(map: "pk_subjects") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code      String          @unique(map: "uq_subjects_code") @db.VarChar(50)
+  name      String          @db.VarChar(150)
+  category  SubjectCategory
+  isActive  Boolean         @default(true) @map("is_active")
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  topics Topic[]
+
+  @@map("subjects")
+}
+
+/// Chủ đề theo dạng kỹ năng (Ke_hoach_soan_cau_hoi Mục 3.4), đơn vị thống kê điểm mạnh/yếu.
+/// Bổ sung so với tài liệu (D22): skill + parts để chặn gắn nhầm chủ đề Reading cho câu Listening
+model Topic {
+  id          String   @id(map: "pk_topics") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subjectId   String   @map("subject_id") @db.Uuid
+  skill       Skill
+  /// Các Part dùng được chủ đề này, ví dụ "P3/P4 – Chi tiết" là [3, 4]
+  parts       Int[]    @db.SmallInt
+  name        String   @db.VarChar(150)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade, map: "fk_topics_subject_id")
+  questions      Question[]
+  questionGroups QuestionGroup[]
+
+  @@unique([subjectId, name], map: "uq_topics_subject_name")
+  @@index([subjectId, skill], map: "ix_topics_subject_skill")
+  @@map("topics")
+}
+
+/// Nhóm câu dùng chung đoạn văn/audio/bảng thông tin (D15): Listening P3, P4; Reading P6, P7; Speaking P4
+model QuestionGroup {
+  id         String         @id(map: "pk_question_groups") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  topicId    String         @map("topic_id") @db.Uuid
+  authorId   String         @map("author_id") @db.Uuid
+  skill      Skill
+  part       Int            @db.SmallInt
+  /// Đoạn văn (Reading P6, P7) hoặc bảng thông tin (Speaking P4)
+  passage    String?
+  /// Lời thoại Listening P3, P4: chỉ hiện ở màn xem lại, không hiện khi đang làm bài
+  transcript String?
+  /// Key trong kho tệp (StorageService), gán khi làm chức năng tải media/nhập .zip
+  audioKey   String?        @map("audio_key") @db.VarChar(500)
+  imageKey   String?        @map("image_key") @db.VarChar(500)
+  status     QuestionStatus @default(DRAFT)
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime?      @map("deleted_at") @db.Timestamptz(6)
+
+  topic     Topic      @relation(fields: [topicId], references: [id], onDelete: Restrict, map: "fk_question_groups_topic_id")
+  author    Teacher    @relation(fields: [authorId], references: [userId], onDelete: Restrict, map: "fk_question_groups_author_id")
+  questions Question[]
+
+  @@index([topicId], map: "ix_question_groups_topic_id")
+  @@index([authorId], map: "ix_question_groups_author_id")
+  @@map("question_groups")
+}
+
+model Question {
+  id              String         @id(map: "pk_questions") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  topicId         String         @map("topic_id") @db.Uuid
+  authorId        String         @map("author_id") @db.Uuid
+  groupId         String?        @map("group_id") @db.Uuid
+  /// Thứ tự trong nhóm (1, 2, 3…); có khi và chỉ khi group_id có
+  orderInGroup    Int?           @map("order_in_group") @db.SmallInt
+  type            QuestionType
+  skill           Skill
+  /// LR 1–7; Speaking 1–5; Writing 1–3 (cặp skill–part hợp lệ kiểm tra ở Service theo TOEIC_PARTS, D17)
+  part            Int            @db.SmallInt
+  difficulty      Difficulty
+  content         String
+  explanation     String?
+  /// Câu trả lời mẫu cho Speaking/Writing: dùng ở màn xem lại và làm mốc khi AI chấm (D18)
+  sampleAnswer    String?        @map("sample_answer")
+  /// Thời gian chuẩn bị/trả lời của câu Speaking, tính bằng giây (D18)
+  prepSeconds     Int?           @map("prep_seconds") @db.SmallInt
+  responseSeconds Int?           @map("response_seconds") @db.SmallInt
+  audioKey        String?        @map("audio_key") @db.VarChar(500)
+  imageKey        String?        @map("image_key") @db.VarChar(500)
+  status          QuestionStatus @default(DRAFT)
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?      @map("deleted_at") @db.Timestamptz(6)
+
+  topic   Topic            @relation(fields: [topicId], references: [id], onDelete: Restrict, map: "fk_questions_topic_id")
+  author  Teacher          @relation(fields: [authorId], references: [userId], onDelete: Restrict, map: "fk_questions_author_id")
+  group   QuestionGroup?   @relation(fields: [groupId], references: [id], onDelete: Restrict, map: "fk_questions_group_id")
+  options QuestionOption[]
+
+  @@index([topicId], map: "ix_questions_topic_id")
+  @@index([authorId], map: "ix_questions_author_id")
+  @@index([groupId], map: "ix_questions_group_id")
+  /// Tìm theo từ khóa (ILIKE '%…%') dùng được chỉ mục trigram; extension pg_trgm tạo trong migration
+  @@index([content(ops: raw("gin_trgm_ops"))], type: Gin, map: "ix_questions_content_trgm")
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String  @id(map: "pk_question_options") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId String  @map("question_id") @db.Uuid
+  /// A, B, C, D
+  label      String  @db.VarChar(10)
+  content    String
+  isCorrect  Boolean @default(false) @map("is_correct")
+  orderIndex Int     @map("order_index") @db.SmallInt
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade, map: "fk_question_options_question_id")
+
+  @@unique([questionId, label], map: "uq_question_options_question_label")
+  @@map("question_options")
+}
+

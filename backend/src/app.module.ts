@@ -11,6 +11,8 @@ import { RedisModule } from './infra/redis/redis.module.js';
 import { MailModule } from './infra/mail/mail.module.js';
 import { MediaModule } from './modules/media/media.module.js';
 import { StorageModule } from './infra/storage/storage.module.js';
+import { SubjectsModule } from './modules/subjects/subjects.module.js';
+import { QuestionsModule } from './modules/questions/questions.module.js';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { StorageModule } from './infra/storage/storage.module.js';
     AuthModule,
     MeModule,
     MediaModule,
+    SubjectsModule,
+    QuestionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

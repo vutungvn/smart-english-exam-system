@@ -10,6 +10,7 @@ import { OneTimeTokenService } from './one-time-token.service.js';
 import { AuthLimitService } from './auth-limit.service.js';
 import { AUTH_THROTTLE } from './auth.constants.js';
 import { GoogleOAuthService } from './google-oauth.service.js';
+import { RolesGuard } from '../../common/guards/roles.guard.js';
 
 @Module({
   imports: [
@@ -24,7 +25,9 @@ import { GoogleOAuthService } from './google-oauth.service.js';
     OneTimeTokenService,
     AuthLimitService,
     GoogleOAuthService,
+    // Guard toàn cục chạy theo thứ tự đăng ký: xác thực (ai?) rồi mới phân quyền (được làm gì?)
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
   exports: [TokenService],
 })
