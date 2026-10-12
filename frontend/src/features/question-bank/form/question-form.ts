@@ -6,7 +6,7 @@ import type {
   QuestionStatus,
   Skill,
 } from '@/api/generated';
-import { findPartRule, OPTION_LABELS, type PartRule } from '../toeic';
+import { defaultContent, findPartRule, OPTION_LABELS, type PartRule } from '../toeic';
 
 /**
  * Giá trị form giữ dạng chuỗi cho ô số (thời gian, thứ tự) để ô trống không thành NaN;
@@ -115,7 +115,8 @@ export function emptyFormValues(preset?: {
     topicId: '',
     difficulty: 'MEDIUM',
     status: 'DRAFT',
-    content: '',
+    // L1, L2 có nhãn cố định; R6 điền "Chỗ trống [n]" khi biết thứ tự trong nhóm (AnswerFields)
+    content: rule ? (defaultContent(rule.skill, rule.part) ?? '') : '',
     options: EMPTY_OPTIONS,
     correct: '',
     sampleAnswer: '',

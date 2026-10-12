@@ -269,3 +269,32 @@ export function partLabel(rule: Pick<PartRule, 'part' | 'name'>): string {
 export function groupText(group: { passage: string | null; transcript: string | null }): string {
   return (group.transcript ?? group.passage ?? '').trim();
 }
+
+/**
+ * Listening Part 1, 2 và Reading Part 6 trong đề thật không in câu hỏi bằng chữ, nhưng backend
+ * bắt buộc có content: form điền sẵn một nhãn chuẩn (giáo viên vẫn sửa được).
+ * Part 6 ghi số chỗ trống theo thứ tự trong nhóm, khớp dấu [n] ___ trong đoạn văn của nhóm.
+ */
+export function defaultContent(
+  skill: Skill | '',
+  part: number,
+  orderInGroup?: string,
+): string | undefined {
+  if (skill === 'LISTENING' && part === 1) return 'Nghe và chọn câu mô tả đúng nhất bức tranh.';
+  if (skill === 'LISTENING' && part === 2) return 'Nghe câu hỏi và chọn câu trả lời phù hợp nhất.';
+  if (skill === 'READING' && part === 6) {
+    const order = Number(orderInGroup);
+    return Number.isInteger(order) && order > 0 ? `Chỗ trống [${order}]` : 'Chỗ trống';
+  }
+  return undefined;
+}
+
+/** Nội dung còn là nhãn mặc định (giáo viên chưa tự sửa): được phép thay theo Part/thứ tự mới */
+export function isDefaultContent(content: string): boolean {
+  const text = content.trim();
+  return (
+    text === defaultContent('LISTENING', 1) ||
+    text === defaultContent('LISTENING', 2) ||
+    /^Chỗ trống( \[\d+\])?$/.test(text)
+  );
+}

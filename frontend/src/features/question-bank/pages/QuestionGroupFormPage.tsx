@@ -514,7 +514,7 @@ function contentPlaceholder(rule?: PartRule): string {
   if (rule.skill === 'SPEAKING')
     return 'Annual Tech Summit – Schedule\n09:00 – 10:30  Keynote: The future of AI\n10:45 – 12:00  Workshop: Cloud security\n…';
   if (rule.part === 6)
-    return 'To: All staff\nFrom: Human Resources\n\nPlease be advised that the office will be (131) ___ next Monday…';
+    return 'To: All staff\nFrom: Human Resources\n\nPlease be advised that the office will be [1] ___ next Monday. [2] ___…';
   return 'Dán email, thông báo, quảng cáo, bài báo… mà các câu hỏi sẽ hỏi về.';
 }
 
@@ -626,8 +626,9 @@ function GroupGuide({ rule }: { rule?: PartRule }) {
           ]
         : rule.part === 6
           ? [
-              'Đánh dấu chỗ trống theo số câu, ví dụ (131) ___, (132) ___.',
-              'Mỗi chỗ trống là một câu hỏi trong nhóm, đúng thứ tự.',
+              'Đánh dấu chỗ trống theo thứ tự câu trong nhóm: [1] ___, [2] ___, [3] ___, [4] ___. Không dùng số câu của đề (131, 132…) vì mỗi đề đánh số khác nhau.',
+              'Câu hỏi có Thứ tự trong nhóm là n sẽ điền vào chỗ trống [n]; form câu hỏi tự ghi nhãn "Chỗ trống [n]".',
+              'Thường có 1 chỗ trống điền cả câu: 4 phương án là 4 câu hoàn chỉnh.',
             ]
           : [
               'Có thể gồm một hoặc nhiều văn bản (email + hóa đơn…), ghi rõ tiêu đề từng phần.',

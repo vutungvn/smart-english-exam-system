@@ -1,9 +1,10 @@
+import { useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { CircleCheck } from 'lucide-react';
+import { CircleCheck, Info } from 'lucide-react';
 import { FieldError } from '@/components/form/FieldError';
 import { FormField } from '@/components/form/FormField';
 import { cn } from '@/lib/utils';
-import { OPTION_LABELS, type PartRule } from '../toeic';
+import { defaultContent, isDefaultContent, OPTION_LABELS, type PartRule } from '../toeic';
 import { CONTENT_MAX, SAMPLE_ANSWER_MAX, type QuestionFormValues } from './question-form';
 import { inputClass, textareaClass } from './styles';
 
@@ -23,12 +24,27 @@ function contentPlaceholder(rule?: PartRule): string {
 export function AnswerFields({ rule }: { rule?: PartRule }) {
   const {
     register,
-    formState: { errors },
+    getValues,
+    setValue,
+    formState: { errors, isSubmitted },
   } = useFormContext<QuestionFormValues>();
-  const [content, correct, sampleAnswer] = useWatch<
+  const [content, correct, sampleAnswer, skill, part, orderInGroup] = useWatch<
     QuestionFormValues,
-    ['content', 'correct', 'sampleAnswer']
-  >({ name: ['content', 'correct', 'sampleAnswer'] });
+    ['content', 'correct', 'sampleAnswer', 'skill', 'part', 'orderInGroup']
+  >({ name: ['content', 'correct', 'sampleAnswer', 'skill', 'part', 'orderInGroup'] });
+  const hasDefault = defaultContent(skill, part) !== undefined;
+
+  // L1, L2, R6: điền nhãn mặc định khi đổi Part hoặc thứ tự trong nhóm (R6 "Chỗ trống [n]").
+  // Chỉ thay khi ô đang trống hoặc vẫn là nhãn mặc định: giáo viên đã tự sửa thì giữ nguyên.
+  // Không theo dõi content: giáo viên xóa trắng ô để tự gõ thì không bị điền lại ngay.
+  useEffect(() => {
+    const current = getValues('content');
+    if (current.trim() && !isDefaultContent(current)) return;
+    const next = defaultContent(skill, part, orderInGroup) ?? '';
+    if (next !== current) {
+      setValue('content', next, { shouldDirty: true, shouldValidate: isSubmitted });
+    }
+  }, [skill, part, orderInGroup, getValues, setValue, isSubmitted]);
 
   return (
     <div className="space-y-6">
@@ -49,6 +65,17 @@ export function AnswerFields({ rule }: { rule?: PartRule }) {
           className={textareaClass}
           {...register('content')}
         />
+        {hasDefault && (
+          <p className="flex items-start gap-1.5 px-1 text-xs text-subtle">
+            <Info className="mt-0.5 size-3.5 shrink-0" />
+            <span>
+              Đề thật không in câu hỏi cho Part này; nội dung được điền sẵn làm nhãn để phân biệt
+              các câu, bạn sửa được.
+              {skill === 'READING' &&
+                ' Số trong [ ] tự đổi theo Thứ tự trong nhóm, khớp dấu [n] ___ trong đoạn văn của nhóm.'}
+            </span>
+          </p>
+        )}
       </FormField>
 
       {rule?.type === 'SINGLE_CHOICE' && (
