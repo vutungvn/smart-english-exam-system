@@ -10,7 +10,7 @@ const SECTIONS: SidebarSection[] = [
     { to: '/teacher/questions', label: 'Ngân hàng câu hỏi', icon: ListChecks },
     { to: '/teacher/question-groups', label: 'Nhóm câu hỏi', icon: Layers },
     { to: '/teacher/import', label: 'Nhập từ tệp', icon: FileUp, comingSoon: true },
-    { to: '/teacher/exams', label: 'Đề thi', icon: FileText, comingSoon: true },
+    { to: '/teacher/exams', label: 'Đề thi', icon: FileText },
   ],
   [{ to: '/teacher/profile', label: 'Hồ sơ cá nhân', icon: UserRound }],
 ];
