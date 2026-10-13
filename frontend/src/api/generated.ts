@@ -1,5 +1,12 @@
 import { baseApi as api } from './base-api';
-export const addTagTypes = ['Auth', 'Me', 'Subjects', 'Questions', 'Question Groups'] as const;
+export const addTagTypes = [
+  'Auth',
+  'Me',
+  'Subjects',
+  'Questions',
+  'Question Groups',
+  'Exams',
+] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
     addTagTypes,
@@ -193,6 +200,88 @@ const injectedRtkApi = api
           method: 'DELETE',
         }),
         invalidatesTags: ['Question Groups'],
+      }),
+      listExams: build.query<ListExamsApiResponse, ListExamsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/exams`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+            status: queryArg.status,
+            scoringScale: queryArg.scoringScale,
+            q: queryArg.q,
+          },
+        }),
+        providesTags: ['Exams'],
+      }),
+      createExam: build.mutation<CreateExamApiResponse, CreateExamApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/teacher/exams`, method: 'POST', body: queryArg }),
+        invalidatesTags: ['Exams'],
+      }),
+      getExam: build.query<GetExamApiResponse, GetExamApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/teacher/exams/${queryArg}` }),
+        providesTags: ['Exams'],
+      }),
+      updateExam: build.mutation<UpdateExamApiResponse, UpdateExamApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/exams/${queryArg.id}`,
+          method: 'PATCH',
+          body: queryArg.updateExamDto,
+        }),
+        invalidatesTags: ['Exams'],
+      }),
+      deleteExam: build.mutation<DeleteExamApiResponse, DeleteExamApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/teacher/exams/${queryArg}`, method: 'DELETE' }),
+        invalidatesTags: ['Exams'],
+      }),
+      addSection: build.mutation<AddSectionApiResponse, AddSectionApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/exams/${queryArg.id}/sections`,
+          method: 'POST',
+          body: queryArg.addExamSectionDto,
+        }),
+        invalidatesTags: ['Exams'],
+      }),
+      removeSection: build.mutation<RemoveSectionApiResponse, RemoveSectionApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/exams/${queryArg.id}/sections/${queryArg.sectionId}`,
+          method: 'DELETE',
+        }),
+        invalidatesTags: ['Exams'],
+      }),
+      addQuestions: build.mutation<AddQuestionsApiResponse, AddQuestionsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/exams/${queryArg.id}/sections/${queryArg.sectionId}/questions`,
+          method: 'POST',
+          body: queryArg.addExamQuestionsDto,
+        }),
+        invalidatesTags: ['Exams'],
+      }),
+      removeQuestion: build.mutation<RemoveQuestionApiResponse, RemoveQuestionApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/exams/${queryArg.id}/sections/${queryArg.sectionId}/questions/${queryArg.examQuestionId}`,
+          method: 'DELETE',
+        }),
+        invalidatesTags: ['Exams'],
+      }),
+      validateExam: build.query<ValidateExamApiResponse, ValidateExamApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/teacher/exams/${queryArg}/validation` }),
+        providesTags: ['Exams'],
+      }),
+      previewExam: build.query<PreviewExamApiResponse, PreviewExamApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/teacher/exams/${queryArg}/preview` }),
+        providesTags: ['Exams'],
+      }),
+      publishExam: build.mutation<PublishExamApiResponse, PublishExamApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/teacher/exams/${queryArg}/publish`, method: 'POST' }),
+        invalidatesTags: ['Exams'],
+      }),
+      unpublishExam: build.mutation<UnpublishExamApiResponse, UnpublishExamApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/exams/${queryArg}/unpublish`,
+          method: 'POST',
+        }),
+        invalidatesTags: ['Exams'],
       }),
     }),
     overrideExisting: false,
@@ -411,6 +500,109 @@ export type DeleteQuestionGroupApiResponse = /** status 200 Thành công */ {
   data: object | null;
 };
 export type DeleteQuestionGroupApiArg = string;
+export type ListExamsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamSummary[];
+  meta: PaginationMetaDto;
+};
+export type ListExamsApiArg = {
+  page?: number;
+  limit?: number;
+  status?: ExamStatus;
+  scoringScale?: ScoringScale;
+  /** Tìm theo tên đề (không phân biệt hoa thường) */
+  q?: string;
+};
+export type CreateExamApiResponse = /** status 201 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamDetail;
+};
+export type CreateExamApiArg = CreateExamDto;
+export type GetExamApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamDetail;
+};
+export type GetExamApiArg = string;
+export type UpdateExamApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamDetail;
+};
+export type UpdateExamApiArg = {
+  id: string;
+  updateExamDto: UpdateExamDto;
+};
+export type DeleteExamApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: object | null;
+};
+export type DeleteExamApiArg = string;
+export type AddSectionApiResponse = /** status 201 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamDetail;
+};
+export type AddSectionApiArg = {
+  id: string;
+  addExamSectionDto: AddExamSectionDto;
+};
+export type RemoveSectionApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamDetail;
+};
+export type RemoveSectionApiArg = {
+  id: string;
+  sectionId: string;
+};
+export type AddQuestionsApiResponse = /** status 201 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamDetail;
+};
+export type AddQuestionsApiArg = {
+  id: string;
+  sectionId: string;
+  addExamQuestionsDto: AddExamQuestionsDto;
+};
+export type RemoveQuestionApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamDetail;
+};
+export type RemoveQuestionApiArg = {
+  id: string;
+  sectionId: string;
+  examQuestionId: string;
+};
+export type ValidateExamApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamValidation;
+};
+export type ValidateExamApiArg = string;
+export type PreviewExamApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamPaper;
+};
+export type PreviewExamApiArg = string;
+export type PublishExamApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamDetail;
+};
+export type PublishExamApiArg = string;
+export type UnpublishExamApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamDetail;
+};
+export type UnpublishExamApiArg = string;
 export type UserStatus = 'PENDING_VERIFICATION' | 'PENDING_APPROVAL' | 'ACTIVE' | 'LOCKED';
 export type RegisterResult = {
   id: string;
@@ -451,7 +643,14 @@ export type ErrorCode =
   | 'QUESTION_NOT_FOUND'
   | 'QUESTION_GROUP_NOT_FOUND'
   | 'QUESTION_GROUP_NOT_EMPTY'
-  | 'QUESTION_GROUP_ORDER_TAKEN';
+  | 'QUESTION_GROUP_ORDER_TAKEN'
+  | 'EXAM_NOT_FOUND'
+  | 'EXAM_SECTION_NOT_FOUND'
+  | 'EXAM_QUESTION_NOT_FOUND'
+  | 'EXAM_PUBLISHED'
+  | 'EXAM_SECTION_EXISTS'
+  | 'EXAM_QUESTION_DUPLICATE'
+  | 'EXAM_NOT_PUBLISHABLE';
 export type FieldErrorDto = {
   /** Trường lỗi, trường lồng nhau dạng address.city */
   field: string;
@@ -744,6 +943,186 @@ export type UpdateQuestionGroupDto = {
   /** updatedAt lần đọc gần nhất */
   updatedAt: string;
 };
+export type SubjectRef = {
+  id: string;
+  code: string;
+  name: string;
+};
+export type ExamKind = 'STANDARD' | 'AI_PRACTICE';
+export type ScoringScale = 'TOEIC_990' | 'TOEIC_SW' | 'PERCENT';
+export type ExamStatus = 'DRAFT' | 'PUBLISHED' | 'UNPUBLISHED';
+export type ExamSummary = {
+  id: string;
+  subject: SubjectRef;
+  kind: ExamKind;
+  title: string;
+  description: string | null;
+  scoringScale: ScoringScale;
+  durationMinutes: number;
+  /** null: không giới hạn */
+  maxAttempts: number | null;
+  allowPartPractice: boolean;
+  status: ExamStatus;
+  publishedAt: string | null;
+  sectionCount: number;
+  questionCount: number;
+  createdAt: string;
+  /** Gửi lại nguyên giá trị này khi PATCH để kiểm tra xung đột (khóa lạc quan) */
+  updatedAt: string;
+};
+export type ExamQuestionItem = {
+  /** Id của câu trong đề (dùng khi gỡ câu khỏi đề) */
+  id: string;
+  orderIndex: number;
+  /** Câu trong ngân hàng; các câu cùng groupId nằm liền nhau (một khối) */
+  question: QuestionSummary;
+};
+export type ExamSectionItem = {
+  id: string;
+  skill: Skill;
+  part: number;
+  name: string;
+  questionCount: number;
+  questions: ExamQuestionItem[];
+};
+export type ExamDetail = {
+  id: string;
+  subject: SubjectRef;
+  kind: ExamKind;
+  title: string;
+  description: string | null;
+  scoringScale: ScoringScale;
+  durationMinutes: number;
+  /** null: không giới hạn */
+  maxAttempts: number | null;
+  allowPartPractice: boolean;
+  status: ExamStatus;
+  publishedAt: string | null;
+  sectionCount: number;
+  questionCount: number;
+  createdAt: string;
+  /** Gửi lại nguyên giá trị này khi PATCH để kiểm tra xung đột (khóa lạc quan) */
+  updatedAt: string;
+  /** Theo thứ tự Part chuẩn của TOEIC */
+  sections: ExamSectionItem[];
+};
+export type CreateExamDto = {
+  /** Chương trình thi, lấy từ GET /subjects */
+  subjectId: string;
+  title: string;
+  description?: string | null;
+  /** TOEIC_990: đề Listening + Reading đủ 7 Part · TOEIC_SW: đề Speaking và/hoặc Writing · PERCENT: luyện theo Part */
+  scoringScale: ScoringScale;
+  durationMinutes: number;
+  /** Bỏ trống hoặc null: không giới hạn số lần làm */
+  maxAttempts?: number | null;
+  /** Cho phép học viên làm riêng từng Part */
+  allowPartPractice?: boolean;
+};
+export type UpdateExamDto = {
+  title?: string;
+  description?: string | null;
+  /** TOEIC_990: đề Listening + Reading đủ 7 Part · TOEIC_SW: đề Speaking và/hoặc Writing · PERCENT: luyện theo Part */
+  scoringScale?: ScoringScale;
+  durationMinutes?: number;
+  /** Bỏ trống hoặc null: không giới hạn số lần làm */
+  maxAttempts?: number | null;
+  /** Cho phép học viên làm riêng từng Part */
+  allowPartPractice?: boolean;
+  /** updatedAt lần đọc gần nhất */
+  updatedAt: string;
+};
+export type AddExamSectionDto = {
+  skill: Skill;
+  /** LR 1–7; Speaking 1–5; Writing 1–3 */
+  part: number;
+};
+export type AddExamQuestionsDto = {
+  /** Câu đơn (Part không có nhóm), thêm theo đúng thứ tự gửi lên */
+  questionIds?: string[];
+  /** Nhóm câu (L3, L4, R6, R7, S4): thêm toàn bộ câu của nhóm theo thứ tự trong nhóm */
+  groupIds?: string[];
+};
+export type ExamPartCheck = {
+  skill: Skill;
+  part: number;
+  name: string;
+  /** Số câu chuẩn TOEIC; null với đề luyện tập (PERCENT) */
+  expected: number | null;
+  actual: number;
+};
+export type ExamIssueLevel = 'ERROR' | 'WARNING';
+export type ExamIssueCode =
+  | 'NO_SECTIONS'
+  | 'MISSING_PART'
+  | 'EMPTY_SECTION'
+  | 'WRONG_QUESTION_COUNT'
+  | 'QUESTION_REMOVED'
+  | 'QUESTION_NOT_ACTIVE'
+  | 'GROUP_NOT_ACTIVE'
+  | 'GROUP_SIZE'
+  | 'GROUP_INCOMPLETE'
+  | 'MISSING_MEDIA'
+  | 'DURATION';
+export type ExamIssue = {
+  level: ExamIssueLevel;
+  code: ExamIssueCode;
+  message: string;
+  sectionId: string | null;
+  /** Câu trong ngân hàng, để FE mở thẳng câu cần sửa */
+  questionId: string | null;
+};
+export type ExamValidation = {
+  /** true khi không còn lỗi mức ERROR */
+  publishable: boolean;
+  totalQuestions: number;
+  parts: ExamPartCheck[];
+  issues: ExamIssue[];
+};
+export type PaperGroup = {
+  id: string;
+  /** Đoạn văn, bảng thông tin */
+  passage: string | null;
+  audioKey: string | null;
+  imageKey: string | null;
+};
+export type PaperOption = {
+  id: string;
+  label: string;
+  content: string;
+};
+export type PaperQuestion = {
+  /** Số câu liên tục trong cả đề: 1, 2, 3… */
+  number: number;
+  examQuestionId: string;
+  type: QuestionType;
+  content: string;
+  audioKey: string | null;
+  imageKey: string | null;
+  prepSeconds: number | null;
+  responseSeconds: number | null;
+  /** Không có isCorrect; rỗng với câu trả lời mở */
+  options: PaperOption[];
+};
+export type PaperBlock = {
+  group: PaperGroup | null;
+  questions: PaperQuestion[];
+};
+export type PaperSection = {
+  id: string;
+  skill: Skill;
+  part: number;
+  name: string;
+  blocks: PaperBlock[];
+};
+export type ExamPaper = {
+  id: string;
+  title: string;
+  scoringScale: ScoringScale;
+  durationMinutes: number;
+  totalQuestions: number;
+  sections: PaperSection[];
+};
 export const {
   useRegisterMutation,
   useVerifyEmailMutation,
@@ -772,4 +1151,17 @@ export const {
   useGetQuestionGroupQuery,
   useUpdateQuestionGroupMutation,
   useDeleteQuestionGroupMutation,
+  useListExamsQuery,
+  useCreateExamMutation,
+  useGetExamQuery,
+  useUpdateExamMutation,
+  useDeleteExamMutation,
+  useAddSectionMutation,
+  useRemoveSectionMutation,
+  useAddQuestionsMutation,
+  useRemoveQuestionMutation,
+  useValidateExamQuery,
+  usePreviewExamQuery,
+  usePublishExamMutation,
+  useUnpublishExamMutation,
 } = injectedRtkApi;
