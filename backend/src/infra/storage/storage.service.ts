@@ -6,10 +6,17 @@ export interface SaveObjectOptions {
   cacheControl?: string;
 }
 
+export interface GetObjectOptions {
+  /** Một khoảng byte theo cú pháp header Range: "bytes=0-1023", "bytes=1024-", "bytes=-500" */
+  range?: string;
+}
+
 export interface StoredObject {
   body: Readable;
   contentType?: string;
   contentLength?: number;
+  /** Chỉ có khi đọc theo khoảng byte: "bytes 0-1023/52000" */
+  contentRange?: string;
 }
 
 /**
@@ -21,8 +28,11 @@ export abstract class StorageService {
   /** Ghi đè nếu key đã tồn tại */
   abstract save(key: string, body: Buffer, options: SaveObjectOptions): Promise<void>;
 
-  /** null khi key không tồn tại */
-  abstract get(key: string): Promise<StoredObject | null>;
+  /**
+   * null khi key không tồn tại. Khoảng byte vượt quá kích thước tệp thì ném
+   * MEDIA_RANGE_NOT_SATISFIABLE (416)
+   */
+  abstract get(key: string, options?: GetObjectOptions): Promise<StoredObject | null>;
 
   /** Key không tồn tại cũng coi là thành công */
   abstract delete(key: string): Promise<void>;

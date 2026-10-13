@@ -3,6 +3,9 @@ import { Difficulty, QuestionStatus, QuestionType, Skill } from '../../generated
 
 // Khai báo các class được tham chiếu trước, vì decorator đọc chúng ngay khi nạp file
 
+export const MEDIA_URL_NOTE =
+  'URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp';
+
 export class TopicRef {
   @ApiProperty({ format: 'uuid' })
   id: string;
@@ -37,6 +40,14 @@ export class QuestionOptionItem {
 export class QuestionSummary {
   @ApiProperty({ format: 'uuid' })
   id: string;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: 'P5-001',
+    description: 'Mã câu trong tệp nhập; câu tạo bằng form thì null',
+  })
+  code: string | null;
 
   @ApiProperty({ type: TopicRef })
   topic: TopicRef;
@@ -93,11 +104,25 @@ export class QuestionDetail extends QuestionSummary {
   @ApiProperty({ type: 'integer', nullable: true })
   responseSeconds: number | null;
 
-  @ApiProperty({ type: String, nullable: true, description: 'Gán khi làm chức năng tải media' })
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Key trong kho tệp, gán khi nhập .zip',
+  })
   audioKey: string | null;
 
-  @ApiProperty({ type: String, nullable: true, description: 'Gán khi làm chức năng tải media' })
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Key trong kho tệp, gán khi nhập .zip',
+  })
   imageKey: string | null;
+
+  @ApiProperty({ type: String, nullable: true, description: MEDIA_URL_NOTE })
+  audioUrl: string | null;
+
+  @ApiProperty({ type: String, nullable: true, description: MEDIA_URL_NOTE })
+  imageUrl: string | null;
 
   @ApiProperty({ type: [QuestionOptionItem], description: 'Rỗng với câu trả lời mở' })
   options: QuestionOptionItem[];
@@ -130,6 +155,12 @@ export class QuestionGroupSummary {
 
   @ApiProperty({ type: String, nullable: true })
   imageKey: string | null;
+
+  @ApiProperty({ type: String, nullable: true, description: MEDIA_URL_NOTE })
+  audioUrl: string | null;
+
+  @ApiProperty({ type: String, nullable: true, description: MEDIA_URL_NOTE })
+  imageUrl: string | null;
 
   @ApiProperty({ enum: QuestionStatus, enumName: 'QuestionStatus' })
   status: QuestionStatus;

@@ -6,6 +6,7 @@ import type { WithMeta } from '../../common/types/api-response.js';
 import { paginate, toPrismaPage } from '../../common/utils/pagination.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
+import { MediaUrlService } from '../media/media-url.service.js';
 import type { CreateQuestionDto, QuestionOptionDto } from './dto/create-question.dto.js';
 import type { QuestionQueryDto } from './dto/question-query.dto.js';
 import type { UpdateQuestionDto } from './dto/update-question.dto.js';
@@ -56,6 +57,7 @@ export class QuestionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly refs: QuestionReferencesService,
+    private readonly media: MediaUrlService,
   ) {}
 
   async list(query: QuestionQueryDto, user: AuthUser): Promise<WithMeta<QuestionSummary[]>> {
@@ -99,7 +101,7 @@ export class QuestionsService {
       select: questionDetailSelect,
     });
     if (!row) throw new AppException(ErrorCode.QUESTION_NOT_FOUND);
-    return toQuestionDetail(row);
+    return toQuestionDetail(row, this.media);
   }
 
   async create(dto: CreateQuestionDto, user: AuthUser): Promise<QuestionDetail> {
@@ -146,7 +148,7 @@ export class QuestionsService {
       }),
     );
 
-    return toQuestionDetail(row);
+    return toQuestionDetail(row, this.media);
   }
 
   async update(id: string, dto: UpdateQuestionDto, user: AuthUser): Promise<QuestionDetail> {

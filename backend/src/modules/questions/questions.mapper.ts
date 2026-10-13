@@ -1,4 +1,5 @@
 import type { Prisma } from '../../generated/prisma/client.js';
+import type { MediaUrlService } from '../media/media-url.service.js';
 import type {
   QuestionDetail,
   QuestionGroupDetail,
@@ -14,6 +15,7 @@ const topicSelect = { select: { id: true, name: true } } as const;
 
 export const questionSummarySelect = {
   id: true,
+  code: true,
   groupId: true,
   orderInGroup: true,
   type: true,
@@ -78,14 +80,24 @@ export function toQuestionSummary({ author, ...row }: QuestionSummaryRow): Quest
   return { ...row, author: author.user };
 }
 
-export function toQuestionDetail({ author, ...row }: QuestionDetailRow): QuestionDetail {
-  return { ...row, author: author.user };
+// media gắn URL ký cho audio/ảnh: chỉ API đã kiểm tra quyền xem mới gọi các hàm này
+export function toQuestionDetail(
+  { author, ...row }: QuestionDetailRow,
+  media: MediaUrlService,
+): QuestionDetail {
+  return media.withUrls({ ...row, author: author.user });
 }
 
-export function toGroupSummary({ author, _count, ...row }: GroupSummaryRow): QuestionGroupSummary {
-  return { ...row, author: author.user, questionCount: _count.questions };
+export function toGroupSummary(
+  { author, _count, ...row }: GroupSummaryRow,
+  media: MediaUrlService,
+): QuestionGroupSummary {
+  return media.withUrls({ ...row, author: author.user, questionCount: _count.questions });
 }
 
-export function toGroupDetail({ questions, ...row }: GroupDetailRow): QuestionGroupDetail {
-  return { ...toGroupSummary(row), questions: questions.map(toQuestionSummary) };
+export function toGroupDetail(
+  { questions, ...row }: GroupDetailRow,
+  media: MediaUrlService,
+): QuestionGroupDetail {
+  return { ...toGroupSummary(row, media), questions: questions.map(toQuestionSummary) };
 }

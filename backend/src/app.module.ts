@@ -14,6 +14,7 @@ import { StorageModule } from './infra/storage/storage.module.js';
 import { SubjectsModule } from './modules/subjects/subjects.module.js';
 import { QuestionsModule } from './modules/questions/questions.module.js';
 import { ExamsModule } from './modules/exams/exams.module.js';
+import { QuestionImportModule } from './modules/question-import/question-import.module.js';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ExamsModule } from './modules/exams/exams.module.js';
     MediaModule,
     SubjectsModule,
     QuestionsModule,
+    QuestionImportModule,
     ExamsModule,
   ],
   controllers: [AppController],

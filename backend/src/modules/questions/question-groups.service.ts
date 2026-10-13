@@ -6,6 +6,7 @@ import type { WithMeta } from '../../common/types/api-response.js';
 import { paginate, toPrismaPage } from '../../common/utils/pagination.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
+import { MediaUrlService } from '../media/media-url.service.js';
 import type {
   CreateQuestionGroupDto,
   QuestionGroupQueryDto,
@@ -30,6 +31,7 @@ export class QuestionGroupsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly refs: QuestionReferencesService,
+    private readonly media: MediaUrlService,
   ) {}
 
   async list(
@@ -55,7 +57,11 @@ export class QuestionGroupsService {
       this.prisma.questionGroup.count({ where }),
     ]);
 
-    return paginate(rows.map(toGroupSummary), total, query);
+    return paginate(
+      rows.map((row) => toGroupSummary(row, this.media)),
+      total,
+      query,
+    );
   }
 
   async get(id: string): Promise<QuestionGroupDetail> {
@@ -64,7 +70,7 @@ export class QuestionGroupsService {
       select: groupDetailSelect,
     });
     if (!row) throw new AppException(ErrorCode.QUESTION_GROUP_NOT_FOUND);
-    return toGroupDetail(row);
+    return toGroupDetail(row, this.media);
   }
 
   async create(dto: CreateQuestionGroupDto, user: AuthUser): Promise<QuestionGroupDetail> {
@@ -86,7 +92,7 @@ export class QuestionGroupsService {
       },
       select: groupDetailSelect,
     });
-    return toGroupDetail(row);
+    return toGroupDetail(row, this.media);
   }
 
   async update(

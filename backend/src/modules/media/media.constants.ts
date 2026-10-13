@@ -19,3 +19,20 @@ export function avatarKeyFromUrl(url: string | null): string | null {
   const fileName = url.slice(AVATAR_URL_PREFIX.length);
   return AVATAR_FILE_PATTERN.test(fileName) ? AVATAR_KEY_PREFIX + fileName : null;
 }
+
+// Audio, ảnh của câu hỏi và nhóm câu: key questions/<uuid>.<đuôi>, phát qua
+// GET /api/v1/media/questions/<uuid>.<đuôi>?exp=…&sig=… (URL ký, xem MediaUrlService)
+export const QUESTION_MEDIA_KEY_PREFIX = 'questions/';
+export const QUESTION_MEDIA_URL_PREFIX = '/api/v1/media/questions/';
+export const QUESTION_MEDIA_FILE_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(mp3|jpg|png|webp)$/;
+
+/** Định dạng tệp câu hỏi được nhận: đuôi lưu trong kho và Content-Type khi phát lại */
+export const QUESTION_MEDIA_TYPES = {
+  mp3: 'audio/mpeg',
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+} as const;
+
+export type QuestionMediaExt = keyof typeof QUESTION_MEDIA_TYPES;

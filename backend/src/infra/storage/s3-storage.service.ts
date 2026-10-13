@@ -10,7 +10,12 @@ import {
 } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { Env } from '../../config/env.schema.js';
-import { SaveObjectOptions, StorageService, StoredObject } from './storage.service.js';
+import {
+  GetObjectOptions,
+  SaveObjectOptions,
+  StorageService,
+  StoredObject,
+} from './storage.service.js';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import { Readable } from 'node:stream';
@@ -74,10 +79,10 @@ export class S3StorageService
     );
   }
 
-  async get(key: string): Promise<StoredObject | null> {
+  async get(key: string, options: GetObjectOptions = {}): Promise<StoredObject | null> {
     try {
       const object = await this.client.send(
-        new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+        new GetObjectCommand({ Bucket: this.bucket, Key: key, Range: options.range }),
       );
 
       // Trên Node, SDK trả Body là IncomingMessage (một Readable)
@@ -86,9 +91,13 @@ export class S3StorageService
         body: object.Body,
         contentType: object.ContentType,
         contentLength: object.ContentLength,
+        contentRange: object.ContentRange,
       };
     } catch (error) {
       if (error instanceof S3ServiceException && error.name === 'NoSuchKey') return null;
+      if (error instanceof S3ServiceException && error.name === 'InvalidRange') {
+        throw new AppException(ErrorCode.MEDIA_RANGE_NOT_SATISFIABLE);
+      }
       this.logger.error(`Lỗi đọc tệp ${key}: ${this.describe(error)}`);
       throw new AppException(ErrorCode.STORAGE_UNAVAILABLE);
     }

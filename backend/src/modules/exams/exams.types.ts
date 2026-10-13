@@ -6,7 +6,7 @@ import {
   ScoringScale,
   Skill,
 } from '../../generated/prisma/enums.js';
-import { QuestionSummary } from '../questions/questions.types.js';
+import { MEDIA_URL_NOTE, QuestionSummary } from '../questions/questions.types.js';
 
 // Khai báo các class được tham chiếu trước, vì decorator đọc chúng ngay khi nạp file
 
@@ -232,6 +232,12 @@ export class PaperQuestion {
   @ApiProperty({ type: String, nullable: true })
   imageKey: string | null;
 
+  @ApiProperty({ type: String, nullable: true, description: MEDIA_URL_NOTE })
+  audioUrl: string | null;
+
+  @ApiProperty({ type: String, nullable: true, description: MEDIA_URL_NOTE })
+  imageUrl: string | null;
+
   @ApiProperty({ type: 'integer', nullable: true })
   prepSeconds: number | null;
 
@@ -254,6 +260,12 @@ export class PaperGroup {
 
   @ApiProperty({ type: String, nullable: true })
   imageKey: string | null;
+
+  @ApiProperty({ type: String, nullable: true, description: MEDIA_URL_NOTE })
+  audioUrl: string | null;
+
+  @ApiProperty({ type: String, nullable: true, description: MEDIA_URL_NOTE })
+  imageUrl: string | null;
 }
 
 /** Câu đơn (group = null) hoặc một nhóm câu dùng chung đoạn văn/audio */
