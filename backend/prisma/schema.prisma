@@ -85,6 +85,33 @@ enum QuestionStatus {
   @@map("question_status")
 }
 
+/// Thang điểm của đề (D17): TOEIC_990 đề Listening + Reading; TOEIC_SW đề Speaking và/hoặc Writing
+/// (0–200 mỗi kỹ năng); PERCENT luyện theo Part, bộ luyện tập AI
+enum ScoringScale {
+  TOEIC_990
+  TOEIC_SW
+  PERCENT
+
+  @@map("scoring_scale")
+}
+
+/// D4: STANDARD do giáo viên soạn; AI_PRACTICE bộ luyện tập AI tạo cho học viên (Giai đoạn 3)
+enum ExamKind {
+  STANDARD
+  AI_PRACTICE
+
+  @@map("exam_kind")
+}
+
+/// DRAFT: đang soạn · PUBLISHED: học viên thấy và làm được · UNPUBLISHED: đã gỡ, giữ nguyên bài làm cũ
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+
+  @@map("exam_status")
+}
+
 // ================================================================
 // Nhóm Người dùng và phân quyền
 // ================================================================
@@ -135,7 +162,7 @@ model User {
   /// Luôn lưu chữ thường (D3), chuẩn hóa ở tầng Service trước khi ghi
   email              String     @unique(map: "uq_users_email") @db.VarChar(255)
   /// null khi tài khoản chỉ đăng nhập bằng Google; tạo mật khẩu qua luồng Quên mật khẩu
-  passwordHash       String?     @map("password_hash") @db.VarChar(255)
+  passwordHash       String?    @map("password_hash") @db.VarChar(255)
   /// "sub" trong id_token của Google, cố định với mỗi tài khoản Google (email có thể đổi)
   googleId           String?    @unique(map: "uq_users_google_id") @map("google_id") @db.VarChar(255)
   fullName           String     @map("full_name") @db.VarChar(100)
@@ -179,9 +206,10 @@ model Teacher {
   specialization String  @db.VarChar(255)
   isApproved     Boolean @default(false) @map("is_approved")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_teachers_user_id")
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_teachers_user_id")
   questions      Question[]
   questionGroups QuestionGroup[]
+  exams          Exam[]
 
   @@map("teachers")
 }
@@ -232,6 +260,7 @@ model Subject {
   updatedAt DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   topics Topic[]
+  exams  Exam[]
 
   @@map("subjects")
 }
@@ -311,10 +340,11 @@ model Question {
   updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt       DateTime?      @map("deleted_at") @db.Timestamptz(6)
 
-  topic   Topic            @relation(fields: [topicId], references: [id], onDelete: Restrict, map: "fk_questions_topic_id")
-  author  Teacher          @relation(fields: [authorId], references: [userId], onDelete: Restrict, map: "fk_questions_author_id")
-  group   QuestionGroup?   @relation(fields: [groupId], references: [id], onDelete: Restrict, map: "fk_questions_group_id")
-  options QuestionOption[]
+  topic         Topic            @relation(fields: [topicId], references: [id], onDelete: Restrict, map: "fk_questions_topic_id")
+  author        Teacher          @relation(fields: [authorId], references: [userId], onDelete: Restrict, map: "fk_questions_author_id")
+  group         QuestionGroup?   @relation(fields: [groupId], references: [id], onDelete: Restrict, map: "fk_questions_group_id")
+  options       QuestionOption[]
+  examQuestions ExamQuestion[]
 
   @@index([topicId], map: "ix_questions_topic_id")
   @@index([authorId], map: "ix_questions_author_id")
@@ -339,3 +369,68 @@ model QuestionOption {
   @@map("question_options")
 }
 
+// ================================================================
+// Nhóm Đề thi
+// ================================================================
+
+model Exam {
+  id                String       @id(map: "pk_exams") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authorId          String       @map("author_id") @db.Uuid
+  /// Chương trình thi (D4): lọc đề theo TOEIC, sau này IELTS
+  subjectId         String       @map("subject_id") @db.Uuid
+  kind              ExamKind     @default(STANDARD)
+  title             String       @db.VarChar(255)
+  description       String?
+  scoringScale      ScoringScale @map("scoring_scale")
+  /// Thời gian làm bài toàn đề (phút); đồng hồ tính ở server khi bắt đầu làm bài
+  durationMinutes   Int          @map("duration_minutes")
+  /// null: không giới hạn số lần làm
+  maxAttempts       Int?         @map("max_attempts")
+  /// Cho phép học viên chọn làm riêng từng Part
+  allowPartPractice Boolean      @default(true) @map("allow_part_practice")
+  status            ExamStatus   @default(DRAFT)
+  publishedAt       DateTime?    @map("published_at") @db.Timestamptz(6)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt         DateTime?    @map("deleted_at") @db.Timestamptz(6)
+
+  author   Teacher       @relation(fields: [authorId], references: [userId], onDelete: Restrict, map: "fk_exams_author_id")
+  subject  Subject       @relation(fields: [subjectId], references: [id], onDelete: Restrict, map: "fk_exams_subject_id")
+  sections ExamSection[]
+
+  @@index([authorId], map: "ix_exams_author_id")
+  @@index([subjectId], map: "ix_exams_subject_id")
+  @@map("exams")
+}
+
+/// Mỗi phần thi là một Part TOEIC; một đề không có hai phần cùng Part
+model ExamSection {
+  id         String @id(map: "pk_exam_sections") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  examId     String @map("exam_id") @db.Uuid
+  skill      Skill
+  part       Int    @db.SmallInt
+  /// Thứ tự chuẩn của Part trong đề (L1…L4, R5…R7, S1…S5, W1…W3), tự tính khi thêm phần thi
+  orderIndex Int    @map("order_index") @db.SmallInt
+
+  exam      Exam           @relation(fields: [examId], references: [id], onDelete: Cascade, map: "fk_exam_sections_exam_id")
+  questions ExamQuestion[]
+
+  @@unique([examId, skill, part], map: "uq_exam_sections_exam_part")
+  @@index([examId, orderIndex], map: "ix_exam_sections_exam_order")
+  @@map("exam_sections")
+}
+
+/// Câu hỏi trong phần thi. Nhóm câu được thêm như một khối: các câu của nhóm nằm liền nhau
+model ExamQuestion {
+  id         String @id(map: "pk_exam_questions") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sectionId  String @map("section_id") @db.Uuid
+  questionId String @map("question_id") @db.Uuid
+  orderIndex Int    @map("order_index")
+
+  section  ExamSection @relation(fields: [sectionId], references: [id], onDelete: Cascade, map: "fk_exam_questions_section_id")
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Restrict, map: "fk_exam_questions_question_id")
+
+  @@unique([sectionId, questionId], map: "uq_exam_questions_section_question")
+  @@index([questionId], map: "ix_exam_questions_question_id")
+  @@map("exam_questions")
+}

@@ -46,6 +46,15 @@ export const ErrorCode = {
   QUESTION_GROUP_NOT_FOUND: 'QUESTION_GROUP_NOT_FOUND',
   QUESTION_GROUP_NOT_EMPTY: 'QUESTION_GROUP_NOT_EMPTY',
   QUESTION_GROUP_ORDER_TAKEN: 'QUESTION_GROUP_ORDER_TAKEN',
+
+  // Đề thi
+  EXAM_NOT_FOUND: 'EXAM_NOT_FOUND',
+  EXAM_SECTION_NOT_FOUND: 'EXAM_SECTION_NOT_FOUND',
+  EXAM_QUESTION_NOT_FOUND: 'EXAM_QUESTION_NOT_FOUND',
+  EXAM_PUBLISHED: 'EXAM_PUBLISHED',
+  EXAM_SECTION_EXISTS: 'EXAM_SECTION_EXISTS',
+  EXAM_QUESTION_DUPLICATE: 'EXAM_QUESTION_DUPLICATE',
+  EXAM_NOT_PUBLISHABLE: 'EXAM_NOT_PUBLISHABLE',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -184,6 +193,35 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.QUESTION_GROUP_ORDER_TAKEN]: {
     status: HttpStatus.CONFLICT,
     message: 'Vị trí này trong nhóm đã có câu hỏi khác',
+  },
+  // Đề thi
+  [ErrorCode.EXAM_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy đề thi',
+  },
+  [ErrorCode.EXAM_SECTION_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy phần thi trong đề',
+  },
+  [ErrorCode.EXAM_QUESTION_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy câu hỏi trong phần thi',
+  },
+  [ErrorCode.EXAM_PUBLISHED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Đề đang xuất bản, hãy gỡ xuất bản trước khi sửa nội dung hoặc xóa đề',
+  },
+  [ErrorCode.EXAM_SECTION_EXISTS]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Đề đã có phần thi cho Part này',
+  },
+  [ErrorCode.EXAM_QUESTION_DUPLICATE]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Câu hỏi đã có trong đề',
+  },
+  [ErrorCode.EXAM_NOT_PUBLISHABLE]: {
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    message: 'Đề chưa đủ điều kiện xuất bản',
   },
 };
 
