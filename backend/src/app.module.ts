@@ -13,6 +13,7 @@ import { MediaModule } from './modules/media/media.module.js';
 import { StorageModule } from './infra/storage/storage.module.js';
 import { SubjectsModule } from './modules/subjects/subjects.module.js';
 import { QuestionsModule } from './modules/questions/questions.module.js';
+import { ExamsModule } from './modules/exams/exams.module.js';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { QuestionsModule } from './modules/questions/questions.module.js';
     MediaModule,
     SubjectsModule,
     QuestionsModule,
+    ExamsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
