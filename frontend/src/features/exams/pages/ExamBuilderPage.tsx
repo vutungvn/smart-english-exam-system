@@ -12,13 +12,32 @@ import {
   Trash2,
   Undo2,
 } from 'lucide-react';
-import type { Skill } from '@/api/generated';
+import { toApiError } from '@/api/errors';
+import {
+  useAddQuestionsMutation,
+  useAddSectionMutation,
+  useDeleteExamMutation,
+  useGetExamQuery,
+  usePublishExamMutation,
+  useRemoveQuestionMutation,
+  useRemoveSectionMutation,
+  useUnpublishExamMutation,
+  useUpdateExamMutation,
+  useValidateExamQuery,
+  type ExamDetail,
+  type Skill,
+} from '@/api/generated';
 import { AppDialog } from '@/components/AppDialog';
 import { ButtonLink } from '@/components/ButtonLink';
+import { FormAlert } from '@/components/form/FormAlert';
 import { PageHeader } from '@/components/PageHeader';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { formatDateTime } from '@/features/profile/format';
-import { EmptyState, SuccessBanner } from '@/features/question-bank/components/ListStates';
+import {
+  EmptyState,
+  ErrorState,
+  SuccessBanner,
+} from '@/features/question-bank/components/ListStates';
 import { cn } from '@/lib/utils';
 import { ExamFormDialog } from '../components/ExamFormDialog';
 import { ExamStatusPill, ExamTypePill } from '../components/ExamPills';
@@ -26,50 +45,95 @@ import { PartNav } from '../components/PartNav';
 import { QuestionPickerDialog } from '../components/QuestionPickerDialog';
 import { SectionPanel } from '../components/SectionPanel';
 import { ValidationPanel } from '../components/ValidationPanel';
-import { EXAM_TYPE_META, partsOfScale, sectionTitle } from '../exam-meta';
-import { checkExamLocal, expectedTotal } from '../mock/check-exam';
-import { mockExams, useMockExam } from '../mock/mock-store';
+import {
+  EXAM_TYPE_META,
+  expectedTotal,
+  partsOfScale,
+  sectionTitle,
+  type ExamFormValues,
+} from '../exam-meta';
 import { EXAM_LIST_PATH, examPreviewPath } from '../paths';
-import type { ExamDetail } from '../types';
 import type { ExamsLocationState } from './ExamsPage';
 
-const outlineButton = cn(
-  buttonVariants({ variant: 'outline' }),
-  'h-10 rounded-xl bg-white px-4 font-semibold',
-);
+const outlineButton = 'h-10 rounded-xl bg-white px-4 font-semibold';
 
-/** `/teacher/exams/:id`: soạn đề theo Part. TẠM (lượt 1) dữ liệu từ mock-store */
+function toFormValues(exam: ExamDetail): ExamFormValues {
+  return {
+    title: exam.title,
+    description: exam.description ?? '',
+    scoringScale: exam.scoringScale,
+    durationMinutes: exam.durationMinutes,
+    maxAttempts: exam.maxAttempts,
+    allowPartPractice: exam.allowPartPractice,
+  };
+}
+
+/** `/teacher/exams/:id`: soạn đề theo Part */
 export function ExamBuilderPage() {
   const { id = '' } = useParams();
-  const exam = useMockExam(id);
+  const { data, error, isLoading, refetch } = useGetExamQuery(id);
 
-  if (!exam) {
+  if (isLoading) return <BuilderSkeleton />;
+  if (!data) {
+    const apiError = toApiError(error);
     return (
       <div className="rounded-3xl border border-border bg-white">
-        <EmptyState
-          icon={FileQuestion}
-          title="Không tìm thấy đề thi"
-          description="Đề không tồn tại hoặc đã bị xóa."
-        >
-          <ButtonLink to={EXAM_LIST_PATH} className="h-10 w-auto px-5">
-            Về danh sách đề
-          </ButtonLink>
-        </EmptyState>
+        {apiError.code === 'EXAM_NOT_FOUND' ? (
+          <EmptyState
+            icon={FileQuestion}
+            title="Không tìm thấy đề thi"
+            description="Đề không tồn tại, đã bị xóa, hoặc là đề của giáo viên khác."
+          >
+            <ButtonLink to={EXAM_LIST_PATH} className="h-10 w-auto px-5">
+              Về danh sách đề
+            </ButtonLink>
+          </EmptyState>
+        ) : (
+          <ErrorState message={apiError.message} onRetry={() => void refetch()} />
+        )}
       </div>
     );
   }
-  return <Builder exam={exam} />;
+  return (
+    <Builder
+      key={data.data.id}
+      exam={data.data}
+      reload={async () => (await refetch().unwrap()).data}
+    />
+  );
 }
 
 type Confirm = 'publish' | 'unpublish' | 'delete' | { removeSection: string } | null;
 
-function Builder({ exam }: { exam: ExamDetail }) {
+// Mã lỗi cho thấy dữ liệu trên màn hình đã cũ (sửa ở tab khác): tải lại đề sau khi báo lỗi
+const STALE_CODES = new Set([
+  'EXAM_PUBLISHED',
+  'EXAM_SECTION_EXISTS',
+  'EXAM_SECTION_NOT_FOUND',
+  'EXAM_QUESTION_NOT_FOUND',
+  'EXAM_QUESTION_DUPLICATE',
+]);
+
+function Builder({ exam, reload }: { exam: ExamDetail; reload: () => Promise<ExamDetail> }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const validationQuery = useValidateExamQuery(exam.id);
+  const validation = validationQuery.data?.data;
+  const [updateExam] = useUpdateExamMutation();
+  const [deleteExam] = useDeleteExamMutation();
+  const [addSection, addSectionState] = useAddSectionMutation();
+  const [removeSection, removeSectionState] = useRemoveSectionMutation();
+  const [addQuestions] = useAddQuestionsMutation();
+  const [removeQuestion, removeQuestionState] = useRemoveQuestionMutation();
+  const [publishExam] = usePublishExamMutation();
+  const [unpublishExam] = useUnpublishExamMutation();
+
   const [selectedId, setSelectedId] = useState<string | undefined>(exam.sections[0]?.id);
   const [editing, setEditing] = useState(0);
   const [picking, setPicking] = useState(false);
   const [confirm, setConfirm] = useState<Confirm>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [actionError, setActionError] = useState<string>();
   const [flash, setFlash] = useState(() => (location.state as ExamsLocationState | null)?.flash);
 
   useEffect(() => {
@@ -79,31 +143,72 @@ function Builder({ exam }: { exam: ExamDetail }) {
   }, [location, navigate]);
 
   const selected = exam.sections.find((s) => s.id === selectedId) ?? exam.sections[0];
-  const validation = useMemo(() => checkExamLocal(exam), [exam]);
   const usedQuestionIds = useMemo(
     () => new Set(exam.sections.flatMap((s) => s.questions.map((item) => item.question.id))),
     [exam],
   );
+  const usedGroupIds = useMemo(
+    () =>
+      new Set(
+        exam.sections.flatMap((s) =>
+          s.questions.flatMap((item) => (item.question.groupId ? [item.question.groupId] : [])),
+        ),
+      ),
+    [exam],
+  );
   const published = exam.status === 'PUBLISHED';
   const expected = expectedTotal(exam);
-  const errorCount = validation.issues.filter((issue) => issue.level === 'ERROR').length;
+  const errorCount = validation?.issues.filter((issue) => issue.level === 'ERROR').length ?? 0;
   const missingParts = partsOfScale(exam.scoringScale).filter(
     (rule) => !exam.sections.some((s) => s.skill === rule.skill && s.part === rule.part),
   );
+  const busy =
+    addSectionState.isLoading || removeSectionState.isLoading || removeQuestionState.isLoading;
+
+  /** Chạy một thao tác: thành công thì báo, lỗi thì hiện dưới đầu trang (giữ dữ liệu đang có) */
+  const run = async (action: () => Promise<unknown>, success?: string): Promise<boolean> => {
+    setActionError(undefined);
+    try {
+      await action();
+      if (success) setFlash(success);
+      return true;
+    } catch (err) {
+      const apiError = toApiError(err);
+      setFlash(undefined);
+      setActionError(apiError.fieldErrors[0]?.message ?? apiError.message);
+      if (STALE_CODES.has(apiError.code)) void reload();
+      if (apiError.code === 'EXAM_NOT_PUBLISHABLE') void validationQuery.refetch();
+      return false;
+    }
+  };
 
   const goToSection = (sectionId: string) => {
     setSelectedId(sectionId);
     document.getElementById('exam-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-  const addPart = (skill: Skill, part: number) => {
-    setSelectedId(mockExams.addSection(exam.id, skill, part));
-    setFlash(`Đã thêm ${sectionTitle(skill, part)}`);
-  };
-  const addAllParts = () => {
-    const ids = missingParts.map((rule) => mockExams.addSection(exam.id, rule.skill, rule.part));
-    if (!selected) setSelectedId(ids[0]);
-    setFlash(`Đã thêm ${ids.length} Part còn thiếu`);
-  };
+
+  const addPart = (skill: Skill, part: number) =>
+    void run(
+      async () => {
+        const { data } = await addSection({
+          id: exam.id,
+          addExamSectionDto: { skill, part },
+        }).unwrap();
+        setSelectedId(data.sections.find((s) => s.skill === skill && s.part === part)?.id);
+      },
+      `Đã thêm ${sectionTitle(skill, part)}`,
+    );
+
+  // Thêm lần lượt từng Part còn thiếu (backend nhận một Part mỗi lần)
+  const addAllParts = () =>
+    void run(async () => {
+      for (const rule of missingParts) {
+        await addSection({
+          id: exam.id,
+          addExamSectionDto: { skill: rule.skill, part: rule.part },
+        }).unwrap();
+      }
+    }, `Đã thêm ${missingParts.length} Part còn thiếu`);
 
   const confirmDialog = (() => {
     if (confirm === 'publish') {
@@ -113,10 +218,11 @@ function Builder({ exam }: { exam: ExamDetail }) {
           'Học viên sẽ thấy và làm được đề này. Trong lúc xuất bản không sửa được nội dung đề.',
         action: 'Xuất bản',
         danger: false,
-        run: () => {
-          mockExams.publish(exam.id);
-          setFlash('Đã xuất bản đề, học viên đã thấy đề trong mục Luyện đề thi');
-        },
+        run: () =>
+          run(
+            () => publishExam(exam.id).unwrap(),
+            'Đã xuất bản đề, học viên đã thấy đề trong mục Luyện đề thi',
+          ),
       };
     }
     if (confirm === 'unpublish') {
@@ -126,10 +232,8 @@ function Builder({ exam }: { exam: ExamDetail }) {
           'Đề ẩn khỏi danh sách của học viên, bài làm đã có giữ nguyên. Sau khi gỡ có thể sửa nội dung.',
         action: 'Gỡ xuất bản',
         danger: false,
-        run: () => {
-          mockExams.unpublish(exam.id);
-          setFlash('Đã gỡ xuất bản, bạn có thể sửa nội dung đề');
-        },
+        run: () =>
+          run(() => unpublishExam(exam.id).unwrap(), 'Đã gỡ xuất bản, bạn có thể sửa nội dung đề'),
       };
     }
     if (confirm === 'delete') {
@@ -139,10 +243,13 @@ function Builder({ exam }: { exam: ExamDetail }) {
           'Đề sẽ không còn trong danh sách. Bài làm cũ của học viên (nếu có) vẫn được giữ.',
         action: 'Xóa đề',
         danger: true,
-        run: () => {
-          mockExams.remove(exam.id);
-          const state: ExamsLocationState = { flash: 'Đã xóa đề thi' };
-          void navigate(EXAM_LIST_PATH, { state });
+        run: async () => {
+          const ok = await run(() => deleteExam(exam.id).unwrap());
+          if (ok) {
+            const state: ExamsLocationState = { flash: 'Đã xóa đề thi' };
+            void navigate(EXAM_LIST_PATH, { state });
+          }
+          return ok;
         },
       };
     }
@@ -153,11 +260,14 @@ function Builder({ exam }: { exam: ExamDetail }) {
         description: `Part và ${section?.questionCount ?? 0} câu trong Part sẽ bị gỡ khỏi đề. Câu hỏi trong ngân hàng không bị ảnh hưởng.`,
         action: 'Xóa Part',
         danger: true,
-        run: () => {
-          mockExams.removeSection(exam.id, confirm.removeSection);
-          setSelectedId(exam.sections.find((s) => s.id !== confirm.removeSection)?.id);
-          setFlash('Đã xóa Part khỏi đề');
-        },
+        run: () =>
+          run(async () => {
+            const { data } = await removeSection({
+              id: exam.id,
+              sectionId: confirm.removeSection,
+            }).unwrap();
+            setSelectedId(data.sections[0]?.id);
+          }, 'Đã xóa Part khỏi đề'),
       };
     }
     return null;
@@ -193,7 +303,10 @@ function Builder({ exam }: { exam: ExamDetail }) {
               <Pencil />
               Sửa thông tin
             </Button>
-            <Link to={examPreviewPath(exam.id)} className={outlineButton}>
+            <Link
+              to={examPreviewPath(exam.id)}
+              className={cn(buttonVariants({ variant: 'outline' }), outlineButton)}
+            >
               <Eye />
               Xem trước
             </Link>
@@ -209,10 +322,18 @@ function Builder({ exam }: { exam: ExamDetail }) {
               </Button>
             ) : (
               // Nút disabled không nhận chuột nên đặt title ở thẻ bọc ngoài
-              <span title={validation.publishable ? undefined : `Còn ${errorCount} lỗi cần sửa`}>
+              <span
+                title={
+                  !validation
+                    ? 'Đang kiểm tra điều kiện xuất bản'
+                    : validation.publishable
+                      ? undefined
+                      : `Còn ${errorCount} lỗi cần sửa`
+                }
+              >
                 <Button
                   type="button"
-                  disabled={!validation.publishable}
+                  disabled={!validation?.publishable}
                   onClick={() => setConfirm('publish')}
                   className="h-10 rounded-xl bg-linear-to-r from-primary to-brand px-4 font-semibold shadow-md shadow-primary/30 hover:brightness-95"
                 >
@@ -227,6 +348,7 @@ function Builder({ exam }: { exam: ExamDetail }) {
       />
 
       {flash && <SuccessBanner message={flash} onClose={() => setFlash(undefined)} />}
+      {actionError && <FormAlert message={actionError} onClose={() => setActionError(undefined)} />}
 
       {published && (
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-primary/20 bg-accent px-4 py-3 text-sm text-slate-700">
@@ -247,8 +369,9 @@ function Builder({ exam }: { exam: ExamDetail }) {
       )}
 
       {/*
-        ≥1360px (85rem, cùng đơn vị rem với lg để Tailwind xếp đúng thứ tự media query): 3 cột (Part · nội dung · kiểm tra). lg–1359px: 2 cột, khung kiểm tra nằm dưới
-        danh sách Part. Màn hẹp: một cột, Part thành tab cuộn ngang ở trên.
+        ≥1360px (85rem, cùng đơn vị rem với lg để Tailwind xếp đúng thứ tự media query): 3 cột
+        (Part · nội dung · kiểm tra). lg–1359px: 2 cột, khung kiểm tra nằm dưới danh sách Part.
+        Màn hẹp: một cột, Part thành tab cuộn ngang ở trên.
       */}
       <div className="grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)] min-[85rem]:grid-cols-[240px_minmax(0,1fr)_300px]">
         <div className="min-w-0 lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1">
@@ -256,7 +379,7 @@ function Builder({ exam }: { exam: ExamDetail }) {
             sections={exam.sections}
             scale={exam.scoringScale}
             selectedId={selected?.id}
-            readOnly={published}
+            readOnly={published || busy}
             onSelect={setSelectedId}
             onAddPart={addPart}
             onAddAllParts={addAllParts}
@@ -272,9 +395,16 @@ function Builder({ exam }: { exam: ExamDetail }) {
               section={selected}
               scale={exam.scoringScale}
               readOnly={published}
+              busy={busy}
               onAddQuestions={() => setPicking(true)}
               onRemoveQuestion={(examQuestionId) =>
-                mockExams.removeQuestion(exam.id, selected.id, examQuestionId)
+                void run(() =>
+                  removeQuestion({
+                    id: exam.id,
+                    sectionId: selected.id,
+                    examQuestionId,
+                  }).unwrap(),
+                )
               }
               onRemoveSection={() => setConfirm({ removeSection: selected.id })}
             />
@@ -290,7 +420,7 @@ function Builder({ exam }: { exam: ExamDetail }) {
                 }
               >
                 {!published && exam.scoringScale !== 'PERCENT' && (
-                  <Button className="h-10 rounded-xl px-5" onClick={addAllParts}>
+                  <Button className="h-10 rounded-xl px-5" disabled={busy} onClick={addAllParts}>
                     <ListPlus />
                     Thêm đủ {missingParts.length} Part
                   </Button>
@@ -301,11 +431,25 @@ function Builder({ exam }: { exam: ExamDetail }) {
         </div>
 
         <div className="min-w-0 lg:col-start-1 lg:row-start-2 min-[85rem]:sticky min-[85rem]:top-24 min-[85rem]:col-start-3 min-[85rem]:row-start-1">
-          <ValidationPanel
-            validation={validation}
-            published={published}
-            onGoToSection={goToSection}
-          />
+          {validation ? (
+            <ValidationPanel
+              validation={validation}
+              published={published}
+              onGoToSection={goToSection}
+            />
+          ) : validationQuery.error ? (
+            <div className="rounded-3xl border border-border bg-white">
+              <ErrorState
+                message={toApiError(validationQuery.error).message}
+                onRetry={() => void validationQuery.refetch()}
+              />
+            </div>
+          ) : (
+            <div
+              aria-hidden
+              className="h-72 animate-pulse rounded-3xl border border-border bg-white"
+            />
+          )}
         </div>
       </div>
 
@@ -314,10 +458,17 @@ function Builder({ exam }: { exam: ExamDetail }) {
           section={selected}
           scale={exam.scoringScale}
           usedQuestionIds={usedQuestionIds}
+          usedGroupIds={usedGroupIds}
           onClose={() => setPicking(false)}
-          onConfirm={(ids) => {
-            mockExams.addQuestions(exam.id, selected.id, ids);
+          onConfirm={async (ids) => {
+            // Lỗi ném ra để hộp thoại hiện thông báo và giữ nguyên lựa chọn
+            await addQuestions({
+              id: exam.id,
+              sectionId: selected.id,
+              addExamQuestionsDto: ids,
+            }).unwrap();
             setPicking(false);
+            setActionError(undefined);
             setFlash(
               ids.groupIds.length > 0
                 ? `Đã thêm ${ids.groupIds.length} nhóm vào ${sectionTitle(selected.skill, selected.part)}`
@@ -333,25 +484,27 @@ function Builder({ exam }: { exam: ExamDetail }) {
           open
           onOpenChange={(open) => !open && setEditing(0)}
           lockScale={exam.sections.length > 0}
-          initial={{
-            title: exam.title,
-            description: exam.description ?? '',
-            scoringScale: exam.scoringScale,
-            durationMinutes: exam.durationMinutes,
-            maxAttempts: exam.maxAttempts,
-            allowPartPractice: exam.allowPartPractice,
-          }}
-          onSubmit={(values) => {
-            mockExams.update(exam.id, values);
+          initial={toFormValues(exam)}
+          onSubmit={async (values) => {
+            await updateExam({
+              id: exam.id,
+              updateExamDto: {
+                ...values,
+                description: values.description || null,
+                updatedAt: exam.updatedAt,
+              },
+            }).unwrap();
             setEditing(0);
             setFlash('Đã lưu thông tin đề');
           }}
+          onReload={async () => toFormValues(await reload())}
         />
       )}
 
       <AppDialog
         open={confirmDialog !== null}
         onOpenChange={(open) => !open && setConfirm(null)}
+        busy={confirming}
         title={confirmDialog?.title ?? ''}
         description={confirmDialog?.description ?? ''}
         footer={
@@ -359,11 +512,13 @@ function Builder({ exam }: { exam: ExamDetail }) {
             <Button
               variant="outline"
               className="h-10 rounded-xl px-4"
+              disabled={confirming}
               onClick={() => setConfirm(null)}
             >
               Hủy
             </Button>
             <Button
+              disabled={confirming}
               className={cn(
                 'h-10 rounded-xl px-4 font-semibold',
                 confirmDialog?.danger
@@ -371,11 +526,15 @@ function Builder({ exam }: { exam: ExamDetail }) {
                   : 'bg-linear-to-r from-primary to-brand shadow-md shadow-primary/30 hover:brightness-95',
               )}
               onClick={() => {
-                confirmDialog?.run();
-                setConfirm(null);
+                if (!confirmDialog) return;
+                setConfirming(true);
+                void confirmDialog.run().finally(() => {
+                  setConfirming(false);
+                  setConfirm(null);
+                });
               }}
             >
-              {confirmDialog?.action}
+              {confirming ? 'Đang xử lý…' : confirmDialog?.action}
             </Button>
           </>
         }
@@ -393,7 +552,10 @@ function MoreMenu({ published, onDelete }: { published: boolean; onDelete: () =>
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
         aria-label="Thao tác khác"
-        className={cn(outlineButton, 'w-10 px-0 data-[state=open]:bg-accent')}
+        className={cn(
+          buttonVariants({ variant: 'outline' }),
+          'size-10 rounded-xl bg-white p-0 data-[state=open]:bg-accent',
+        )}
       >
         <MoreVertical className="size-4" />
       </DropdownMenu.Trigger>
@@ -420,5 +582,22 @@ function MoreMenu({ published, onDelete }: { published: boolean; onDelete: () =>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
+  );
+}
+
+function BuilderSkeleton() {
+  return (
+    <div aria-busy className="space-y-6">
+      <div className="space-y-3">
+        <div className="h-4 w-48 animate-pulse rounded bg-slate-200/70" />
+        <div className="h-8 w-72 animate-pulse rounded bg-slate-200/70" />
+        <div className="h-6 w-96 max-w-full animate-pulse rounded bg-slate-200/70" />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] min-[85rem]:grid-cols-[240px_minmax(0,1fr)_300px]">
+        <div className="hidden h-80 animate-pulse rounded-3xl border border-border bg-white lg:block" />
+        <div className="h-96 animate-pulse rounded-3xl border border-border bg-white" />
+        <div className="hidden h-72 animate-pulse rounded-3xl border border-border bg-white min-[85rem]:block" />
+      </div>
+    </div>
   );
 }

@@ -11,6 +11,7 @@ import { AuthPreviewPage } from '@/features/dev/AuthPreviewPage';
 import { LandingPage } from '@/features/landing/LandingPage';
 import { ChangePasswordPage } from '@/features/profile/ChangePasswordPage';
 import { ExamBuilderPage } from '@/features/exams/pages/ExamBuilderPage';
+import { ExamPreviewPage } from '@/features/exams/pages/ExamPreviewPage';
 import { ExamsPage } from '@/features/exams/pages/ExamsPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
 import { QuestionBankPage } from '@/features/question-bank/pages/QuestionBankPage';
@@ -114,11 +115,7 @@ export const router = createBrowserRouter([
               { path: 'question-groups/:id/edit', element: <QuestionGroupFormPage /> },
               { path: 'exams', element: <ExamsPage /> },
               { path: 'exams/:id', element: <ExamBuilderPage /> },
-              // TẠM: trang xem trước làm ở lượt 2
-              {
-                path: 'exams/:id/preview',
-                element: <ComingSoonPage title="Xem trước đề" backTo="/teacher/exams" />,
-              },
+              { path: 'exams/:id/preview', element: <ExamPreviewPage /> },
               { path: 'profile', element: <ProfilePage /> },
               { path: 'profile/password', element: <ChangePasswordPage /> },
               ...TEACHER_PLACEHOLDERS.map(({ path, title }) => ({

@@ -4,7 +4,7 @@ import type { Skill } from '@/api/generated';
 import { SKILL_META } from '@/features/question-bank/toeic';
 import { cn } from '@/lib/utils';
 import { partsOfScale, quotaOf } from '../exam-meta';
-import type { ExamSectionItem, ScoringScale } from '../types';
+import type { ExamSectionItem, ScoringScale } from '@/api/generated';
 
 interface PartNavProps {
   sections: ExamSectionItem[];

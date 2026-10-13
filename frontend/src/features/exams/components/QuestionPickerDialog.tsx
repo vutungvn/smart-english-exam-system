@@ -1,11 +1,25 @@
 import { useState } from 'react';
 import { Dialog } from 'radix-ui';
-import { CircleAlert, Layers, ListChecks, Lock, Search, X } from 'lucide-react';
-import type { Difficulty, QuestionStatus } from '@/api/generated';
+import { CircleAlert, Layers, ListChecks, Lock, X } from 'lucide-react';
+import { toApiError } from '@/api/errors';
+import {
+  useListQuestionGroupsQuery,
+  useListQuestionsQuery,
+  type Difficulty,
+  type ExamSectionItem,
+  type QuestionGroupSummary,
+  type QuestionStatus,
+  type QuestionSummary,
+  type ScoringScale,
+} from '@/api/generated';
+import { FormAlert } from '@/components/form/FormAlert';
+import { Pagination } from '@/components/Pagination';
 import { Button } from '@/components/ui/button';
+import { useAppSelector } from '@/hooks/hooks';
 import { FilterSelect, ToggleSwitch } from '@/features/question-bank/components/FilterControls';
-import { EmptyState } from '@/features/question-bank/components/ListStates';
+import { EmptyState, ErrorState } from '@/features/question-bank/components/ListStates';
 import { DifficultyPill, StatusPill } from '@/features/question-bank/components/Pills';
+import { useToeicTopics } from '@/features/question-bank/hooks/use-toeic-topics';
 import {
   DIFFICULTY_META,
   findPartRule,
@@ -15,97 +29,107 @@ import {
   SKILL_META,
 } from '@/features/question-bank/toeic';
 import { cn } from '@/lib/utils';
+import { selectCurrentUser } from '@/store/slice/auth-slice';
 import { quotaOf, sectionTitle } from '../exam-meta';
-import { bankOf, MOCK_ME } from '../mock/mock-bank';
-import type { ExamSectionItem, ScoringScale } from '../types';
+import { SearchInput } from './SearchInput';
 
 interface QuestionPickerDialogProps {
   section: ExamSectionItem;
   scale: ScoringScale;
   /** Id câu (trong ngân hàng) đã có ở bất kỳ Part nào của đề */
   usedQuestionIds: Set<string>;
+  /** Id nhóm đã có trong đề */
+  usedGroupIds: Set<string>;
   onClose: () => void;
-  onConfirm: (ids: { questionIds: string[]; groupIds: string[] }) => void;
+  /** Gửi API; ném lỗi (từ `.unwrap()`) để hộp thoại hiện thông báo và giữ lựa chọn */
+  onConfirm: (ids: { questionIds: string[]; groupIds: string[] }) => Promise<void>;
 }
 
+const PICKER_PAGE_SIZES = [20, 50] as const;
+
 /**
- * Chọn câu đơn hoặc nhóm câu từ ngân hàng cho một Part. Kỹ năng và Part đã khóa theo phần thi.
- * TẠM (lượt 1): lấy từ ngân hàng giả; lượt 2 dùng useListQuestionsQuery / useListQuestionGroupsQuery
- * với skill, part, q, topicId, difficulty, status, mine và phân trang của API.
+ * Chọn câu đơn hoặc nhóm câu từ ngân hàng (dùng chung mọi giáo viên) cho một Part.
+ * Kỹ năng và Part khóa theo phần thi; lọc và phân trang ở server.
+ * Lựa chọn giữ nguyên khi đổi trang, đổi bộ lọc (chọn ở nhiều trang rồi thêm một lần).
  */
 export function QuestionPickerDialog({
   section,
   scale,
   usedQuestionIds,
+  usedGroupIds,
   onClose,
   onConfirm,
 }: QuestionPickerDialogProps) {
+  const user = useAppSelector(selectCurrentUser);
   const grouped = findPartRule(section.skill, section.part)?.group === 'required';
-  const bank = bankOf(section.skill, section.part);
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState<string>();
   const [topicId, setTopicId] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty | ''>('');
-  const [status, setStatus] = useState<QuestionStatus | ''>('ACTIVE');
+  const [status, setStatus] = useState<QuestionStatus>('ACTIVE');
   const [mine, setMine] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState<number>(PICKER_PAGE_SIZES[0]);
+  // id → số câu (câu đơn là 1, nhóm là số câu trong nhóm) để đếm tổng khi chọn qua nhiều trang
+  const [selected, setSelected] = useState<Map<string, number>>(new Map());
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string>();
 
-  const keyword = q.trim().toLowerCase();
-  const topics = [
-    ...new Map(
-      (grouped ? bank.groups.map((g) => g.group.topic) : bank.singles.map((s) => s.topic)).map(
-        (topic) => [topic.id, topic],
-      ),
-    ).values(),
-  ];
+  const { topics } = useToeicTopics(section.skill, section.part);
+  const common = {
+    skill: section.skill,
+    part: section.part,
+    topicId: topicId || undefined,
+    status,
+    mine: mine || undefined,
+    page,
+    limit,
+  };
+  const questions = useListQuestionsQuery(
+    { ...common, q, difficulty: difficulty || undefined, sort: 'createdAt:desc' },
+    { skip: grouped },
+  );
+  const groups = useListQuestionGroupsQuery(common, { skip: !grouped });
+  const list = grouped ? groups : questions;
+  const meta = list.data?.meta;
 
-  // Câu/nhóm chọn được lên trước, cái đã có trong đề xuống cuối (sort giữ nguyên thứ tự còn lại)
-  const usedLast = (used: boolean) => (used ? 1 : 0);
-  const singles = bank.singles
-    .filter(
-      (question) =>
-        question.status !== 'INACTIVE' && // câu ngừng dùng không thêm vào đề được
-        (!status || question.status === status) &&
-        (!difficulty || question.difficulty === difficulty) &&
-        (!topicId || question.topic.id === topicId) &&
-        (!mine || question.author.id === MOCK_ME.id) &&
-        (!keyword || question.content.toLowerCase().includes(keyword)),
-    )
-    .sort((a, b) => usedLast(usedQuestionIds.has(a.id)) - usedLast(usedQuestionIds.has(b.id)));
-  const groups = bank.groups
-    .filter(
-      ({ group, questions }) =>
-        group.status !== 'INACTIVE' &&
-        (!status || group.status === status) &&
-        (!topicId || group.topic.id === topicId) &&
-        (!mine || group.author.id === MOCK_ME.id) &&
-        (!keyword ||
-          groupText(group).toLowerCase().includes(keyword) ||
-          questions.some((item) => item.content.toLowerCase().includes(keyword))),
-    )
-    .sort(
-      (a, b) =>
-        usedLast(a.questions.some((item) => usedQuestionIds.has(item.id))) -
-        usedLast(b.questions.some((item) => usedQuestionIds.has(item.id))),
-    );
+  /** Đổi bộ lọc thì về trang 1 */
+  const filter = (apply: () => void) => {
+    apply();
+    setPage(1);
+  };
 
-  const groupQuestionCount = (id: string) =>
-    bank.groups.find((g) => g.group.id === id)?.questions.length ?? 0;
-  const selectedCount = grouped
-    ? selected.reduce((sum, id) => sum + groupQuestionCount(id), 0)
-    : selected.length;
+  const toggle = (id: string, count: number) =>
+    setSelected((current) => {
+      const next = new Map(current);
+      if (next.has(id)) next.delete(id);
+      else next.set(id, count);
+      return next;
+    });
+
+  const selectedCount = [...selected.values()].reduce((sum, count) => sum + count, 0);
   const expected = quotaOf(scale, section.skill, section.part);
   const after = section.questionCount + selectedCount;
   const overBy = expected !== null ? after - expected : 0;
   const over = overBy > 0;
-  const available = grouped ? groups.length : singles.length;
 
-  const toggle = (id: string) =>
-    setSelected((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
-    );
+  const confirm = async () => {
+    setSubmitting(true);
+    setSubmitError(undefined);
+    try {
+      const ids = [...selected.keys()];
+      await onConfirm(
+        grouped ? { questionIds: [], groupIds: ids } : { questionIds: ids, groupIds: [] },
+      );
+    } catch (err) {
+      const apiError = toApiError(err);
+      // Lỗi luật nghiệp vụ trả VALIDATION_ERROR kèm câu thông báo cụ thể trong details
+      setSubmitError(apiError.fieldErrors[0]?.message ?? apiError.message);
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
+    <Dialog.Root open onOpenChange={(open) => !open && !submitting && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0" />
         {/* Màn hẹp: toàn màn hình; từ sm: hộp thoại giữa màn, tối đa 85% chiều cao */}
@@ -132,7 +156,8 @@ export function QuestionPickerDialog({
             </div>
             <Dialog.Close
               aria-label="Đóng"
-              className="-mt-1 -mr-1 rounded-lg p-1.5 text-subtle transition-colors hover:bg-accent hover:text-foreground"
+              disabled={submitting}
+              className="-mt-1 -mr-1 rounded-lg p-1.5 text-subtle transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
             >
               <X className="size-5" />
             </Dialog.Close>
@@ -140,54 +165,76 @@ export function QuestionPickerDialog({
 
           <div className="space-y-3 border-b border-border bg-accent/50 px-5 py-4 sm:px-6">
             <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_200px]">
-              <div className="relative">
-                <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-subtle" />
-                <input
-                  type="search"
+              {/* API danh sách nhóm chưa có tìm kiếm theo từ khóa: Part nhóm lọc theo chủ đề */}
+              {grouped ? (
+                <div className="[&_label]:sr-only">
+                  <FilterSelect
+                    label="Chủ đề"
+                    value={topicId}
+                    placeholder="Mọi chủ đề"
+                    onChange={(value) => filter(() => setTopicId(value))}
+                  >
+                    {topics.map((topic) => (
+                      <option key={topic.id} value={topic.id}>
+                        {topic.name}
+                      </option>
+                    ))}
+                  </FilterSelect>
+                </div>
+              ) : (
+                <SearchInput
                   value={q}
-                  onChange={(event) => setQ(event.target.value)}
-                  placeholder={
-                    grouped ? 'Tìm trong đoạn văn, câu hỏi…' : 'Tìm theo nội dung câu hỏi…'
-                  }
-                  aria-label="Tìm câu hỏi"
-                  className="h-10 w-full rounded-xl border border-border bg-white pr-3 pl-10 text-sm outline-none placeholder:text-subtle focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/20"
+                  onSearch={(next) => filter(() => setQ(next))}
+                  placeholder="Tìm theo nội dung câu hỏi…"
                 />
-              </div>
-              <ToggleSwitch label="Chỉ câu của tôi" checked={mine} onChange={setMine} />
+              )}
+              <ToggleSwitch
+                label={grouped ? 'Chỉ nhóm của tôi' : 'Chỉ câu của tôi'}
+                checked={mine}
+                onChange={(checked) => filter(() => setMine(checked))}
+              />
             </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 [&_label]:sr-only">
-              <div className="col-span-2 md:col-span-1">
-                <FilterSelect
-                  label="Chủ đề"
-                  value={topicId}
-                  placeholder="Mọi chủ đề"
-                  onChange={setTopicId}
-                >
-                  {topics.map((topic) => (
-                    <option key={topic.id} value={topic.id}>
-                      {topic.name}
-                    </option>
-                  ))}
-                </FilterSelect>
-              </div>
-              <FilterSelect
-                label="Độ khó"
-                value={difficulty}
-                placeholder="Mọi độ khó"
-                disabled={grouped}
-                onChange={(value) => setDifficulty(value as Difficulty | '')}
-              >
-                {(Object.keys(DIFFICULTY_META) as Difficulty[]).map((key) => (
-                  <option key={key} value={key}>
-                    {DIFFICULTY_META[key].label}
-                  </option>
-                ))}
-              </FilterSelect>
+            <div
+              className={cn(
+                'grid gap-3 [&_label]:sr-only',
+                grouped ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 md:grid-cols-3',
+              )}
+            >
+              {!grouped && (
+                <>
+                  <div className="col-span-2 md:col-span-1">
+                    <FilterSelect
+                      label="Chủ đề"
+                      value={topicId}
+                      placeholder="Mọi chủ đề"
+                      onChange={(value) => filter(() => setTopicId(value))}
+                    >
+                      {topics.map((topic) => (
+                        <option key={topic.id} value={topic.id}>
+                          {topic.name}
+                        </option>
+                      ))}
+                    </FilterSelect>
+                  </div>
+                  <FilterSelect
+                    label="Độ khó"
+                    value={difficulty}
+                    placeholder="Mọi độ khó"
+                    onChange={(value) => filter(() => setDifficulty(value as Difficulty | ''))}
+                  >
+                    {(Object.keys(DIFFICULTY_META) as Difficulty[]).map((key) => (
+                      <option key={key} value={key}>
+                        {DIFFICULTY_META[key].label}
+                      </option>
+                    ))}
+                  </FilterSelect>
+                </>
+              )}
+              {/* Câu, nhóm Ngừng dùng không thêm vào đề được nên không có trong bộ lọc */}
               <FilterSelect
                 label="Trạng thái"
                 value={status}
-                placeholder="Đang dùng và Nháp"
-                onChange={(value) => setStatus(value as QuestionStatus | '')}
+                onChange={(value) => filter(() => setStatus(value as QuestionStatus))}
               >
                 <option value="ACTIVE">Đang dùng</option>
                 <option value="DRAFT">Nháp</option>
@@ -196,182 +243,252 @@ export function QuestionPickerDialog({
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
-            <p className="mb-3 text-xs text-subtle">
-              {available} {grouped ? 'nhóm' : 'câu'} phù hợp
-            </p>
-            {available === 0 ? (
+            {list.isLoading ? (
+              <div aria-hidden className="space-y-2">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+                ))}
+              </div>
+            ) : list.error && !list.data ? (
+              <ErrorState
+                message={toApiError(list.error).message}
+                onRetry={() => void list.refetch()}
+              />
+            ) : !meta || meta.total === 0 ? (
               <EmptyState
                 title={grouped ? 'Không có nhóm phù hợp' : 'Không có câu phù hợp'}
                 description="Thử đổi bộ lọc, hoặc soạn thêm ở Ngân hàng câu hỏi."
               />
-            ) : grouped ? (
-              <ul className="grid gap-3 md:grid-cols-2">
-                {groups.map(({ group, questions }) => {
-                  const used = questions.some((item) => usedQuestionIds.has(item.id));
-                  const checked = selected.includes(group.id);
-                  const size = groupSize(group.skill, group.part);
-                  const badSize =
-                    size && (questions.length < size.min || questions.length > size.max);
-                  return (
-                    <li key={group.id}>
-                      <label
-                        className={cn(
-                          'flex h-full cursor-pointer gap-3 rounded-2xl border p-4 transition-colors',
-                          used && 'cursor-not-allowed opacity-55',
-                          checked
-                            ? 'border-primary bg-accent ring-1 ring-primary'
-                            : 'border-border hover:border-slate-300',
-                        )}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          disabled={used}
-                          onChange={() => toggle(group.id)}
-                          className="mt-0.5 size-4 shrink-0 accent-primary"
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="flex items-center gap-1.5 font-semibold text-foreground">
-                            <Layers className="size-4 shrink-0 text-primary" />
-                            <span className="truncate">{group.topic.name}</span>
-                          </span>
-                          <span className="mt-1.5 line-clamp-3 block text-sm whitespace-pre-line text-slate-600">
-                            {groupText(group)}
-                          </span>
-                          <span className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 font-semibold text-slate-700 ring-1 ring-border">
-                              <ListChecks className="size-3.5" />
-                              {questions.length} câu hỏi
-                            </span>
-                            <StatusPill status={group.status} />
-                            {size && badSize && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">
-                                <CircleAlert className="size-3.5" />
-                                Chuẩn {groupSizeLabel(size)}
-                              </span>
-                            )}
-                            {used && (
-                              <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
-                                Đã có trong đề
-                              </span>
-                            )}
-                          </span>
-                        </span>
-                      </label>
-                    </li>
-                  );
-                })}
-              </ul>
             ) : (
-              <ul className="space-y-2">
-                {singles.map((question) => {
-                  const used = usedQuestionIds.has(question.id);
-                  const checked = selected.includes(question.id);
-                  const draft = question.status === 'DRAFT';
-                  return (
-                    <li key={question.id}>
-                      <label
-                        className={cn(
-                          'flex cursor-pointer gap-3 rounded-2xl border px-4 py-3 transition-colors',
-                          used && 'cursor-not-allowed opacity-55',
-                          checked
-                            ? 'border-primary bg-accent shadow-[inset_3px_0_0_var(--color-primary)]'
-                            : 'border-border hover:border-slate-300',
-                        )}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          disabled={used}
-                          onChange={() => toggle(question.id)}
-                          className="mt-1 size-4 shrink-0 accent-primary"
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="line-clamp-2 block text-sm font-medium wrap-break-word whitespace-pre-line text-foreground">
-                            {question.content}
-                          </span>
-                          <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-subtle">
-                            <span>#{question.topic.name}</span>
-                            <span aria-hidden>·</span>
-                            <span>
-                              {question.author.id === MOCK_ME.id ? (
-                                <span className="font-semibold text-primary">Bạn</span>
-                              ) : (
-                                question.author.fullName
-                              )}
-                            </span>
-                            <DifficultyPill difficulty={question.difficulty} />
-                            <StatusPill status={question.status} />
-                            {used && (
-                              <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
-                                Đã có trong đề
-                              </span>
-                            )}
-                          </span>
-                          {draft && !used && (
-                            <span className="mt-1.5 block text-xs text-amber-700">
-                              Câu Nháp vẫn thêm được, nhưng phải chuyển sang Đang dùng trước khi
-                              xuất bản đề.
-                            </span>
-                          )}
-                        </span>
-                      </label>
-                    </li>
-                  );
-                })}
-              </ul>
+              <div className={cn('transition-opacity', list.isFetching && 'opacity-60')}>
+                <p className="mb-3 text-xs text-subtle">
+                  {meta.total} {grouped ? 'nhóm' : 'câu'} phù hợp
+                </p>
+                {grouped ? (
+                  <ul className="grid gap-3 md:grid-cols-2">
+                    {(groups.data?.data ?? []).map((group) => (
+                      <GroupOption
+                        key={group.id}
+                        group={group}
+                        used={usedGroupIds.has(group.id)}
+                        checked={selected.has(group.id)}
+                        onToggle={() => toggle(group.id, group.questionCount)}
+                      />
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="space-y-2">
+                    {(questions.data?.data ?? []).map((question) => (
+                      <QuestionOption
+                        key={question.id}
+                        question={question}
+                        mine={question.author.id === user?.id}
+                        used={usedQuestionIds.has(question.id)}
+                        checked={selected.has(question.id)}
+                        onToggle={() => toggle(question.id, 1)}
+                      />
+                    ))}
+                  </ul>
+                )}
+                {meta.totalPages > 1 && (
+                  <div className="mt-4">
+                    <Pagination
+                      page={page}
+                      totalPages={meta.totalPages}
+                      limit={limit}
+                      pageSizes={PICKER_PAGE_SIZES}
+                      onPageChange={setPage}
+                      onLimitChange={(next) => filter(() => setLimit(next))}
+                    />
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 border-t border-border px-5 py-4 sm:px-6">
-            <p className="min-w-0 flex-1 text-sm text-slate-700">
-              Đã chọn{' '}
-              <span className="font-semibold text-brand">
-                {grouped
-                  ? `${selected.length} nhóm (${selectedCount} câu)`
-                  : `${selectedCount} câu`}
-              </span>
-              {selectedCount > 0 && (
-                <span
-                  className={cn(
-                    'mt-1 flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold sm:mt-0 sm:ml-2 sm:inline-flex',
-                    over ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600',
-                  )}
-                >
-                  {over && <CircleAlert className="size-3.5" />}
-                  Part {section.part} sẽ có {after}
-                  {expected !== null && `/${expected}`} câu
-                  {over && ` (vượt ${overBy} câu)`}
+          <div className="space-y-3 border-t border-border px-5 py-4 sm:px-6">
+            {submitError && (
+              <FormAlert message={submitError} onClose={() => setSubmitError(undefined)} />
+            )}
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="min-w-0 flex-1 text-sm text-slate-700">
+                Đã chọn{' '}
+                <span className="font-semibold text-brand">
+                  {grouped
+                    ? `${selected.size} nhóm (${selectedCount} câu)`
+                    : `${selectedCount} câu`}
                 </span>
-              )}
-            </p>
-            <div className="flex w-full gap-3 sm:w-auto">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-10 flex-1 rounded-xl px-4 sm:flex-none"
-                onClick={onClose}
-              >
-                Hủy
-              </Button>
-              <Button
-                type="button"
-                disabled={selected.length === 0}
-                onClick={() =>
-                  onConfirm(
-                    grouped
-                      ? { questionIds: [], groupIds: selected }
-                      : { questionIds: selected, groupIds: [] },
-                  )
-                }
-                className="h-10 flex-1 rounded-xl bg-linear-to-r from-primary to-brand px-5 font-semibold shadow-md shadow-primary/30 hover:brightness-95 sm:flex-none"
-              >
-                Thêm {selectedCount > 0 ? `${selectedCount} câu` : ''} vào đề
-              </Button>
+                {selectedCount > 0 && (
+                  <span
+                    className={cn(
+                      'mt-1 flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold sm:mt-0 sm:ml-2 sm:inline-flex',
+                      over ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600',
+                    )}
+                  >
+                    {over && <CircleAlert className="size-3.5" />}
+                    Part {section.part} sẽ có {after}
+                    {expected !== null && `/${expected}`} câu
+                    {over && ` (vượt ${overBy} câu)`}
+                  </span>
+                )}
+              </p>
+              <div className="flex w-full gap-3 sm:w-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 flex-1 rounded-xl px-4 sm:flex-none"
+                  disabled={submitting}
+                  onClick={onClose}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="button"
+                  disabled={selected.size === 0 || submitting}
+                  onClick={() => void confirm()}
+                  className="h-10 flex-1 rounded-xl bg-linear-to-r from-primary to-brand px-5 font-semibold shadow-md shadow-primary/30 hover:brightness-95 sm:flex-none"
+                >
+                  {submitting
+                    ? 'Đang thêm…'
+                    : `Thêm ${selectedCount > 0 ? `${selectedCount} câu ` : ''}vào đề`}
+                </Button>
+              </div>
             </div>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+function QuestionOption({
+  question,
+  mine,
+  used,
+  checked,
+  onToggle,
+}: {
+  question: QuestionSummary;
+  mine: boolean;
+  used: boolean;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <li>
+      <label
+        className={cn(
+          'flex cursor-pointer gap-3 rounded-2xl border px-4 py-3 transition-colors',
+          used && 'cursor-not-allowed opacity-55',
+          checked
+            ? 'border-primary bg-accent shadow-[inset_3px_0_0_var(--color-primary)]'
+            : 'border-border hover:border-slate-300',
+        )}
+      >
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={used}
+          onChange={onToggle}
+          className="mt-1 size-4 shrink-0 accent-primary"
+        />
+        <span className="min-w-0 flex-1">
+          <span className="line-clamp-2 block text-sm font-medium wrap-break-word whitespace-pre-line text-foreground">
+            {question.content}
+          </span>
+          <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-subtle">
+            <span>#{question.topic.name}</span>
+            <span aria-hidden>·</span>
+            {mine ? (
+              <span className="font-semibold text-primary">Bạn</span>
+            ) : (
+              <span>{question.author.fullName}</span>
+            )}
+            <DifficultyPill difficulty={question.difficulty} />
+            <StatusPill status={question.status} />
+            {used && (
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
+                Đã có trong đề
+              </span>
+            )}
+          </span>
+          {question.status === 'DRAFT' && !used && (
+            <span className="mt-1.5 block text-xs text-amber-700">
+              Câu Nháp vẫn thêm được, nhưng phải chuyển sang Đang dùng trước khi xuất bản đề.
+            </span>
+          )}
+        </span>
+      </label>
+    </li>
+  );
+}
+
+function GroupOption({
+  group,
+  used,
+  checked,
+  onToggle,
+}: {
+  group: QuestionGroupSummary;
+  used: boolean;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  const size = groupSize(group.skill, group.part);
+  const badSize = size && (group.questionCount < size.min || group.questionCount > size.max);
+  const empty = group.questionCount === 0;
+  const disabled = used || empty;
+  return (
+    <li>
+      <label
+        className={cn(
+          'flex h-full cursor-pointer gap-3 rounded-2xl border p-4 transition-colors',
+          disabled && 'cursor-not-allowed opacity-55',
+          checked
+            ? 'border-primary bg-accent ring-1 ring-primary'
+            : 'border-border hover:border-slate-300',
+        )}
+      >
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={disabled}
+          onChange={onToggle}
+          className="mt-0.5 size-4 shrink-0 accent-primary"
+        />
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5 font-semibold text-foreground">
+            <Layers className="size-4 shrink-0 text-primary" />
+            <span className="truncate">{group.topic.name}</span>
+          </span>
+          <span className="mt-1.5 line-clamp-3 block text-sm whitespace-pre-line text-slate-600">
+            {groupText(group) || 'Chưa có nội dung'}
+          </span>
+          <span className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+            <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 font-semibold text-slate-700 ring-1 ring-border">
+              <ListChecks className="size-3.5" />
+              {group.questionCount} câu hỏi
+            </span>
+            <StatusPill status={group.status} />
+            {size && badSize && !empty && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">
+                <CircleAlert className="size-3.5" />
+                Chuẩn {groupSizeLabel(size)}
+              </span>
+            )}
+            {empty && (
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
+                Nhóm chưa có câu
+              </span>
+            )}
+            {used && (
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
+                Đã có trong đề
+              </span>
+            )}
+          </span>
+        </span>
+      </label>
+    </li>
   );
 }

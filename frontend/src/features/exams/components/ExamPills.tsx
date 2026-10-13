@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { EXAM_STATUS_META, EXAM_TYPE_META } from '../exam-meta';
-import type { ExamStatus, ScoringScale } from '../types';
+import type { ExamStatus, ScoringScale } from '@/api/generated';
 
 const pillBase =
   'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap';

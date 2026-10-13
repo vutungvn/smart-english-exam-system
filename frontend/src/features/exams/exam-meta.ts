@@ -1,8 +1,17 @@
 import { FileText, Layers3, Mic } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { Skill } from '@/api/generated';
+import type { ExamDetail, ExamStatus, ScoringScale, Skill } from '@/api/generated';
 import { PART_RULES, type PartRule } from '@/features/question-bank/toeic';
-import type { ExamStatus, ScoringScale } from './types';
+
+/** Giá trị form tạo/sửa thông tin đề (đã chuyển sang số, sẵn sàng gửi API) */
+export interface ExamFormValues {
+  title: string;
+  description: string;
+  scoringScale: ScoringScale;
+  durationMinutes: number;
+  maxAttempts: number | null;
+  allowPartPractice: boolean;
+}
 
 /** Số câu mỗi Part của đề TOEIC chuẩn (khớp backend exam-structure.ts) */
 export const TOEIC_QUOTAS: Record<string, number> = {
@@ -95,4 +104,24 @@ export function partOrder(skill: Skill, part: number): number {
 /** "Reading · Part 5" */
 export function sectionTitle(skill: Skill, part: number): string {
   return `${skill.charAt(0)}${skill.slice(1).toLowerCase()} · Part ${part}`;
+}
+
+/**
+ * Tổng số câu chuẩn của đề: LR 200; SW tính theo kỹ năng đã có trong đề (Speaking 11, Writing 8);
+ * luyện tập không có chuẩn (null). Danh sách đề không có phần thi nên đề SW trả null.
+ */
+export function expectedTotal(
+  exam: Pick<ExamDetail, 'scoringScale'> & { sections?: Pick<ExamDetail, 'sections'>['sections'] },
+): number | null {
+  if (exam.scoringScale === 'PERCENT') return null;
+  if (exam.scoringScale === 'TOEIC_SW' && !exam.sections) return null;
+  const skills =
+    exam.scoringScale === 'TOEIC_990'
+      ? EXAM_TYPE_META.TOEIC_990.skills
+      : EXAM_TYPE_META.TOEIC_SW.skills.filter((skill) =>
+          exam.sections?.some((s) => s.skill === skill),
+        );
+  return partsOfScale(exam.scoringScale)
+    .filter((rule) => skills.includes(rule.skill))
+    .reduce((sum, rule) => sum + (quotaOf(exam.scoringScale, rule.skill, rule.part) ?? 0), 0);
 }

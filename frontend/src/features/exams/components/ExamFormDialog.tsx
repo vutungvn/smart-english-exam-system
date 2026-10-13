@@ -1,16 +1,20 @@
+import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Lock } from 'lucide-react';
+import { Lock, RotateCw } from 'lucide-react';
+import { toApiError } from '@/api/errors';
 import { AppDialog } from '@/components/AppDialog';
+import { FormAlert } from '@/components/form/FormAlert';
 import { FormField } from '@/components/form/FormField';
 import { SubmitButton } from '@/components/form/SubmitButton';
 import { Button } from '@/components/ui/button';
 import { ToggleSwitch } from '@/features/question-bank/components/FilterControls';
 import { inputClass, textareaClass } from '@/features/question-bank/form/styles';
+import { applyFieldErrors } from '@/lib/form-errors';
 import { cn } from '@/lib/utils';
-import { EXAM_TYPE_META, SCALES } from '../exam-meta';
-import type { ExamFormValues, ScoringScale } from '../types';
+import { EXAM_TYPE_META, SCALES, type ExamFormValues } from '../exam-meta';
+import type { ScoringScale } from '@/api/generated';
 
 // Luật khớp CreateExamDto ở backend; ô số giữ dạng chuỗi để ô trống không thành NaN
 const schema = z
@@ -42,6 +46,16 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
+// Lỗi VALIDATION_ERROR của server gắn được vào các ô này
+const SERVER_FIELDS = [
+  'title',
+  'description',
+  'scoringScale',
+  'durationMinutes',
+  'maxAttempts',
+  'allowPartPractice',
+] as const;
+
 interface ExamFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,7 +63,10 @@ interface ExamFormDialogProps {
   initial?: ExamFormValues;
   /** Đề đã có phần thi thì không đổi được loại đề (backend chặn đổi thang điểm) */
   lockScale?: boolean;
-  onSubmit: (values: ExamFormValues) => void | Promise<void>;
+  /** Gửi API; ném lỗi (từ `.unwrap()`) để hộp thoại hiện lên đúng ô */
+  onSubmit: (values: ExamFormValues) => Promise<void>;
+  /** Sửa đề gặp 409: tải bản mới nhất từ server và điền lại form */
+  onReload?: () => Promise<ExamFormValues | undefined>;
 }
 
 function toFormValues(initial?: ExamFormValues): FormValues {
@@ -70,12 +87,18 @@ export function ExamFormDialog({
   initial,
   lockScale = false,
   onSubmit,
+  onReload,
 }: ExamFormDialogProps) {
   const editing = !!initial;
+  const [conflict, setConflict] = useState(false);
+  const [reloading, setReloading] = useState(false);
   const {
     register,
     handleSubmit,
     setValue,
+    setError,
+    clearErrors,
+    reset,
     control,
     formState: { errors, isSubmitting, dirtyFields },
   } = useForm({ resolver: zodResolver(schema), defaultValues: toFormValues(initial) });
@@ -83,6 +106,7 @@ export function ExamFormDialog({
     control,
     name: ['scoringScale', 'allowPartPractice'],
   });
+  const formError = errors.root?.server?.message;
 
   const chooseScale = (next: ScoringScale) => {
     setValue('scoringScale', next, { shouldDirty: true });
@@ -92,15 +116,39 @@ export function ExamFormDialog({
     }
   };
 
-  const submit = (values: FormValues) =>
-    onSubmit({
-      title: values.title.trim(),
-      description: values.description.trim(),
-      scoringScale: values.scoringScale,
-      durationMinutes: Number(values.durationMinutes),
-      maxAttempts: values.maxAttempts.trim() ? Number(values.maxAttempts) : null,
-      allowPartPractice: values.allowPartPractice,
-    });
+  const submit = async (values: FormValues) => {
+    setConflict(false);
+    try {
+      await onSubmit({
+        title: values.title.trim(),
+        description: values.description.trim(),
+        scoringScale: values.scoringScale,
+        durationMinutes: Number(values.durationMinutes),
+        maxAttempts: values.maxAttempts.trim() ? Number(values.maxAttempts) : null,
+        allowPartPractice: values.allowPartPractice,
+      });
+    } catch (err) {
+      const apiError = toApiError(err);
+      if (apiError.code === 'VERSION_CONFLICT') {
+        setConflict(true);
+        return;
+      }
+      if (applyFieldErrors(apiError, setError, SERVER_FIELDS)) return;
+      setError('root.server', { type: apiError.code, message: apiError.message });
+    }
+  };
+
+  const reload = async () => {
+    if (!onReload) return;
+    setReloading(true);
+    try {
+      const latest = await onReload();
+      if (latest) reset(toFormValues(latest));
+      setConflict(false);
+    } finally {
+      setReloading(false);
+    }
+  };
 
   return (
     <AppDialog
@@ -136,6 +184,20 @@ export function ExamFormDialog({
       }
     >
       <form id="exam-form" noValidate onSubmit={handleSubmit(submit)} className="space-y-5">
+        {conflict && (
+          <FormAlert message="Đề vừa được cập nhật ở nơi khác (tab hoặc thiết bị khác). Tải bản mới nhất rồi sửa lại; thay đổi chưa lưu ở đây sẽ mất.">
+            <button
+              type="button"
+              disabled={reloading}
+              onClick={() => void reload()}
+              className="inline-flex items-center gap-1 underline-offset-4 hover:underline disabled:opacity-50"
+            >
+              <RotateCw className={cn('size-3.5', reloading && 'animate-spin')} />
+              Tải bản mới nhất
+            </button>
+          </FormAlert>
+        )}
+
         <FormField id="exam-title" label="Tên đề" required error={errors.title?.message}>
           <input
             id="exam-title"
@@ -248,6 +310,8 @@ export function ExamFormDialog({
             {...register('description')}
           />
         </FormField>
+
+        {formError && <FormAlert message={formError} onClose={() => clearErrors('root.server')} />}
       </form>
     </AppDialog>
   );

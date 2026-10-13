@@ -2,7 +2,7 @@ import { Link } from 'react-router';
 import { ArrowRight, CircleAlert, CircleCheck, CircleX, Info, TriangleAlert } from 'lucide-react';
 import { questionPath } from '@/features/question-bank/paths';
 import { cn } from '@/lib/utils';
-import type { ExamIssue, ExamValidation } from '../types';
+import type { ExamIssue, ExamValidation } from '@/api/generated';
 
 interface ValidationPanelProps {
   validation: ExamValidation;

@@ -11,12 +11,14 @@ import {
 } from '@/features/question-bank/toeic';
 import { cn } from '@/lib/utils';
 import { quotaOf, sectionTitle } from '../exam-meta';
-import type { ExamQuestionItem, ExamSectionItem, ScoringScale } from '../types';
+import type { ExamQuestionItem, ExamSectionItem, ScoringScale } from '@/api/generated';
 
 interface SectionPanelProps {
   section: ExamSectionItem;
   scale: ScoringScale;
   readOnly: boolean;
+  /** Đang gửi thao tác lên server: tắt các nút để không bấm hai lần */
+  busy?: boolean;
   onAddQuestions: () => void;
   onRemoveQuestion: (examQuestionId: string) => void;
   onRemoveSection: () => void;
@@ -58,6 +60,7 @@ export function SectionPanel({
   section,
   scale,
   readOnly,
+  busy = false,
   onAddQuestions,
   onRemoveQuestion,
   onRemoveSection,
@@ -71,28 +74,32 @@ export function SectionPanel({
 
   return (
     <section className="rounded-3xl border border-border bg-white p-4 shadow-2xs sm:p-6">
-      <div className="flex flex-wrap items-start gap-3">
-        <div className="min-w-0 flex-1">
-          <h2 className="flex flex-wrap items-center gap-2 font-bold text-foreground">
-            <span className={cn('size-2.5 rounded-full', SKILL_META[section.skill].dot)} />
-            {sectionTitle(section.skill, section.part)} – {section.name}
-            <span
-              className={cn(
-                'rounded-full px-2.5 py-0.5 text-xs font-semibold tabular-nums',
-                ok ? 'bg-success-soft/40 text-success' : 'bg-amber-50 text-amber-700',
-              )}
-            >
-              {expected === null
-                ? `${section.questionCount} câu`
-                : `${section.questionCount}/${expected} câu`}
-            </span>
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">{partHint(section)}</p>
-        </div>
+      {/* Tiêu đề Part một hàng riêng (tên Part có thể dài); số câu, gợi ý và nút ở hàng dưới */}
+      <h2 className="flex items-start gap-2 text-base leading-snug font-bold text-foreground">
+        <span
+          className={cn('mt-1.5 size-2.5 shrink-0 rounded-full', SKILL_META[section.skill].dot)}
+        />
+        <span className="min-w-0">
+          {sectionTitle(section.skill, section.part)} – {section.name}
+        </span>
+      </h2>
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-3">
+        <span
+          className={cn(
+            'rounded-full px-2.5 py-0.5 text-xs font-semibold tabular-nums',
+            ok ? 'bg-success-soft/40 text-success' : 'bg-amber-50 text-amber-700',
+          )}
+        >
+          {expected === null
+            ? `${section.questionCount} câu`
+            : `${section.questionCount}/${expected} câu`}
+        </span>
+        <span className="text-sm text-muted-foreground">{partHint(section)}</span>
         {!readOnly && (
-          <div className="flex w-full items-center gap-2 sm:w-auto">
+          <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
             <Button
               type="button"
+              disabled={busy}
               onClick={onAddQuestions}
               className="h-10 flex-1 rounded-xl bg-linear-to-r from-primary to-brand px-4 font-semibold shadow-md shadow-primary/25 hover:brightness-95 sm:flex-none"
             >
@@ -102,6 +109,7 @@ export function SectionPanel({
             <Button
               type="button"
               variant="ghost"
+              disabled={busy}
               aria-label={`Xóa ${sectionTitle(section.skill, section.part)}`}
               title="Xóa Part"
               onClick={onRemoveSection}
@@ -142,6 +150,7 @@ export function SectionPanel({
                   item={item}
                   number={++number}
                   readOnly={readOnly}
+                  busy={busy}
                   onRemove={() => onRemoveQuestion(item.id)}
                 />
               );
@@ -174,8 +183,9 @@ export function SectionPanel({
                   {!readOnly && (
                     <button
                       type="button"
+                      disabled={busy}
                       onClick={() => onRemoveQuestion(block.items[0].id)}
-                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-danger-soft hover:text-destructive"
+                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-danger-soft hover:text-destructive disabled:opacity-50"
                     >
                       <X className="size-3.5" />
                       Gỡ nhóm
@@ -200,12 +210,14 @@ function QuestionRow({
   item,
   number,
   readOnly,
+  busy = false,
   compact = false,
   onRemove,
 }: {
   item: ExamQuestionItem;
   number: number;
   readOnly: boolean;
+  busy?: boolean;
   compact?: boolean;
   onRemove?: () => void;
 }) {
@@ -253,8 +265,9 @@ function QuestionRow({
             type="button"
             aria-label={`Gỡ câu ${number} khỏi đề`}
             title="Gỡ khỏi đề"
+            disabled={busy}
             onClick={onRemove}
-            className="rounded-lg p-2 text-subtle transition-colors hover:bg-danger-soft hover:text-destructive"
+            className="rounded-lg p-2 text-subtle transition-colors hover:bg-danger-soft hover:text-destructive disabled:opacity-50"
           >
             <X className="size-4" />
           </button>

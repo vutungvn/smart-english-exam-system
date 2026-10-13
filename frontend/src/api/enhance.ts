@@ -16,9 +16,11 @@ export const enhancedApi = api.enhanceEndpoints({
         return { url: '/api/v1/me/avatar', method: 'POST', body };
       },
     },
-    // Thêm/sửa/xóa câu làm đổi số câu và danh sách câu của nhóm: tải lại cả dữ liệu nhóm
+    // Thêm/sửa/xóa câu làm đổi số câu và danh sách câu của nhóm: tải lại cả dữ liệu nhóm.
+    // Đổi trạng thái hay xóa câu, nhóm đang nằm trong đề làm đổi kết quả kiểm tra xuất bản của đề
     createQuestion: { invalidatesTags: ['Questions', 'Question Groups'] },
-    updateQuestion: { invalidatesTags: ['Questions', 'Question Groups'] },
-    deleteQuestion: { invalidatesTags: ['Questions', 'Question Groups'] },
+    updateQuestion: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
+    deleteQuestion: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
+    updateQuestionGroup: { invalidatesTags: ['Question Groups', 'Exams'] },
   },
 });

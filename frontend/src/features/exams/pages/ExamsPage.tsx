@@ -1,41 +1,60 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { DropdownMenu } from 'radix-ui';
-import { Eye, FilePlus2, MoreVertical, PencilRuler, Plus, Search, Trash2 } from 'lucide-react';
+import { Eye, FilePlus2, MoreVertical, PencilRuler, Plus, Trash2 } from 'lucide-react';
+import { toApiError } from '@/api/errors';
+import {
+  useCreateExamMutation,
+  useDeleteExamMutation,
+  useListExamsQuery,
+  useListSubjectsQuery,
+  type ExamStatus,
+  type ExamSummary,
+  type ScoringScale,
+} from '@/api/generated';
 import { AppDialog } from '@/components/AppDialog';
+import { FormAlert } from '@/components/form/FormAlert';
 import { PageHeader } from '@/components/PageHeader';
 import { Pagination } from '@/components/Pagination';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/features/profile/format';
 import { FilterSelect, SegmentedControl } from '@/features/question-bank/components/FilterControls';
-import { EmptyState, SuccessBanner } from '@/features/question-bank/components/ListStates';
+import {
+  EmptyState,
+  ErrorState,
+  SuccessBanner,
+} from '@/features/question-bank/components/ListStates';
+import { QuestionTableSkeleton } from '@/features/question-bank/components/QuestionTable';
 import { cn } from '@/lib/utils';
 import { ExamFormDialog } from '../components/ExamFormDialog';
 import { ExamStatusPill, ExamTypePill } from '../components/ExamPills';
-import { EXAM_STATUS_META, EXAM_STATUSES, EXAM_TYPE_META, SCALES } from '../exam-meta';
-import { expectedTotal } from '../mock/check-exam';
-import { mockExams, useMockExams } from '../mock/mock-store';
+import { SearchInput } from '../components/SearchInput';
+import {
+  EXAM_STATUS_META,
+  EXAM_STATUSES,
+  EXAM_TYPE_META,
+  expectedTotal,
+  SCALES,
+} from '../exam-meta';
+import { EXAM_PAGE_SIZES, toExamListArg, useExamFilters } from '../hooks/use-exam-filters';
 import { examPath, examPreviewPath } from '../paths';
-import type { ExamDetail, ExamStatus, ScoringScale } from '../types';
-
-const PAGE_SIZES = [10, 20, 50] as const;
 
 export interface ExamsLocationState {
   flash?: string;
 }
 
-// TẠM (lượt 1): dữ liệu lấy từ mock-store; lượt 2 đổi sang useListExamsQuery + bộ lọc trên URL
 export function ExamsPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const exams = useMockExams();
-  const [status, setStatus] = useState<ExamStatus>();
-  const [scale, setScale] = useState<ScoringScale>();
-  const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState<number>(PAGE_SIZES[0]);
+  const { filters, update, hasFilters, clear } = useExamFilters();
+  const { data, error, isLoading, isFetching, refetch } = useListExamsQuery(toExamListArg(filters));
+  const subjects = useListSubjectsQuery();
+  const toeicId = subjects.data?.data.find((subject) => subject.code === 'TOEIC')?.id;
+  const [createExam] = useCreateExamMutation();
+  const [deleteExam, { isLoading: deleting }] = useDeleteExamMutation();
   const [creating, setCreating] = useState(0); // đổi key để mở hộp thoại với form mới
-  const [pendingDelete, setPendingDelete] = useState<ExamDetail | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<ExamSummary | null>(null);
+  const [deleteError, setDeleteError] = useState<string>();
 
   const [flash, setFlash] = useState(() => (location.state as ExamsLocationState | null)?.flash);
   useEffect(() => {
@@ -44,22 +63,32 @@ export function ExamsPage() {
     }
   }, [location, navigate]);
 
-  const keyword = query.trim().toLowerCase();
-  const filtered = exams.filter(
-    (exam) =>
-      (!status || exam.status === status) &&
-      (!scale || exam.scoringScale === scale) &&
-      (!keyword || exam.title.toLowerCase().includes(keyword)),
-  );
-  const totalPages = Math.ceil(filtered.length / limit);
-  const current = Math.min(page, Math.max(totalPages, 1));
-  const rows = filtered.slice((current - 1) * limit, current * limit);
-  const hasFilters = Boolean(status || scale || keyword);
-  const clear = () => {
-    setStatus(undefined);
-    setScale(undefined);
-    setQuery('');
-    setPage(1);
+  // Xóa đề cuối của trang cuối: lùi về trang còn dữ liệu
+  const meta = data?.meta;
+  useEffect(() => {
+    if (meta && meta.totalPages > 0 && filters.page > meta.totalPages) {
+      update({ page: meta.totalPages });
+    }
+  }, [meta, filters.page, update]);
+
+  const exams = data?.data ?? [];
+  const openCreate = () => setCreating((n) => n + 1);
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteError(undefined);
+    try {
+      await deleteExam(pendingDelete.id).unwrap();
+      setPendingDelete(null);
+      setFlash('Đã xóa đề thi');
+    } catch (err) {
+      const apiError = toApiError(err);
+      if (apiError.code === 'EXAM_NOT_FOUND') {
+        setPendingDelete(null);
+        return;
+      }
+      setDeleteError(apiError.message);
+    }
   };
 
   return (
@@ -71,7 +100,8 @@ export function ExamsPage() {
         actions={
           <Button
             type="button"
-            onClick={() => setCreating((n) => n + 1)}
+            onClick={openCreate}
+            disabled={!toeicId}
             className="h-10 rounded-xl bg-linear-to-r from-primary to-brand px-4 font-semibold shadow-md shadow-primary/30 hover:brightness-95"
           >
             <Plus />
@@ -88,11 +118,8 @@ export function ExamsPage() {
       >
         <SegmentedControl<ExamStatus>
           label="Trạng thái"
-          value={status}
-          onChange={(next) => {
-            setStatus(next);
-            setPage(1);
-          }}
+          value={filters.status}
+          onChange={(status) => update({ status })}
           options={[
             { label: 'Tất cả' },
             ...EXAM_STATUSES.map((item) => ({ value: item, label: EXAM_STATUS_META[item].label })),
@@ -100,29 +127,19 @@ export function ExamsPage() {
           className="grid grid-cols-2 sm:flex xl:shrink-0"
         />
         <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px] xl:flex-1">
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-subtle" />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setPage(1);
-              }}
-              placeholder="Tìm theo tên đề…"
-              aria-label="Tìm theo tên đề"
-              className="h-10 w-full rounded-xl border border-border bg-slate-50 pr-3 pl-10 text-sm outline-none transition-colors placeholder:text-subtle hover:border-slate-300 focus-visible:border-primary focus-visible:bg-white focus-visible:ring-3 focus-visible:ring-primary/20"
-            />
-          </div>
+          <SearchInput
+            value={filters.q}
+            onSearch={(q) => update({ q })}
+            placeholder="Tìm theo tên đề…"
+          />
           <div className="[&>div>label]:sr-only">
             <FilterSelect
               label="Loại đề"
-              value={scale ?? ''}
+              value={filters.scoringScale ?? ''}
               placeholder="Mọi loại đề"
-              onChange={(value) => {
-                setScale((value || undefined) as ScoringScale | undefined);
-                setPage(1);
-              }}
+              onChange={(value) =>
+                update({ scoringScale: (value || undefined) as ScoringScale | undefined })
+              }
             >
               {SCALES.map((item) => (
                 <option key={item} value={item}>
@@ -143,12 +160,18 @@ export function ExamsPage() {
             <PencilRuler className="size-5 text-primary" />
             Danh sách đề
           </h2>
-          <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{filtered.length}</span> đề
-          </span>
+          {meta && (
+            <span className="text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">{meta.total}</span> đề
+            </span>
+          )}
         </div>
 
-        {rows.length === 0 ? (
+        {isLoading ? (
+          <QuestionTableSkeleton rows={4} />
+        ) : error && !data ? (
+          <ErrorState message={toApiError(error).message} onRetry={() => void refetch()} />
+        ) : exams.length === 0 ? (
           hasFilters ? (
             <EmptyState title="Không có đề phù hợp" description="Thử bỏ bớt điều kiện lọc.">
               <Button variant="outline" className="h-10 rounded-xl px-4" onClick={clear}>
@@ -161,58 +184,70 @@ export function ExamsPage() {
               title="Chưa có đề thi nào"
               description="Tạo đề, thêm các Part rồi chọn câu từ ngân hàng câu hỏi."
             >
-              <Button className="h-10 rounded-xl px-5" onClick={() => setCreating((n) => n + 1)}>
+              <Button className="h-10 rounded-xl px-5" onClick={openCreate} disabled={!toeicId}>
                 <Plus />
                 Tạo đề thi
               </Button>
             </EmptyState>
           )
         ) : (
-          <>
+          <div className={cn('transition-opacity', isFetching && 'opacity-60')}>
             {/* Bảng từ md trở lên; màn hẹp hiện dạng thẻ để không phải cuộn ngang */}
-            <ExamTable exams={rows} onDelete={setPendingDelete} />
+            <ExamTable exams={exams} onDelete={setPendingDelete} />
             <ul className="divide-y divide-border md:hidden">
-              {rows.map((exam) => (
+              {exams.map((exam) => (
                 <ExamCard key={exam.id} exam={exam} onDelete={() => setPendingDelete(exam)} />
               ))}
             </ul>
-          </>
+          </div>
         )}
 
-        {filtered.length > 0 && (
+        {meta && meta.total > 0 && (
           <div className="border-t border-border px-5 py-4">
             <Pagination
-              page={current}
-              totalPages={totalPages}
-              limit={limit}
-              pageSizes={PAGE_SIZES}
-              onPageChange={setPage}
-              onLimitChange={(next) => {
-                setLimit(next);
-                setPage(1);
-              }}
+              page={filters.page}
+              totalPages={meta.totalPages}
+              limit={filters.limit}
+              pageSizes={EXAM_PAGE_SIZES}
+              onPageChange={(page) => update({ page })}
+              onLimitChange={(limit) => update({ limit })}
             />
           </div>
         )}
       </section>
 
-      {creating > 0 && (
+      {creating > 0 && toeicId && (
         <ExamFormDialog
           key={creating}
           open
           onOpenChange={(open) => !open && setCreating(0)}
-          onSubmit={(values) => {
-            const created = mockExams.create(values);
-            void navigate(examPath(created.id), {
-              state: { flash: 'Đã tạo đề, hãy thêm các Part và câu hỏi' },
-            });
+          onSubmit={async (values) => {
+            const { data: created } = await createExam({
+              subjectId: toeicId,
+              title: values.title,
+              description: values.description || null,
+              scoringScale: values.scoringScale,
+              durationMinutes: values.durationMinutes,
+              maxAttempts: values.maxAttempts,
+              allowPartPractice: values.allowPartPractice,
+            }).unwrap();
+            const state: ExamsLocationState = {
+              flash: 'Đã tạo đề, hãy thêm các Part và câu hỏi',
+            };
+            void navigate(examPath(created.id), { state });
           }}
         />
       )}
 
       <AppDialog
         open={pendingDelete !== null}
-        onOpenChange={(open) => !open && setPendingDelete(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingDelete(null);
+            setDeleteError(undefined);
+          }
+        }}
+        busy={deleting}
         title="Xóa đề thi?"
         description="Đề sẽ không còn trong danh sách. Bài làm cũ của học viên (nếu có) vẫn được giữ."
         footer={
@@ -220,36 +255,42 @@ export function ExamsPage() {
             <Button
               variant="outline"
               className="h-10 rounded-xl px-4"
+              disabled={deleting}
               onClick={() => setPendingDelete(null)}
             >
               Hủy
             </Button>
             <Button
               className="h-10 rounded-xl bg-destructive px-4 text-white hover:bg-destructive/90"
-              onClick={() => {
-                if (pendingDelete) mockExams.remove(pendingDelete.id);
-                setPendingDelete(null);
-                setFlash('Đã xóa đề thi');
-              }}
+              disabled={deleting}
+              onClick={() => void confirmDelete()}
             >
               <Trash2 />
-              Xóa đề
+              {deleting ? 'Đang xóa…' : 'Xóa đề'}
             </Button>
           </>
         }
       >
-        <p className="rounded-xl border-l-4 border-destructive/50 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
-          {pendingDelete?.title}
-        </p>
+        <div className="space-y-3">
+          <p className="rounded-xl border-l-4 border-destructive/50 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+            {pendingDelete?.title}
+          </p>
+          {deleteError && (
+            <FormAlert message={deleteError} onClose={() => setDeleteError(undefined)} />
+          )}
+        </div>
       </AppDialog>
     </div>
   );
 }
 
-/** "7 Part · 195/200 câu" kèm thanh tiến độ (đề chuẩn); đề luyện tập chỉ ghi số câu */
-function Structure({ exam }: { exam: ExamDetail }) {
+/**
+ * "7 Part · 194/200 câu" kèm thanh tiến độ với đề LR. Danh sách không có chi tiết phần thi
+ * nên đề Speaking/Writing và đề luyện tập chỉ ghi số câu; số chuẩn xem ở màn soạn đề.
+ */
+function Structure({ exam }: { exam: ExamSummary }) {
   const expected = expectedTotal(exam);
-  const done = expected !== null && expected > 0 && exam.questionCount === expected;
+  const done = expected !== null && exam.questionCount === expected;
   const percent = expected ? Math.min(100, Math.round((exam.questionCount / expected) * 100)) : 0;
   return (
     <div className="min-w-0">
@@ -275,8 +316,8 @@ function ExamTable({
   exams,
   onDelete,
 }: {
-  exams: ExamDetail[];
-  onDelete: (exam: ExamDetail) => void;
+  exams: ExamSummary[];
+  onDelete: (exam: ExamSummary) => void;
 }) {
   const navigate = useNavigate();
   return (
@@ -355,7 +396,7 @@ function ExamTable({
   );
 }
 
-function ExamCard({ exam, onDelete }: { exam: ExamDetail; onDelete: () => void }) {
+function ExamCard({ exam, onDelete }: { exam: ExamSummary; onDelete: () => void }) {
   return (
     <li className="flex gap-3 px-5 py-4">
       <div className="min-w-0 flex-1">
@@ -381,7 +422,7 @@ function ExamCard({ exam, onDelete }: { exam: ExamDetail; onDelete: () => void }
 const menuItem =
   'flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm outline-none select-none data-highlighted:bg-accent data-disabled:cursor-not-allowed data-disabled:opacity-50';
 
-function RowMenu({ exam, onDelete }: { exam: ExamDetail; onDelete: () => void }) {
+function RowMenu({ exam, onDelete }: { exam: ExamSummary; onDelete: () => void }) {
   const navigate = useNavigate();
   const published = exam.status === 'PUBLISHED';
   return (
