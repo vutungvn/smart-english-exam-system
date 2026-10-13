@@ -4488,6 +4488,767 @@
         ]
       }
     },
+    "/api/v1/teacher/questions/import/template": {
+      "get": {
+        "description": "questions.xlsx (sheet huong_dan, groups, questions có sẵn ví dụ Listening, Reading, Speaking, Writing) và media/ có một ảnh mẫu. Nhập nguyên tệp mẫu sẽ thành công.",
+        "operationId": "getQuestionImportTemplate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Tệp .zip",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tải tệp mẫu .zip",
+        "tags": [
+          "Question Import"
+        ]
+      }
+    },
+    "/api/v1/teacher/questions/import/preview": {
+      "post": {
+        "description": "Kiểm tra toàn bộ tệp, chưa ghi gì vào ngân hàng. Lỗi, cảnh báo chỉ rõ sheet/dòng/cột. Không có lỗi (canConfirm = true) thì gọi /{token}/confirm trong 1 giờ. Mỗi giáo viên chỉ giữ một bản xem trước: tải tệp khác thì bản cũ bị hủy.",
+        "operationId": "previewQuestionImport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Tệp .zip gồm questions.xlsx và thư mục media/, tối đa 100 MB"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ImportPreview"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: QUESTION_IMPORT_INVALID_FILE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "QUESTION_IMPORT_INVALID_FILE": {
+                    "summary": "QUESTION_IMPORT_INVALID_FILE: Tệp nhập không hợp lệ, cần tệp .zip gồm questions.xlsx và thư mục media/",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "QUESTION_IMPORT_INVALID_FILE",
+                        "message": "Tệp nhập không hợp lệ, cần tệp .zip gồm questions.xlsx và thư mục media/"
+                      }
+                    }
+                  },
+                  "QUESTION_IMPORT_INVALID_FILE_2": {
+                    "summary": "QUESTION_IMPORT_INVALID_FILE: Tệp .zip có tệp mang đường dẫn không hợp lệ (tuyệt đối hoặc chứa ../)",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "QUESTION_IMPORT_INVALID_FILE",
+                        "message": "Tệp .zip có tệp mang đường dẫn không hợp lệ (tuyệt đối hoặc chứa ../)"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Lỗi, error.code thuộc: PAYLOAD_TOO_LARGE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "PAYLOAD_TOO_LARGE": {
+                    "summary": "PAYLOAD_TOO_LARGE: Dữ liệu gửi lên quá lớn",
+                    "value": {
+                      "success": false,
+                      "status": 413,
+                      "error": {
+                        "code": "PAYLOAD_TOO_LARGE",
+                        "message": "Dữ liệu gửi lên quá lớn"
+                      }
+                    }
+                  },
+                  "PAYLOAD_TOO_LARGE_2": {
+                    "summary": "PAYLOAD_TOO_LARGE: Tệp .zip giải nén ra quá 300 MB",
+                    "value": {
+                      "success": false,
+                      "status": 413,
+                      "error": {
+                        "code": "PAYLOAD_TOO_LARGE",
+                        "message": "Tệp .zip giải nén ra quá 300 MB"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Lỗi, error.code thuộc: STORAGE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "STORAGE_UNAVAILABLE": {
+                    "summary": "STORAGE_UNAVAILABLE: Kho lưu trữ tệp tạm thời không khả dụng, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 503,
+                      "error": {
+                        "code": "STORAGE_UNAVAILABLE",
+                        "message": "Kho lưu trữ tệp tạm thời không khả dụng, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tải tệp lên và xem trước",
+        "tags": [
+          "Question Import"
+        ]
+      }
+    },
+    "/api/v1/teacher/questions/import/{token}/confirm": {
+      "post": {
+        "description": "Kiểm tra lại tệp với dữ liệu hiện tại, lưu audio/ảnh vào kho rồi ghi mọi nhóm, câu trong một transaction: lỗi thì không câu nào được nhập.",
+        "operationId": "confirmQuestionImport",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmImportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 201
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ImportResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "status",
+                            "message": "status không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: QUESTION_IMPORT_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "QUESTION_IMPORT_NOT_FOUND": {
+                    "summary": "QUESTION_IMPORT_NOT_FOUND: Phiên nhập tệp không tồn tại hoặc đã hết hạn, vui lòng tải tệp lên lại",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "QUESTION_IMPORT_NOT_FOUND",
+                        "message": "Phiên nhập tệp không tồn tại hoặc đã hết hạn, vui lòng tải tệp lên lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: QUESTION_IMPORT_IN_PROGRESS, QUESTION_CODE_TAKEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "QUESTION_IMPORT_IN_PROGRESS": {
+                    "summary": "QUESTION_IMPORT_IN_PROGRESS: Tệp này đang được nhập, vui lòng chờ trong giây lát",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IMPORT_IN_PROGRESS",
+                        "message": "Tệp này đang được nhập, vui lòng chờ trong giây lát"
+                      }
+                    }
+                  },
+                  "QUESTION_CODE_TAKEN": {
+                    "summary": "QUESTION_CODE_TAKEN: Mã câu hỏi đã có trong ngân hàng, vui lòng xem trước lại tệp",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_CODE_TAKEN",
+                        "message": "Mã câu hỏi đã có trong ngân hàng, vui lòng xem trước lại tệp"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Lỗi, error.code thuộc: QUESTION_IMPORT_HAS_ERRORS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "QUESTION_IMPORT_HAS_ERRORS": {
+                    "summary": "QUESTION_IMPORT_HAS_ERRORS: Tệp còn dòng lỗi, hãy sửa rồi tải lên lại",
+                    "value": {
+                      "success": false,
+                      "status": 422,
+                      "error": {
+                        "code": "QUESTION_IMPORT_HAS_ERRORS",
+                        "message": "Tệp còn dòng lỗi, hãy sửa rồi tải lên lại",
+                        "details": [
+                          {
+                            "sheet": "questions",
+                            "row": 5,
+                            "column": "correct",
+                            "message": "Thiếu đáp án đúng"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Lỗi, error.code thuộc: STORAGE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "STORAGE_UNAVAILABLE": {
+                    "summary": "STORAGE_UNAVAILABLE: Kho lưu trữ tệp tạm thời không khả dụng, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 503,
+                      "error": {
+                        "code": "STORAGE_UNAVAILABLE",
+                        "message": "Kho lưu trữ tệp tạm thời không khả dụng, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xác nhận nhập",
+        "tags": [
+          "Question Import"
+        ]
+      }
+    },
+    "/api/v1/teacher/questions/import/{token}/errors": {
+      "get": {
+        "description": "Đầy đủ mọi dòng lỗi (response xem trước chỉ trả 500 lỗi đầu tiên).",
+        "operationId": "getQuestionImportErrors",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tệp .xlsx",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "token",
+                            "message": "token không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: QUESTION_IMPORT_NOT_FOUND",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "QUESTION_IMPORT_NOT_FOUND": {
+                    "summary": "QUESTION_IMPORT_NOT_FOUND: Phiên nhập tệp không tồn tại hoặc đã hết hạn, vui lòng tải tệp lên lại",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "QUESTION_IMPORT_NOT_FOUND",
+                        "message": "Phiên nhập tệp không tồn tại hoặc đã hết hạn, vui lòng tải tệp lên lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tải danh sách lỗi, cảnh báo dạng Excel",
+        "tags": [
+          "Question Import"
+        ]
+      }
+    },
     "/api/v1/teacher/exams": {
       "get": {
         "operationId": "listExams",
@@ -7146,11 +7907,18 @@
           "AUTH_GOOGLE_STUDENT_ONLY",
           "STORAGE_UNAVAILABLE",
           "AVATAR_INVALID_IMAGE",
+          "MEDIA_LINK_INVALID",
+          "MEDIA_RANGE_NOT_SATISFIABLE",
           "SUBJECT_NOT_FOUND",
           "QUESTION_NOT_FOUND",
           "QUESTION_GROUP_NOT_FOUND",
           "QUESTION_GROUP_NOT_EMPTY",
           "QUESTION_GROUP_ORDER_TAKEN",
+          "QUESTION_CODE_TAKEN",
+          "QUESTION_IMPORT_INVALID_FILE",
+          "QUESTION_IMPORT_NOT_FOUND",
+          "QUESTION_IMPORT_HAS_ERRORS",
+          "QUESTION_IMPORT_IN_PROGRESS",
           "EXAM_NOT_FOUND",
           "EXAM_SECTION_NOT_FOUND",
           "EXAM_QUESTION_NOT_FOUND",
@@ -7833,6 +8601,12 @@
             "type": "string",
             "format": "uuid"
           },
+          "code": {
+            "type": "string",
+            "nullable": true,
+            "example": "P5-001",
+            "description": "Mã câu trong tệp nhập; câu tạo bằng form thì null"
+          },
           "topic": {
             "$ref": "#/components/schemas/TopicRef"
           },
@@ -7895,6 +8669,7 @@
         },
         "required": [
           "id",
+          "code",
           "topic",
           "author",
           "groupId",
@@ -7941,6 +8716,12 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true,
+            "example": "P5-001",
+            "description": "Mã câu trong tệp nhập; câu tạo bằng form thì null"
           },
           "topic": {
             "$ref": "#/components/schemas/TopicRef"
@@ -8020,12 +8801,22 @@
           "audioKey": {
             "type": "string",
             "nullable": true,
-            "description": "Gán khi làm chức năng tải media"
+            "description": "Key trong kho tệp, gán khi nhập .zip"
           },
           "imageKey": {
             "type": "string",
             "nullable": true,
-            "description": "Gán khi làm chức năng tải media"
+            "description": "Key trong kho tệp, gán khi nhập .zip"
+          },
+          "audioUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
           },
           "options": {
             "description": "Rỗng với câu trả lời mở",
@@ -8037,6 +8828,7 @@
         },
         "required": [
           "id",
+          "code",
           "topic",
           "author",
           "groupId",
@@ -8055,6 +8847,8 @@
           "responseSeconds",
           "audioKey",
           "imageKey",
+          "audioUrl",
+          "imageUrl",
           "options"
         ]
       },
@@ -8319,6 +9113,16 @@
             "type": "string",
             "nullable": true
           },
+          "audioUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
           "status": {
             "allOf": [
               {
@@ -8349,6 +9153,8 @@
           "transcript",
           "audioKey",
           "imageKey",
+          "audioUrl",
+          "imageUrl",
           "status",
           "questionCount",
           "createdAt",
@@ -8395,6 +9201,16 @@
             "type": "string",
             "nullable": true
           },
+          "audioUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
           "status": {
             "allOf": [
               {
@@ -8432,6 +9248,8 @@
           "transcript",
           "audioKey",
           "imageKey",
+          "audioUrl",
+          "imageUrl",
           "status",
           "questionCount",
           "createdAt",
@@ -8522,6 +9340,277 @@
         "required": [
           "updatedAt"
         ]
+      },
+      "ImportPartCount": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "example": "Conversations"
+          },
+          "groupCount": {
+            "type": "integer"
+          },
+          "questionCount": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "skill",
+          "part",
+          "name",
+          "groupCount",
+          "questionCount"
+        ]
+      },
+      "ImportIssue": {
+        "type": "object",
+        "properties": {
+          "sheet": {
+            "type": "string",
+            "enum": [
+              "file",
+              "groups",
+              "questions",
+              "media"
+            ],
+            "description": "file: cấu trúc tệp; groups, questions: sheet trong Excel; media: thư mục media/"
+          },
+          "row": {
+            "type": "integer",
+            "nullable": true,
+            "example": 5,
+            "description": "Số dòng trong Excel (dòng 1 là tiêu đề)"
+          },
+          "column": {
+            "type": "string",
+            "nullable": true,
+            "example": "option_d"
+          },
+          "message": {
+            "type": "string",
+            "example": "Listening Part 2 (Question-Response) chỉ có phương án A, B, C"
+          }
+        },
+        "required": [
+          "sheet",
+          "row",
+          "column",
+          "message"
+        ]
+      },
+      "ImportQuestionRow": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "type": "integer",
+            "example": 2
+          },
+          "code": {
+            "type": "string",
+            "example": "P5-001"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "integer"
+          },
+          "difficulty": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Difficulty"
+              }
+            ]
+          },
+          "topic": {
+            "type": "string",
+            "example": "P5/P6 – Từ loại"
+          },
+          "groupCode": {
+            "type": "string",
+            "nullable": true,
+            "example": "P3-G01"
+          },
+          "orderInGroup": {
+            "type": "integer",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "description": "Nội dung câu, cắt ngắn 120 ký tự"
+          },
+          "audioFile": {
+            "type": "string",
+            "nullable": true,
+            "example": "P1-003.mp3"
+          },
+          "imageFile": {
+            "type": "string",
+            "nullable": true,
+            "example": "P1-003.jpg"
+          }
+        },
+        "required": [
+          "row",
+          "code",
+          "skill",
+          "part",
+          "difficulty",
+          "topic",
+          "groupCode",
+          "orderInGroup",
+          "content",
+          "audioFile",
+          "imageFile"
+        ]
+      },
+      "ImportPreview": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Dùng cho /{token}/confirm và /{token}/errors"
+          },
+          "fileName": {
+            "type": "string",
+            "example": "toeic-reading.zip"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Sau thời điểm này phải tải lại"
+          },
+          "canConfirm": {
+            "type": "boolean",
+            "description": "false khi còn lỗi: phải sửa tệp rồi tải lên lại"
+          },
+          "groupCount": {
+            "type": "integer",
+            "description": "Số nhóm hợp lệ"
+          },
+          "questionCount": {
+            "type": "integer",
+            "description": "Số câu hợp lệ"
+          },
+          "mediaCount": {
+            "type": "integer",
+            "description": "Số tệp audio/ảnh được dùng"
+          },
+          "errorCount": {
+            "type": "integer"
+          },
+          "warningCount": {
+            "type": "integer"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportPartCount"
+            }
+          },
+          "errors": {
+            "description": "Tối đa 500 lỗi đầu tiên; đầy đủ trong GET /{token}/errors",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportIssue"
+            }
+          },
+          "warnings": {
+            "description": "Tối đa 500 cảnh báo đầu tiên",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportIssue"
+            }
+          },
+          "questions": {
+            "description": "Các câu hợp lệ, theo thứ tự dòng",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportQuestionRow"
+            }
+          }
+        },
+        "required": [
+          "token",
+          "fileName",
+          "expiresAt",
+          "canConfirm",
+          "groupCount",
+          "questionCount",
+          "mediaCount",
+          "errorCount",
+          "warningCount",
+          "parts",
+          "errors",
+          "warnings",
+          "questions"
+        ]
+      },
+      "ImportResult": {
+        "type": "object",
+        "properties": {
+          "groupCount": {
+            "type": "integer"
+          },
+          "questionCount": {
+            "type": "integer"
+          },
+          "mediaCount": {
+            "type": "integer",
+            "description": "Số tệp audio/ảnh đã lưu vào kho"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestionStatus"
+              }
+            ]
+          }
+        },
+        "required": [
+          "groupCount",
+          "questionCount",
+          "mediaCount",
+          "status"
+        ]
+      },
+      "ImportStatus": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "ACTIVE"
+        ],
+        "description": "Trạng thái của mọi nhóm, câu được nhập. ACTIVE: dùng ngay để soạn đề xuất bản"
+      },
+      "ConfirmImportDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "default": "DRAFT",
+            "description": "Trạng thái của mọi nhóm, câu được nhập. ACTIVE: dùng ngay để soạn đề xuất bản",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImportStatus"
+              }
+            ]
+          }
+        }
       },
       "SubjectRef": {
         "type": "object",
@@ -9116,13 +10205,25 @@
           "imageKey": {
             "type": "string",
             "nullable": true
+          },
+          "audioUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
           }
         },
         "required": [
           "id",
           "passage",
           "audioKey",
-          "imageKey"
+          "imageKey",
+          "audioUrl",
+          "imageUrl"
         ]
       },
       "PaperOption": {
@@ -9175,6 +10276,16 @@
             "type": "string",
             "nullable": true
           },
+          "audioUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
           "prepSeconds": {
             "type": "integer",
             "nullable": true
@@ -9198,6 +10309,8 @@
           "content",
           "audioKey",
           "imageKey",
+          "audioUrl",
+          "imageUrl",
           "prepSeconds",
           "responseSeconds",
           "options"

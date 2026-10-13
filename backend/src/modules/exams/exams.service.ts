@@ -8,6 +8,7 @@ import { paginate, toPrismaPage } from '../../common/utils/pagination.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { ExamStatus } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
+import { MediaUrlService } from '../media/media-url.service.js';
 import type { CreateExamDto, ExamQueryDto, UpdateExamDto } from './dto/exam.dto.js';
 import { checkExam } from './exam-check.js';
 import {
@@ -33,7 +34,10 @@ function blankToNull(value: string | null | undefined): string | null {
  */
 @Injectable()
 export class ExamsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly media: MediaUrlService,
+  ) {}
 
   private ownedWhere(id: string, user: AuthUser): Prisma.ExamWhereInput {
     return { id, authorId: user.id, deletedAt: null };
@@ -156,7 +160,7 @@ export class ExamsService {
       select: examPaperSelect,
     });
     if (!row) throw new AppException(ErrorCode.EXAM_NOT_FOUND);
-    return toExamPaper(row);
+    return toExamPaper(row, this.media);
   }
 
   async publish(id: string, user: AuthUser): Promise<ExamDetail> {

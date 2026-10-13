@@ -1,5 +1,6 @@
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { Skill } from '../../generated/prisma/enums.js';
+import type { MediaUrlService } from '../media/media-url.service.js';
 import { questionSummarySelect, toQuestionSummary } from '../questions/questions.mapper.js';
 import { findPartRule } from '../questions/toeic-parts.js';
 import type {
@@ -170,7 +171,7 @@ export function toExamDetail({ sections, ...row }: ExamDetailRow): ExamDetail {
 }
 
 /** Đánh số câu liên tục cả đề; các câu liền nhau cùng nhóm gom vào một khối */
-export function toExamPaper({ sections, ...row }: ExamPaperRow): ExamPaper {
+export function toExamPaper({ sections, ...row }: ExamPaperRow, media: MediaUrlService): ExamPaper {
   let number = 0;
 
   const paperSections: PaperSection[] = sections.map((section) => {
@@ -178,11 +179,15 @@ export function toExamPaper({ sections, ...row }: ExamPaperRow): ExamPaper {
 
     for (const item of section.questions) {
       const { group, ...question } = item.question;
-      const paperQuestion = { ...question, number: ++number, examQuestionId: item.id };
+      const paperQuestion = media.withUrls({
+        ...question,
+        number: ++number,
+        examQuestionId: item.id,
+      });
       const last = blocks.at(-1);
 
       if (group && last?.group?.id === group.id) last.questions.push(paperQuestion);
-      else blocks.push({ group, questions: [paperQuestion] });
+      else blocks.push({ group: group && media.withUrls(group), questions: [paperQuestion] });
     }
 
     return {

@@ -319,6 +319,9 @@ model Question {
   topicId         String         @map("topic_id") @db.Uuid
   authorId        String         @map("author_id") @db.Uuid
   groupId         String?        @map("group_id") @db.Uuid
+  /// Mã câu trong tệp nhập (P5-001, S1-03-11), dùng đối chiếu khi nhập lại; câu tạo bằng form thì null.
+  /// Duy nhất trong các câu chưa xóa: chỉ mục unique một phần uq_questions_code viết tay trong migration
+  code            String?        @db.VarChar(50)
   /// Thứ tự trong nhóm (1, 2, 3…); có khi và chỉ khi group_id có
   orderInGroup    Int?           @map("order_in_group") @db.SmallInt
   type            QuestionType

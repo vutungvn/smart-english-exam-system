@@ -39,6 +39,8 @@ export const ErrorCode = {
   // Tệp
   STORAGE_UNAVAILABLE: 'STORAGE_UNAVAILABLE',
   AVATAR_INVALID_IMAGE: 'AVATAR_INVALID_IMAGE',
+  MEDIA_LINK_INVALID: 'MEDIA_LINK_INVALID',
+  MEDIA_RANGE_NOT_SATISFIABLE: 'MEDIA_RANGE_NOT_SATISFIABLE',
 
   // Ngân hàng câu hỏi
   SUBJECT_NOT_FOUND: 'SUBJECT_NOT_FOUND',
@@ -46,6 +48,13 @@ export const ErrorCode = {
   QUESTION_GROUP_NOT_FOUND: 'QUESTION_GROUP_NOT_FOUND',
   QUESTION_GROUP_NOT_EMPTY: 'QUESTION_GROUP_NOT_EMPTY',
   QUESTION_GROUP_ORDER_TAKEN: 'QUESTION_GROUP_ORDER_TAKEN',
+  QUESTION_CODE_TAKEN: 'QUESTION_CODE_TAKEN',
+
+  // Nhập câu hỏi từ tệp .zip
+  QUESTION_IMPORT_INVALID_FILE: 'QUESTION_IMPORT_INVALID_FILE',
+  QUESTION_IMPORT_NOT_FOUND: 'QUESTION_IMPORT_NOT_FOUND',
+  QUESTION_IMPORT_HAS_ERRORS: 'QUESTION_IMPORT_HAS_ERRORS',
+  QUESTION_IMPORT_IN_PROGRESS: 'QUESTION_IMPORT_IN_PROGRESS',
 
   // Đề thi
   EXAM_NOT_FOUND: 'EXAM_NOT_FOUND',
@@ -173,6 +182,14 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
     status: HttpStatus.BAD_REQUEST,
     message: 'Ảnh không hợp lệ, chỉ nhận ảnh JPEG, PNG hoặc WebP',
   },
+  [ErrorCode.MEDIA_LINK_INVALID]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'Liên kết tệp không hợp lệ hoặc đã hết hạn, vui lòng tải lại trang',
+  },
+  [ErrorCode.MEDIA_RANGE_NOT_SATISFIABLE]: {
+    status: HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE,
+    message: 'Khoảng byte yêu cầu nằm ngoài kích thước tệp',
+  },
   // Ngân hàng câu hỏi
   [ErrorCode.SUBJECT_NOT_FOUND]: {
     status: HttpStatus.NOT_FOUND,
@@ -193,6 +210,27 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.QUESTION_GROUP_ORDER_TAKEN]: {
     status: HttpStatus.CONFLICT,
     message: 'Vị trí này trong nhóm đã có câu hỏi khác',
+  },
+  [ErrorCode.QUESTION_CODE_TAKEN]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Mã câu hỏi đã có trong ngân hàng, vui lòng xem trước lại tệp',
+  },
+  // Nhập câu hỏi từ tệp .zip
+  [ErrorCode.QUESTION_IMPORT_INVALID_FILE]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: 'Tệp nhập không hợp lệ, cần tệp .zip gồm questions.xlsx và thư mục media/',
+  },
+  [ErrorCode.QUESTION_IMPORT_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Phiên nhập tệp không tồn tại hoặc đã hết hạn, vui lòng tải tệp lên lại',
+  },
+  [ErrorCode.QUESTION_IMPORT_HAS_ERRORS]: {
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    message: 'Tệp còn dòng lỗi, hãy sửa rồi tải lên lại',
+  },
+  [ErrorCode.QUESTION_IMPORT_IN_PROGRESS]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Tệp này đang được nhập, vui lòng chờ trong giây lát',
   },
   // Đề thi
   [ErrorCode.EXAM_NOT_FOUND]: {
@@ -234,6 +272,7 @@ const STATUS_TO_CODE: Partial<Record<number, ErrorCode>> = {
   [HttpStatus.CONFLICT]: ErrorCode.CONFLICT,
   [HttpStatus.GONE]: ErrorCode.GONE,
   [HttpStatus.PAYLOAD_TOO_LARGE]: ErrorCode.PAYLOAD_TOO_LARGE,
+  [HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE]: ErrorCode.MEDIA_RANGE_NOT_SATISFIABLE,
   [HttpStatus.UNPROCESSABLE_ENTITY]: ErrorCode.UNPROCESSABLE_ENTITY,
   [HttpStatus.TOO_MANY_REQUESTS]: ErrorCode.TOO_MANY_REQUESTS,
   [HttpStatus.SERVICE_UNAVAILABLE]: ErrorCode.SERVICE_UNAVAILABLE,
