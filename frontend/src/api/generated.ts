@@ -151,6 +151,17 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/api/v1/teacher/questions/${queryArg}`, method: 'DELETE' }),
         invalidatesTags: ['Questions'],
       }),
+      bulkDeleteQuestions: build.mutation<
+        BulkDeleteQuestionsApiResponse,
+        BulkDeleteQuestionsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/questions/bulk-delete`,
+          method: 'POST',
+          body: queryArg,
+        }),
+        invalidatesTags: ['Questions'],
+      }),
       listQuestionGroups: build.query<ListQuestionGroupsApiResponse, ListQuestionGroupsApiArg>({
         query: (queryArg) => ({
           url: `/api/v1/teacher/question-groups`,
@@ -197,8 +208,22 @@ const injectedRtkApi = api
         DeleteQuestionGroupApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/teacher/question-groups/${queryArg}`,
+          url: `/api/v1/teacher/question-groups/${queryArg.id}`,
           method: 'DELETE',
+          params: {
+            withQuestions: queryArg.withQuestions,
+          },
+        }),
+        invalidatesTags: ['Question Groups'],
+      }),
+      bulkDeleteQuestionGroups: build.mutation<
+        BulkDeleteQuestionGroupsApiResponse,
+        BulkDeleteQuestionGroupsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/question-groups/bulk-delete`,
+          method: 'POST',
+          body: queryArg,
         }),
         invalidatesTags: ['Question Groups'],
       }),
@@ -269,6 +294,14 @@ const injectedRtkApi = api
       }),
       deleteExam: build.mutation<DeleteExamApiResponse, DeleteExamApiArg>({
         query: (queryArg) => ({ url: `/api/v1/teacher/exams/${queryArg}`, method: 'DELETE' }),
+        invalidatesTags: ['Exams'],
+      }),
+      bulkDeleteExams: build.mutation<BulkDeleteExamsApiResponse, BulkDeleteExamsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/exams/bulk-delete`,
+          method: 'POST',
+          body: queryArg,
+        }),
         invalidatesTags: ['Exams'],
       }),
       addSection: build.mutation<AddSectionApiResponse, AddSectionApiArg>({
@@ -494,6 +527,12 @@ export type DeleteQuestionApiResponse = /** status 200 Thành công */ {
   data: object | null;
 };
 export type DeleteQuestionApiArg = string;
+export type BulkDeleteQuestionsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: BulkDeleteResult;
+};
+export type BulkDeleteQuestionsApiArg = BulkIdsDto;
 export type ListQuestionGroupsApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
@@ -536,7 +575,17 @@ export type DeleteQuestionGroupApiResponse = /** status 200 Thành công */ {
   status: number;
   data: object | null;
 };
-export type DeleteQuestionGroupApiArg = string;
+export type DeleteQuestionGroupApiArg = {
+  id: string;
+  /** true: xóa luôn các câu trong nhóm; false: nhóm còn câu thì không xóa được */
+  withQuestions?: boolean;
+};
+export type BulkDeleteQuestionGroupsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: GroupBulkDeleteResult;
+};
+export type BulkDeleteQuestionGroupsApiArg = BulkDeleteGroupsDto;
 export type GetQuestionImportTemplateApiResponse = /** status 200 Tệp .zip */ Blob;
 export type GetQuestionImportTemplateApiArg = void;
 export type PreviewQuestionImportApiResponse = /** status 200 Thành công */ {
@@ -600,6 +649,12 @@ export type DeleteExamApiResponse = /** status 200 Thành công */ {
   data: object | null;
 };
 export type DeleteExamApiArg = string;
+export type BulkDeleteExamsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: BulkDeleteResult;
+};
+export type BulkDeleteExamsApiArg = BulkIdsDto;
 export type AddSectionApiResponse = /** status 201 Thành công */ {
   success: true;
   status: number;
@@ -706,6 +761,7 @@ export type ErrorCode =
   | 'QUESTION_GROUP_NOT_EMPTY'
   | 'QUESTION_GROUP_ORDER_TAKEN'
   | 'QUESTION_CODE_TAKEN'
+  | 'QUESTION_IN_PUBLISHED_EXAM'
   | 'QUESTION_IMPORT_INVALID_FILE'
   | 'QUESTION_IMPORT_NOT_FOUND'
   | 'QUESTION_IMPORT_HAS_ERRORS'
@@ -962,6 +1018,26 @@ export type UpdateQuestionDto = {
   /** updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409 */
   updatedAt: string;
 };
+export type BulkSkipReason =
+  'NOT_FOUND' | 'NOT_OWNER' | 'IN_PUBLISHED_EXAM' | 'NOT_EMPTY' | 'PUBLISHED';
+export type BulkSkippedItem = {
+  id: string;
+  /** Mã câu, tên đề hoặc đoạn đầu nội dung; null khi không tìm thấy */
+  label: string | null;
+  /** NOT_FOUND: không tồn tại hoặc đã xóa · NOT_OWNER: của giáo viên khác · IN_PUBLISHED_EXAM: đang nằm trong đề đã xuất bản · NOT_EMPTY: nhóm còn câu · PUBLISHED: đề đang xuất bản */
+  reason: BulkSkipReason;
+  message: string;
+};
+export type BulkDeleteResult = {
+  /** Số mục đã xóa */
+  deleted: number;
+  /** Theo đúng thứ tự id gửi lên */
+  skipped: BulkSkippedItem[];
+};
+export type BulkIdsDto = {
+  /** Từ 1 đến 100 id, không trùng nhau */
+  ids: string[];
+};
 export type QuestionGroupSummary = {
   id: string;
   topic: TopicRef;
@@ -1024,6 +1100,20 @@ export type UpdateQuestionGroupDto = {
   status?: QuestionStatus;
   /** updatedAt lần đọc gần nhất */
   updatedAt: string;
+};
+export type GroupBulkDeleteResult = {
+  /** Số mục đã xóa */
+  deleted: number;
+  /** Theo đúng thứ tự id gửi lên */
+  skipped: BulkSkippedItem[];
+  /** Số câu bị xóa theo nhóm (khi withQuestions = true) */
+  deletedQuestions: number;
+};
+export type BulkDeleteGroupsDto = {
+  /** Từ 1 đến 100 id, không trùng nhau */
+  ids: string[];
+  /** true: xóa luôn các câu trong nhóm; false: bỏ qua nhóm còn câu (NOT_EMPTY) */
+  withQuestions?: boolean;
 };
 export type ImportPartCount = {
   skill: Skill;
@@ -1301,11 +1391,13 @@ export const {
   useGetQuestionQuery,
   useUpdateQuestionMutation,
   useDeleteQuestionMutation,
+  useBulkDeleteQuestionsMutation,
   useListQuestionGroupsQuery,
   useCreateQuestionGroupMutation,
   useGetQuestionGroupQuery,
   useUpdateQuestionGroupMutation,
   useDeleteQuestionGroupMutation,
+  useBulkDeleteQuestionGroupsMutation,
   useGetQuestionImportTemplateQuery,
   usePreviewQuestionImportMutation,
   useConfirmQuestionImportMutation,
@@ -1315,6 +1407,7 @@ export const {
   useGetExamQuery,
   useUpdateExamMutation,
   useDeleteExamMutation,
+  useBulkDeleteExamsMutation,
   useAddSectionMutation,
   useRemoveSectionMutation,
   useAddQuestionsMutation,

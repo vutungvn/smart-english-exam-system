@@ -17,7 +17,8 @@ export interface QuestionFilters {
   limit: number;
 }
 
-export const PAGE_SIZES = [10, 20, 50] as const;
+// 100 = số câu tối đa mỗi lần xóa nhiều (giới hạn của API)
+export const PAGE_SIZES = [10, 20, 50, 100] as const;
 const DEFAULT_LIMIT = 10;
 const DEFAULT_SORT: QuestionSort = 'createdAt:desc';
 const SORTS: QuestionSort[] = ['createdAt:desc', 'createdAt:asc', 'updatedAt:desc', 'part:asc'];

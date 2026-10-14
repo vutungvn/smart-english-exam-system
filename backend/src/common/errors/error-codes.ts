@@ -49,6 +49,7 @@ export const ErrorCode = {
   QUESTION_GROUP_NOT_EMPTY: 'QUESTION_GROUP_NOT_EMPTY',
   QUESTION_GROUP_ORDER_TAKEN: 'QUESTION_GROUP_ORDER_TAKEN',
   QUESTION_CODE_TAKEN: 'QUESTION_CODE_TAKEN',
+  QUESTION_IN_PUBLISHED_EXAM: 'QUESTION_IN_PUBLISHED_EXAM',
 
   // Nhập câu hỏi từ tệp .zip
   QUESTION_IMPORT_INVALID_FILE: 'QUESTION_IMPORT_INVALID_FILE',
@@ -214,6 +215,10 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.QUESTION_CODE_TAKEN]: {
     status: HttpStatus.CONFLICT,
     message: 'Mã câu hỏi đã có trong ngân hàng, vui lòng xem trước lại tệp',
+  },
+  [ErrorCode.QUESTION_IN_PUBLISHED_EXAM]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa',
   },
   // Nhập câu hỏi từ tệp .zip
   [ErrorCode.QUESTION_IMPORT_INVALID_FILE]: {

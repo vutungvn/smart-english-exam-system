@@ -23,6 +23,10 @@ export const enhancedApi = api.enhanceEndpoints({
     updateQuestion: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
     deleteQuestion: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
     updateQuestionGroup: { invalidatesTags: ['Question Groups', 'Exams'] },
+    // Xóa nhiều / xóa nhóm kèm câu: câu, nhóm cùng đổi; đề nháp chứa câu bị xóa đổi kết quả kiểm tra
+    bulkDeleteQuestions: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
+    deleteQuestionGroup: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
+    bulkDeleteQuestionGroups: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
 
     // Nhập câu hỏi từ tệp .zip
     previewQuestionImport: {

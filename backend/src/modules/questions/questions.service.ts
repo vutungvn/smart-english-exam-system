@@ -1,4 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import {
+  BulkDeleteResult,
+  shortLabel,
+  skip,
+  type BulkSkippedItem,
+} from '../../common/dto/bulk-delete.dto.js';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
@@ -224,8 +230,44 @@ export class QuestionsService {
     });
     if (!existing) throw new AppException(ErrorCode.QUESTION_NOT_FOUND);
     assertOwner(existing.authorId, user.id);
+    if ((await this.refs.publishedQuestionIds([id])).size > 0) {
+      throw new AppException(ErrorCode.QUESTION_IN_PUBLISHED_EXAM);
+    }
 
     // Xóa mềm: đề thi, bài làm cũ vẫn tham chiếu được tới câu này
     await this.prisma.question.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
+
+  /**
+   * Xóa nhiều câu: câu hợp lệ bị xóa mềm trong một câu lệnh, câu không tồn tại, của giáo viên
+   * khác hoặc đang ở đề đã xuất bản thì bỏ qua kèm lý do (cùng quy tắc với xóa từng câu)
+   */
+  async bulkRemove(ids: string[], user: AuthUser): Promise<BulkDeleteResult> {
+    const rows = await this.prisma.question.findMany({
+      where: { id: { in: ids }, deletedAt: null },
+      select: { id: true, code: true, content: true, authorId: true },
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    const locked = await this.refs.publishedQuestionIds(rows.map((row) => row.id));
+
+    const skipped: BulkSkippedItem[] = [];
+    const deletable: string[] = [];
+    for (const id of ids) {
+      const row = byId.get(id);
+      const label = row ? (row.code ?? shortLabel(row.content)) : null;
+      if (!row) skipped.push(skip(id, null, 'NOT_FOUND'));
+      else if (row.authorId !== user.id) skipped.push(skip(id, label, 'NOT_OWNER'));
+      else if (locked.has(id)) skipped.push(skip(id, label, 'IN_PUBLISHED_EXAM'));
+      else deletable.push(id);
+    }
+
+    // deletedAt: null trong điều kiện: câu bị xóa ở tab khác giữa chừng thì không đếm hai lần
+    const { count } = deletable.length
+      ? await this.prisma.question.updateMany({
+          where: { id: { in: deletable }, deletedAt: null },
+          data: { deletedAt: new Date() },
+        })
+      : { count: 0 };
+    return { deleted: count, skipped };
   }
 }

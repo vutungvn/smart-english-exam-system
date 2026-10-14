@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { QuestionGroupSummary } from '@/api/generated';
 import { formatDate } from '@/features/profile/format';
+import { SelectCheckbox } from '@/components/bulk/SelectCheckbox';
 import { cn } from '@/lib/utils';
 import { groupEditPath, groupPath, newQuestionPath } from '../paths';
 import { groupText, SKILL_META } from '../toeic';
@@ -21,13 +22,16 @@ interface GroupCardProps {
   group: QuestionGroupSummary;
   mine: boolean;
   onDelete: () => void;
+  /** Có khi trang đang cho chọn nhiều để xóa */
+  selected?: boolean;
+  onSelect?: (checked: boolean) => void;
 }
 
 const menuItem =
   'flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm outline-none select-none data-highlighted:bg-accent data-disabled:cursor-not-allowed data-disabled:opacity-50';
 
 // Thẻ nhóm câu: bấm cả thẻ để mở chi tiết; tiêu đề là link thật cho bàn phím
-export function GroupCard({ group, mine, onDelete }: GroupCardProps) {
+export function GroupCard({ group, mine, onDelete, selected, onSelect }: GroupCardProps) {
   const navigate = useNavigate();
   const meta = SKILL_META[group.skill];
   const Icon = meta.icon;
@@ -38,9 +42,22 @@ export function GroupCard({ group, mine, onDelete }: GroupCardProps) {
   return (
     <article
       onClick={() => void navigate(detail)}
-      className="group flex cursor-pointer flex-col rounded-3xl border border-border bg-white p-5 shadow-2xs transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+      className={cn(
+        'group flex cursor-pointer flex-col rounded-3xl border bg-white p-5 shadow-2xs transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md',
+        selected ? 'border-primary ring-2 ring-primary/20' : 'border-border',
+      )}
     >
       <div className="flex items-center gap-2">
+        {onSelect && (
+          <SelectCheckbox
+            className="-ml-2"
+            checked={!!selected}
+            disabled={!mine}
+            disabledReason="Nhóm của giáo viên khác"
+            label={`Chọn nhóm ${group.topic.name}`}
+            onChange={onSelect}
+          />
+        )}
         <span
           className={cn(
             'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap',
@@ -158,7 +175,6 @@ function CardMenu({ group, mine, onDelete }: GroupCardProps) {
               </DropdownMenu.Item>
               <DropdownMenu.Separator className="my-1 h-px bg-border" />
               <DropdownMenu.Item
-                disabled={group.questionCount > 0}
                 onSelect={onDelete}
                 className={cn(menuItem, 'text-destructive data-highlighted:bg-danger-soft')}
               >
@@ -167,7 +183,7 @@ function CardMenu({ group, mine, onDelete }: GroupCardProps) {
                   Xóa nhóm
                   {group.questionCount > 0 && (
                     <span className="block text-[11px] font-normal text-subtle">
-                      Xóa hết câu trong nhóm trước
+                      Kèm {group.questionCount} câu trong nhóm
                     </span>
                   )}
                 </span>

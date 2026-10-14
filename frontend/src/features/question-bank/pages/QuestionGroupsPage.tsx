@@ -3,11 +3,18 @@ import { useLocation, useNavigate } from 'react-router';
 import { Layers, Plus } from 'lucide-react';
 import { toApiError } from '@/api/errors';
 import {
+  useBulkDeleteQuestionGroupsMutation,
   useListQuestionGroupsQuery,
   type QuestionGroupSummary,
   type QuestionStatus,
   type Skill,
 } from '@/api/generated';
+import { BulkActionBar } from '@/components/bulk/BulkActionBar';
+import { BulkDeleteDialog } from '@/components/bulk/BulkDeleteDialog';
+import { toOutcome, type BulkOutcome } from '@/components/bulk/bulk-outcome';
+import { BulkResultBanner } from '@/components/bulk/BulkResultBanner';
+import { SelectCheckbox } from '@/components/bulk/SelectCheckbox';
+import { useSelection } from '@/components/bulk/use-selection';
 import { ButtonLink } from '@/components/ButtonLink';
 import { PageHeader } from '@/components/PageHeader';
 import { Pagination } from '@/components/Pagination';
@@ -39,6 +46,13 @@ export function QuestionGroupsPage() {
     toGroupListArg(filters),
   );
   const [pendingDelete, setPendingDelete] = useState<QuestionGroupSummary | null>(null);
+  // Chọn nhiều để xóa: đổi bộ lọc/trang thì bỏ chọn
+  const selection = useSelection(JSON.stringify(filters));
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [withQuestions, setWithQuestions] = useState(true);
+  const [bulkError, setBulkError] = useState<string>();
+  const [outcome, setOutcome] = useState<BulkOutcome>();
+  const [bulkDelete, { isLoading: bulkDeleting }] = useBulkDeleteQuestionGroupsMutation();
 
   // Thông báo do trang khác gửi qua state (tạo/xóa nhóm), xóa khỏi lịch sử để tải lại không hiện lại
   const [flash, setFlash] = useState(
@@ -59,6 +73,39 @@ export function QuestionGroupsPage() {
 
   const groups = data?.data ?? [];
   const createPath = newGroupPath({ skill: filters.skill, part: filters.part });
+  const myIds = groups.filter((group) => group.author.id === user?.id).map((group) => group.id);
+  const selectedQuestions = groups
+    .filter((group) => selection.has(group.id))
+    .reduce((sum, group) => sum + group.questionCount, 0);
+  const allMineSelected = myIds.length > 0 && myIds.every((id) => selection.has(id));
+
+  const openBulk = () => {
+    setWithQuestions(true);
+    setBulkError(undefined);
+    setBulkOpen(true);
+  };
+
+  const confirmBulk = async () => {
+    setBulkError(undefined);
+    try {
+      const { data: result } = await bulkDelete({
+        ids: [...selection.ids],
+        withQuestions,
+      }).unwrap();
+      setBulkOpen(false);
+      selection.clear();
+      setFlash(undefined);
+      setOutcome(
+        toOutcome(
+          result,
+          'nhóm',
+          result.deletedQuestions > 0 ? ` và ${result.deletedQuestions} câu hỏi trong nhóm` : '',
+        ),
+      );
+    } catch (err) {
+      setBulkError(toApiError(err).message);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -78,6 +125,7 @@ export function QuestionGroupsPage() {
       />
 
       {flash && <SuccessBanner message={flash} onClose={() => setFlash(undefined)} />}
+      {outcome && <BulkResultBanner outcome={outcome} onClose={() => setOutcome(undefined)} />}
 
       <GroupFilterCard
         filters={filters}
@@ -118,21 +166,38 @@ export function QuestionGroupsPage() {
           )}
         </div>
       ) : (
-        <div
-          aria-busy={isFetching}
-          className={cn(
-            'grid gap-5 transition-opacity sm:grid-cols-2 xl:grid-cols-3',
-            isFetching && 'opacity-60',
+        <div className="space-y-3">
+          {myIds.length > 0 && (
+            <div className="flex items-center gap-1 rounded-2xl border border-border bg-white px-3 py-1.5 text-sm shadow-2xs">
+              <SelectCheckbox
+                checked={allMineSelected}
+                indeterminate={selection.count > 0}
+                label="Chọn tất cả nhóm của bạn trong trang"
+                onChange={(checked) => selection.setMany(myIds, checked)}
+              />
+              <span className="text-slate-600">
+                Chọn tất cả nhóm của bạn trong trang ({myIds.length})
+              </span>
+            </div>
           )}
-        >
-          {groups.map((group) => (
-            <GroupCard
-              key={group.id}
-              group={group}
-              mine={group.author.id === user?.id}
-              onDelete={() => setPendingDelete(group)}
-            />
-          ))}
+          <div
+            aria-busy={isFetching}
+            className={cn(
+              'grid gap-5 transition-opacity sm:grid-cols-2 xl:grid-cols-3',
+              isFetching && 'opacity-60',
+            )}
+          >
+            {groups.map((group) => (
+              <GroupCard
+                key={group.id}
+                group={group}
+                mine={group.author.id === user?.id}
+                onDelete={() => setPendingDelete(group)}
+                selected={selection.has(group.id)}
+                onSelect={() => selection.toggle(group.id)}
+              />
+            ))}
+          </div>
         </div>
       )}
 
@@ -149,11 +214,47 @@ export function QuestionGroupsPage() {
         </div>
       )}
 
+      <BulkActionBar
+        count={selection.count}
+        noun="nhóm"
+        onClear={selection.clear}
+        onDelete={openBulk}
+      />
+
+      <BulkDeleteDialog
+        open={bulkOpen}
+        count={selection.count}
+        noun="nhóm câu"
+        description="Nhóm bị xóa không còn trong danh sách. Nhóm có câu đang nằm trong đề đã xuất bản sẽ được bỏ qua."
+        busy={bulkDeleting}
+        error={bulkError}
+        onClose={() => setBulkOpen(false)}
+        onConfirm={() => void confirmBulk()}
+      >
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-slate-50 px-4 py-3">
+          <input
+            type="checkbox"
+            checked={withQuestions}
+            onChange={(event) => setWithQuestions(event.target.checked)}
+            className="mt-0.5 size-4 rounded accent-destructive"
+          />
+          <span className="text-sm">
+            <span className="block font-semibold text-foreground">
+              Xóa cả các câu trong nhóm (tổng {selectedQuestions} câu)
+            </span>
+            <span className="text-muted-foreground">
+              Bỏ tích thì chỉ xóa được nhóm chưa có câu, nhóm còn câu sẽ được bỏ qua.
+            </span>
+          </span>
+        </label>
+      </BulkDeleteDialog>
+
       <DeleteGroupDialog
         group={
           pendingDelete && {
             id: pendingDelete.id,
             title: `${SKILL_META[pendingDelete.skill].label} · Part ${pendingDelete.part} – ${pendingDelete.topic.name}`,
+            questionCount: pendingDelete.questionCount,
           }
         }
         onClose={() => setPendingDelete(null)}

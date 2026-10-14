@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { BulkDeleteResult } from '../../common/dto/bulk-delete.dto.js';
 import { Difficulty, QuestionStatus, QuestionType, Skill } from '../../generated/prisma/enums.js';
 
 // Khai báo các class được tham chiếu trước, vì decorator đọc chúng ngay khi nạp file
@@ -178,4 +179,12 @@ export class QuestionGroupSummary {
 export class QuestionGroupDetail extends QuestionGroupSummary {
   @ApiProperty({ type: [QuestionSummary], description: 'Các câu trong nhóm, theo thứ tự' })
   questions: QuestionSummary[];
+}
+
+export class GroupBulkDeleteResult extends BulkDeleteResult {
+  @ApiProperty({
+    type: 'integer',
+    description: 'Số câu bị xóa theo nhóm (khi withQuestions = true)',
+  })
+  deletedQuestions: number;
 }

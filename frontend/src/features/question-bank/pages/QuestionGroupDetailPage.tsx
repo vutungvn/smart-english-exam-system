@@ -119,20 +119,16 @@ function GroupDetail({ group }: { group: QuestionGroupDetail }) {
                 <Pencil />
                 Sửa nhóm
               </ButtonLink>
-              {/* Backend chỉ xóa được nhóm rỗng: tắt nút và nói rõ lý do.
-                  Nút disabled không nhận chuột nên đặt title ở thẻ bọc ngoài */}
-              <span title={hasQuestions ? 'Xóa hết câu trong nhóm trước khi xóa nhóm' : undefined}>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="h-10 rounded-xl px-4"
-                  disabled={hasQuestions}
-                  onClick={() => setDeletingGroup(true)}
-                >
-                  <Trash2 />
-                  Xóa nhóm
-                </Button>
-              </span>
+              {/* Nhóm còn câu thì hộp thoại xác nhận xóa kèm các câu trong nhóm */}
+              <Button
+                type="button"
+                variant="destructive"
+                className="h-10 rounded-xl px-4"
+                onClick={() => setDeletingGroup(true)}
+              >
+                <Trash2 />
+                Xóa nhóm
+              </Button>
             </>
           )
         }
@@ -201,7 +197,7 @@ function GroupDetail({ group }: { group: QuestionGroupDetail }) {
       </div>
 
       <DeleteGroupDialog
-        group={deletingGroup ? { id: group.id, title } : null}
+        group={deletingGroup ? { id: group.id, title, questionCount: group.questionCount } : null}
         onClose={() => setDeletingGroup(false)}
         onDeleted={() => {
           const state: QuestionBankLocationState = { flash: 'Đã xóa nhóm câu' };

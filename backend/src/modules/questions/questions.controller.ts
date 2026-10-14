@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   Patch,
@@ -13,6 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RoleCode } from '../../common/constants/roles.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
+import { BulkDeleteResult, BulkIdsDto } from '../../common/dto/bulk-delete.dto.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import { UuidParam } from '../../common/pipes/uuid-param.pipe.js';
 import {
@@ -112,10 +114,31 @@ export class QuestionsController {
     return this.questionsService.update(id, dto, user);
   }
 
+  @Post('bulk-delete')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Xóa nhiều câu (tối đa 100)',
+    description:
+      'Câu hợp lệ bị xóa mềm; câu không tồn tại (NOT_FOUND), của giáo viên khác (NOT_OWNER), ' +
+      'đang ở đề đã xuất bản (IN_PUBLISHED_EXAM) bị bỏ qua kèm lý do.',
+  })
+  @ApiEnvelope(BulkDeleteResult)
+  bulkDeleteQuestions(
+    @Body() dto: BulkIdsDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<BulkDeleteResult> {
+    return this.questionsService.bulkRemove(dto.ids, user);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Xóa mềm câu hỏi (chỉ người tạo)' })
   @ApiNullEnvelope()
-  @ApiErrors(ErrorCode.FORBIDDEN, NOT_OWNER, ErrorCode.QUESTION_NOT_FOUND)
+  @ApiErrors(
+    ErrorCode.FORBIDDEN,
+    NOT_OWNER,
+    ErrorCode.QUESTION_NOT_FOUND,
+    ErrorCode.QUESTION_IN_PUBLISHED_EXAM,
+  )
   deleteQuestion(
     @Param('id', UuidParam(ErrorCode.QUESTION_NOT_FOUND)) id: string,
     @CurrentUser() user: AuthUser,
