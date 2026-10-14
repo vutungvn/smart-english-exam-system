@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Link } from 'react-router';
-import { ArrowUpRight, Clock, Headphones, ImageIcon, Info, Layers, Plus } from 'lucide-react';
+import { ArrowUpRight, Clock, Info, Layers, Plus } from 'lucide-react';
 import {
   useGetQuestionGroupQuery,
   useListQuestionGroupsQuery,
@@ -9,6 +9,8 @@ import {
 } from '@/api/generated';
 import { FormField } from '@/components/form/FormField';
 import { NativeSelect } from '@/components/form/NativeSelect';
+import { QuestionMedia } from '@/components/QuestionMedia';
+import { IMPORT_PATH } from '@/features/question-import/import-meta';
 import { groupPath, newGroupPath } from '../paths';
 import { groupText, type PartRule } from '../toeic';
 import { Counter } from './AnswerFields';
@@ -233,15 +235,15 @@ const MEDIA_TEXT: Record<Exclude<PartRule['media'], 'none'>, string> = {
   'audio+image': 'tệp âm thanh và hình ảnh',
 };
 
-// Tải media chưa làm (gắn khi nhập .zip, SPRINT-45): chỉ báo Part này cần gì
+// Âm thanh, hình ảnh gắn khi nhập câu hỏi từ tệp .zip (form không tải tệp lên)
 export function MediaNotice({
   rule,
-  audioKey,
-  imageKey,
+  audioUrl,
+  imageUrl,
 }: {
   rule: PartRule;
-  audioKey?: string | null;
-  imageKey?: string | null;
+  audioUrl?: string | null;
+  imageUrl?: string | null;
 }) {
   if (rule.media === 'none') {
     return (
@@ -256,42 +258,20 @@ export function MediaNotice({
   const needImage = rule.media.includes('image');
   return (
     <div className="space-y-3">
-      <div className="grid gap-3 sm:grid-cols-2">
-        {needAudio && <MediaSlot icon={Headphones} label="Âm thanh" attached={audioKey} />}
-        {needImage && <MediaSlot icon={ImageIcon} label="Hình ảnh" attached={imageKey} />}
+      <div className="grid items-start gap-3 sm:grid-cols-2">
+        {needImage && <QuestionMedia kind="image" url={imageUrl} />}
+        {needAudio && <QuestionMedia kind="audio" url={audioUrl} />}
       </div>
       <p className="flex items-start gap-2 text-xs text-subtle">
         <Clock className="mt-0.5 size-3.5 shrink-0" />
-        Part {rule.part} cần {MEDIA_TEXT[rule.media]}. Tải tệp sẽ làm cùng chức năng “Nhập từ tệp”;
-        hiện có thể lưu câu ở trạng thái Nháp trước.
-      </p>
-    </div>
-  );
-}
-
-function MediaSlot({
-  icon: Icon,
-  label,
-  attached,
-}: {
-  icon: typeof Headphones;
-  label: string;
-  attached?: string | null;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-slate-50 px-4 py-3">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-subtle">
-        <Icon className="size-4" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-slate-700">{label}</span>
-        <span className="block truncate text-xs text-subtle">
-          {attached ? 'Đã gắn tệp' : 'Chưa có tệp'}
+        <span>
+          Part {rule.part} cần {MEDIA_TEXT[rule.media]}. Tệp được gắn khi{' '}
+          <Link to={IMPORT_PATH} className="font-semibold text-primary hover:text-brand">
+            nhập câu hỏi từ tệp .zip
+          </Link>
+          ; chưa có tệp thì vẫn lưu câu được, đề thi chỉ cảnh báo khi xuất bản.
         </span>
-      </span>
-      <span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-        Sắp có
-      </span>
+      </p>
     </div>
   );
 }

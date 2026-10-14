@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { FilePlus2, Layers, ListChecks, Plus } from 'lucide-react';
+import { FilePlus2, FileUp, Layers, ListChecks, Plus } from 'lucide-react';
 import { toApiError } from '@/api/errors';
 import { useListQuestionsQuery, type QuestionSummary } from '@/api/generated';
 import { ButtonLink } from '@/components/ButtonLink';
+import { IMPORT_PATH } from '@/features/question-import/import-meta';
 import { PageHeader } from '@/components/PageHeader';
 import { Pagination } from '@/components/Pagination';
 import { useAppSelector } from '@/hooks/hooks';
@@ -68,6 +69,14 @@ export function QuestionBankPage() {
             >
               <Layers />
               Nhóm câu hỏi
+            </ButtonLink>
+            <ButtonLink
+              to={IMPORT_PATH}
+              variant="secondary"
+              className="h-10 w-auto bg-white px-4 shadow-2xs ring-1 ring-border"
+            >
+              <FileUp />
+              Nhập từ tệp
             </ButtonLink>
             <ButtonLink
               to={createPath}

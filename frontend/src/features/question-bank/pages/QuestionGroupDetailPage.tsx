@@ -4,8 +4,6 @@ import {
   Eye,
   EyeOff,
   FileQuestion,
-  Headphones,
-  ImageIcon,
   Info,
   Layers,
   ListPlus,
@@ -21,6 +19,7 @@ import {
 } from '@/api/generated';
 import { ButtonLink } from '@/components/ButtonLink';
 import { PageHeader } from '@/components/PageHeader';
+import { QuestionMedia } from '@/components/QuestionMedia';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/features/profile/format';
 import { useAppSelector } from '@/hooks/hooks';
@@ -239,10 +238,19 @@ function SharedContentCard({
       </h2>
 
       {listening && (
-        <MediaSlot icon={Headphones} label="Âm thanh hội thoại" attached={!!group.audioKey} />
+        <QuestionMedia
+          kind="audio"
+          url={group.audioUrl}
+          label="Âm thanh hội thoại"
+          emptyHint="Chưa có tệp · gắn khi nhập từ tệp .zip"
+        />
       )}
-      {group.skill === 'READING' && group.imageKey && (
-        <MediaSlot icon={ImageIcon} label="Hình ảnh" attached />
+      {group.imageUrl && (
+        <QuestionMedia
+          kind="image"
+          url={group.imageUrl}
+          label={group.skill === 'SPEAKING' ? 'Bảng thông tin' : 'Hình ảnh, biểu đồ'}
+        />
       )}
 
       <div>
@@ -279,36 +287,6 @@ function SharedContentCard({
         </p>
       )}
     </section>
-  );
-}
-
-function MediaSlot({
-  icon: Icon,
-  label,
-  attached,
-}: {
-  icon: typeof Headphones;
-  label: string;
-  attached: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-2xl border border-dashed border-border bg-slate-50 px-4 py-3">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-subtle">
-        <Icon className="size-4" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-slate-700">{label}</span>
-        <span className="block text-xs text-subtle">
-          {attached ? 'Đã gắn tệp' : 'Chưa có tệp · thêm khi nhập từ tệp .zip'}
-        </span>
-      </span>
-      {/* Chưa có chức năng tải tệp: chỉ báo "Sắp có" khi nhóm chưa có tệp */}
-      {!attached && (
-        <span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-          Sắp có
-        </span>
-      )}
-    </div>
   );
 }
 
