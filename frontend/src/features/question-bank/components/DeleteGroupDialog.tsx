@@ -8,15 +8,16 @@ import { Button } from '@/components/ui/button';
 
 interface DeleteGroupDialogProps {
   /** Nhóm đang chờ xác nhận xóa; null thì đóng hộp thoại */
-  group: { id: string; title: string } | null;
+  group: { id: string; title: string; questionCount: number } | null;
   onClose: () => void;
   onDeleted: () => void;
 }
 
-// Backend chỉ cho xóa nhóm rỗng (QUESTION_GROUP_NOT_EMPTY): nơi gọi chỉ mở hộp thoại khi nhóm không còn câu
+// Nhóm còn câu thì xóa kèm các câu trong nhóm (withQuestions): nhóm là một khối, câu không đứng riêng được
 export function DeleteGroupDialog({ group, onClose, onDeleted }: DeleteGroupDialogProps) {
   const [deleteGroup, { isLoading }] = useDeleteQuestionGroupMutation();
   const [error, setError] = useState<string>();
+  const count = group?.questionCount ?? 0;
 
   const close = () => {
     setError(undefined);
@@ -27,7 +28,7 @@ export function DeleteGroupDialog({ group, onClose, onDeleted }: DeleteGroupDial
     if (!group) return;
     setError(undefined);
     try {
-      await deleteGroup(group.id).unwrap();
+      await deleteGroup({ id: group.id, withQuestions: count > 0 }).unwrap();
       onDeleted();
     } catch (err) {
       const apiError = toApiError(err);
@@ -36,11 +37,7 @@ export function DeleteGroupDialog({ group, onClose, onDeleted }: DeleteGroupDial
         return;
       }
       setError(
-        apiError.code === 'QUESTION_GROUP_NOT_EMPTY'
-          ? 'Nhóm vẫn còn câu hỏi. Xóa hoặc chuyển hết câu trong nhóm trước.'
-          : apiError.code === 'FORBIDDEN'
-            ? 'Bạn chỉ xóa được nhóm do mình tạo'
-            : apiError.message,
+        apiError.code === 'FORBIDDEN' ? 'Bạn chỉ xóa được nhóm do mình tạo' : apiError.message,
       );
     }
   };
@@ -49,8 +46,12 @@ export function DeleteGroupDialog({ group, onClose, onDeleted }: DeleteGroupDial
     <AppDialog
       open={group !== null}
       onOpenChange={(open) => !open && close()}
-      title="Xóa nhóm câu?"
-      description="Nhóm sẽ không còn trong danh sách và không chọn được khi soạn câu hỏi."
+      title={count > 0 ? `Xóa nhóm và ${count} câu trong nhóm?` : 'Xóa nhóm câu?'}
+      description={
+        count > 0
+          ? 'Nhóm và toàn bộ câu hỏi trong nhóm sẽ không còn trong ngân hàng. Không xóa được nếu có câu đang nằm trong đề đã xuất bản.'
+          : 'Nhóm sẽ không còn trong danh sách và không chọn được khi soạn câu hỏi.'
+      }
       busy={isLoading}
       footer={
         <>
@@ -70,7 +71,7 @@ export function DeleteGroupDialog({ group, onClose, onDeleted }: DeleteGroupDial
             onClick={() => void confirm()}
           >
             <Trash2 />
-            {isLoading ? 'Đang xóa…' : 'Xóa nhóm'}
+            {isLoading ? 'Đang xóa…' : count > 0 ? `Xóa nhóm và ${count} câu` : 'Xóa nhóm'}
           </Button>
         </>
       }

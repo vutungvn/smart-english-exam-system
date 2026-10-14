@@ -3474,6 +3474,29 @@
               }
             }
           },
+          "409": {
+            "description": "Lỗi, error.code thuộc: QUESTION_IN_PUBLISHED_EXAM",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "QUESTION_IN_PUBLISHED_EXAM": {
+                    "summary": "QUESTION_IN_PUBLISHED_EXAM: Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_PUBLISHED_EXAM",
+                        "message": "Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
             "content": {
@@ -3504,6 +3527,162 @@
           }
         ],
         "summary": "Xóa mềm câu hỏi (chỉ người tạo)",
+        "tags": [
+          "Questions"
+        ]
+      }
+    },
+    "/api/v1/teacher/questions/bulk-delete": {
+      "post": {
+        "description": "Câu hợp lệ bị xóa mềm; câu không tồn tại (NOT_FOUND), của giáo viên khác (NOT_OWNER), đang ở đề đã xuất bản (IN_PUBLISHED_EXAM) bị bỏ qua kèm lý do.",
+        "operationId": "bulkDeleteQuestions",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkIdsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BulkDeleteResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "ids",
+                            "message": "ids không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xóa nhiều câu (tối đa 100)",
         "tags": [
           "Questions"
         ]
@@ -4277,6 +4456,7 @@
         ]
       },
       "delete": {
+        "description": "Nhóm còn câu: gửi withQuestions=true để xóa luôn các câu, không thì báo QUESTION_GROUP_NOT_EMPTY.",
         "operationId": "deleteQuestionGroup",
         "parameters": [
           {
@@ -4285,6 +4465,16 @@
             "in": "path",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "withQuestions",
+            "required": false,
+            "in": "query",
+            "description": "true: xóa luôn các câu trong nhóm; false: nhóm còn câu thì không xóa được",
+            "schema": {
+              "default": false,
+              "type": "boolean"
             }
           }
         ],
@@ -4431,7 +4621,7 @@
             }
           },
           "409": {
-            "description": "Lỗi, error.code thuộc: QUESTION_GROUP_NOT_EMPTY",
+            "description": "Lỗi, error.code thuộc: QUESTION_GROUP_NOT_EMPTY, QUESTION_IN_PUBLISHED_EXAM",
             "content": {
               "application/json": {
                 "schema": {
@@ -4446,6 +4636,17 @@
                       "error": {
                         "code": "QUESTION_GROUP_NOT_EMPTY",
                         "message": "Nhóm còn câu hỏi, hãy xóa các câu trong nhóm trước"
+                      }
+                    }
+                  },
+                  "QUESTION_IN_PUBLISHED_EXAM": {
+                    "summary": "QUESTION_IN_PUBLISHED_EXAM: Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_PUBLISHED_EXAM",
+                        "message": "Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa"
                       }
                     }
                   }
@@ -4482,7 +4683,163 @@
             "bearer": []
           }
         ],
-        "summary": "Xóa mềm nhóm câu (chỉ khi nhóm không còn câu nào)",
+        "summary": "Xóa mềm nhóm câu (chỉ người tạo)",
+        "tags": [
+          "Question Groups"
+        ]
+      }
+    },
+    "/api/v1/teacher/question-groups/bulk-delete": {
+      "post": {
+        "description": "withQuestions = true thì xóa luôn các câu trong nhóm. Bỏ qua kèm lý do: NOT_FOUND, NOT_OWNER, NOT_EMPTY (còn câu mà withQuestions = false), IN_PUBLISHED_EXAM (có câu ở đề đã xuất bản).",
+        "operationId": "bulkDeleteQuestionGroups",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkDeleteGroupsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GroupBulkDeleteResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "ids",
+                            "message": "ids không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xóa nhiều nhóm câu (tối đa 100)",
         "tags": [
           "Question Groups"
         ]
@@ -6181,6 +6538,162 @@
           }
         ],
         "summary": "Xóa mềm đề (đề đang xuất bản phải gỡ trước)",
+        "tags": [
+          "Exams"
+        ]
+      }
+    },
+    "/api/v1/teacher/exams/bulk-delete": {
+      "post": {
+        "description": "Đề hợp lệ bị xóa mềm; đề không tồn tại/của người khác (NOT_FOUND), đang xuất bản (PUBLISHED) bị bỏ qua.",
+        "operationId": "bulkDeleteExams",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkIdsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BulkDeleteResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "ids",
+                            "message": "ids không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xóa nhiều đề (tối đa 100)",
         "tags": [
           "Exams"
         ]
@@ -7915,6 +8428,7 @@
           "QUESTION_GROUP_NOT_EMPTY",
           "QUESTION_GROUP_ORDER_TAKEN",
           "QUESTION_CODE_TAKEN",
+          "QUESTION_IN_PUBLISHED_EXAM",
           "QUESTION_IMPORT_INVALID_FILE",
           "QUESTION_IMPORT_NOT_FOUND",
           "QUESTION_IMPORT_HAS_ERRORS",
@@ -9073,6 +9587,88 @@
           "updatedAt"
         ]
       },
+      "BulkSkipReason": {
+        "type": "string",
+        "enum": [
+          "NOT_FOUND",
+          "NOT_OWNER",
+          "IN_PUBLISHED_EXAM",
+          "NOT_EMPTY",
+          "PUBLISHED"
+        ],
+        "description": "NOT_FOUND: không tồn tại hoặc đã xóa · NOT_OWNER: của giáo viên khác · IN_PUBLISHED_EXAM: đang nằm trong đề đã xuất bản · NOT_EMPTY: nhóm còn câu · PUBLISHED: đề đang xuất bản"
+      },
+      "BulkSkippedItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "nullable": true,
+            "example": "P5-001",
+            "description": "Mã câu, tên đề hoặc đoạn đầu nội dung; null khi không tìm thấy"
+          },
+          "reason": {
+            "description": "NOT_FOUND: không tồn tại hoặc đã xóa · NOT_OWNER: của giáo viên khác · IN_PUBLISHED_EXAM: đang nằm trong đề đã xuất bản · NOT_EMPTY: nhóm còn câu · PUBLISHED: đề đang xuất bản",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BulkSkipReason"
+              }
+            ]
+          },
+          "message": {
+            "type": "string",
+            "example": "Câu đang nằm trong đề đã xuất bản"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "reason",
+          "message"
+        ]
+      },
+      "BulkDeleteResult": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "integer",
+            "description": "Số mục đã xóa"
+          },
+          "skipped": {
+            "description": "Theo đúng thứ tự id gửi lên",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkSkippedItem"
+            }
+          }
+        },
+        "required": [
+          "deleted",
+          "skipped"
+        ]
+      },
+      "BulkIdsDto": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "Từ 1 đến 100 id, không trùng nhau",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "ids"
+        ]
+      },
       "QuestionGroupSummary": {
         "type": "object",
         "properties": {
@@ -9339,6 +9935,54 @@
         },
         "required": [
           "updatedAt"
+        ]
+      },
+      "GroupBulkDeleteResult": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "integer",
+            "description": "Số mục đã xóa"
+          },
+          "skipped": {
+            "description": "Theo đúng thứ tự id gửi lên",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkSkippedItem"
+            }
+          },
+          "deletedQuestions": {
+            "type": "integer",
+            "description": "Số câu bị xóa theo nhóm (khi withQuestions = true)"
+          }
+        },
+        "required": [
+          "deleted",
+          "skipped",
+          "deletedQuestions"
+        ]
+      },
+      "BulkDeleteGroupsDto": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "Từ 1 đến 100 id, không trùng nhau",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "withQuestions": {
+            "type": "boolean",
+            "default": false,
+            "description": "true: xóa luôn các câu trong nhóm; false: bỏ qua nhóm còn câu (NOT_EMPTY)"
+          }
+        },
+        "required": [
+          "ids"
         ]
       },
       "ImportPartCount": {

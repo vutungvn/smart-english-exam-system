@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import { fieldError } from '../../common/errors/field-error.js';
+import { ExamStatus } from '../../generated/prisma/enums.js';
 import type { Skill } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
 
@@ -35,6 +36,23 @@ export class QuestionReferencesService {
         `Chủ đề "${topic.name}" chỉ dùng cho Part ${topic.parts.join(', ')}`,
       );
     }
+  }
+
+  /**
+   * Các câu (trong danh sách) đang nằm trong một đề đã xuất bản: không được xóa, vì đề xuất bản
+   * phải giữ nguyên bộ câu cho bài làm của học viên (D23)
+   */
+  async publishedQuestionIds(questionIds: string[]): Promise<Set<string>> {
+    if (questionIds.length === 0) return new Set();
+    const rows = await this.prisma.examQuestion.findMany({
+      where: {
+        questionId: { in: questionIds },
+        section: { exam: { status: ExamStatus.PUBLISHED, deletedAt: null } },
+      },
+      select: { questionId: true },
+      distinct: ['questionId'],
+    });
+    return new Set(rows.map((row) => row.questionId));
   }
 
   /** Câu muốn vào nhóm: nhóm còn hiệu lực, do chính giáo viên này tạo, cùng kỹ năng và Part */

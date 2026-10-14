@@ -2,6 +2,8 @@ import { Link, useNavigate } from 'react-router';
 import { DropdownMenu } from 'radix-ui';
 import { Eye, Layers, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import type { QuestionSummary } from '@/api/generated';
+import { SelectCheckbox } from '@/components/bulk/SelectCheckbox';
+import type { Selection } from '@/components/bulk/use-selection';
 import { formatDate } from '@/features/profile/format';
 import { cn } from '@/lib/utils';
 import { DifficultyPill, SkillPill, StatusPill } from './Pills';
@@ -12,6 +14,8 @@ interface QuestionTableProps {
   /** Đang tải trang mới: làm mờ bảng cũ thay vì nháy về khung xương */
   fetching: boolean;
   onDelete: (question: QuestionSummary) => void;
+  /** Chọn nhiều để xóa; chỉ chọn được câu do mình tạo */
+  selection?: Selection;
 }
 
 const menuItem =
@@ -22,8 +26,13 @@ export function QuestionTable({
   currentUserId,
   fetching,
   onDelete,
+  selection,
 }: QuestionTableProps) {
   const navigate = useNavigate();
+  const myIds = questions
+    .filter((question) => question.author.id === currentUserId)
+    .map((question) => question.id);
+  const allSelected = myIds.length > 0 && myIds.every((id) => selection?.has(id));
 
   return (
     <div
@@ -34,7 +43,19 @@ export function QuestionTable({
       <table className="w-full min-w-215 text-left text-sm">
         <thead>
           <tr className="border-b border-border text-xs font-semibold tracking-wider whitespace-nowrap text-subtle uppercase">
-            <th scope="col" className="py-3 pr-4 pl-5">
+            {selection && (
+              <th scope="col" className="w-10 py-1.5 pl-3">
+                <SelectCheckbox
+                  checked={allSelected}
+                  indeterminate={selection.count > 0}
+                  disabled={myIds.length === 0}
+                  disabledReason="Trang này không có câu do bạn tạo"
+                  label="Chọn tất cả câu của bạn trong trang"
+                  onChange={(checked) => selection.setMany(myIds, checked)}
+                />
+              </th>
+            )}
+            <th scope="col" className={cn('py-3 pr-4', selection ? 'pl-2' : 'pl-5')}>
               Câu hỏi
             </th>
             <th scope="col" className="px-4 py-3">
@@ -65,9 +86,23 @@ export function QuestionTable({
               <tr
                 key={question.id}
                 onClick={() => void navigate(detailPath)}
-                className="cursor-pointer align-top transition-colors hover:bg-slate-50"
+                className={cn(
+                  'cursor-pointer align-top transition-colors hover:bg-slate-50',
+                  selection?.has(question.id) && 'bg-accent/60 hover:bg-accent',
+                )}
               >
-                <td className="max-w-md py-4 pr-4 pl-5">
+                {selection && (
+                  <td className="py-2.5 pl-3">
+                    <SelectCheckbox
+                      checked={selection.has(question.id)}
+                      disabled={!mine}
+                      disabledReason="Câu của giáo viên khác"
+                      label={`Chọn câu ${question.code ?? question.content.slice(0, 30)}`}
+                      onChange={() => selection.toggle(question.id)}
+                    />
+                  </td>
+                )}
+                <td className={cn('max-w-md py-4 pr-4', selection ? 'pl-2' : 'pl-5')}>
                   {/* Link thật cho bàn phím và trình đọc màn hình; cả hàng bấm được cho chuột */}
                   <Link
                     to={detailPath}

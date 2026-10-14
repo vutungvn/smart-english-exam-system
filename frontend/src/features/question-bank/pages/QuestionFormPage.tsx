@@ -342,8 +342,8 @@ function QuestionEditor({ defaultValues, question, reload, backPath }: QuestionE
               <FormSection step={rule.group === 'required' ? 5 : 4} title="Âm thanh & hình ảnh">
                 <MediaNotice
                   rule={rule}
-                  audioKey={question?.audioKey}
-                  imageKey={question?.imageKey}
+                  audioUrl={question?.audioUrl}
+                  imageUrl={question?.imageUrl}
                 />
               </FormSection>
             )}

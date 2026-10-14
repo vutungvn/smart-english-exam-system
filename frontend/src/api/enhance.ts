@@ -1,3 +1,4 @@
+import { downloadResponse } from '@/lib/download';
 import { api } from './generated';
 
 /**
@@ -22,5 +23,37 @@ export const enhancedApi = api.enhanceEndpoints({
     updateQuestion: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
     deleteQuestion: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
     updateQuestionGroup: { invalidatesTags: ['Question Groups', 'Exams'] },
+    // Xóa nhiều / xóa nhóm kèm câu: câu, nhóm cùng đổi; đề nháp chứa câu bị xóa đổi kết quả kiểm tra
+    bulkDeleteQuestions: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
+    deleteQuestionGroup: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
+    bulkDeleteQuestionGroups: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
+
+    // Nhập câu hỏi từ tệp .zip
+    previewQuestionImport: {
+      query: ({ file }) => {
+        const body = new FormData();
+        body.append('file', file);
+        return { url: '/api/v1/teacher/questions/import/preview', method: 'POST', body };
+      },
+      invalidatesTags: [],
+    },
+    // Nhập xong thì danh sách câu, nhóm (và số đếm ở sidebar) phải tải lại
+    confirmQuestionImport: { invalidatesTags: ['Questions', 'Question Groups'] },
+    // Hai route trả tệp: gọi bằng initiate(..., { subscribe: false }) khi bấm nút, tệp lưu thẳng
+    // xuống máy, không giữ trong cache và không tự tải lại theo tag
+    getQuestionImportTemplate: {
+      query: () => ({
+        url: '/api/v1/teacher/questions/import/template',
+        responseHandler: downloadResponse('mau-nhap-cau-hoi.zip'),
+      }),
+      providesTags: [],
+    },
+    getQuestionImportErrors: {
+      query: (token) => ({
+        url: `/api/v1/teacher/questions/import/${token}/errors`,
+        responseHandler: downloadResponse('loi-nhap-cau-hoi.xlsx'),
+      }),
+      providesTags: [],
+    },
   },
 });

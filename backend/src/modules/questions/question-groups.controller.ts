@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   Patch,
@@ -25,12 +26,18 @@ import type { ApiErrorExample } from '../../common/swagger/api-errors.decorator.
 import type { WithMeta } from '../../common/types/api-response.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
 import {
+  BulkDeleteGroupsDto,
   CreateQuestionGroupDto,
+  DeleteGroupQueryDto,
   QuestionGroupQueryDto,
   UpdateQuestionGroupDto,
 } from './dto/question-group.dto.js';
 import { QuestionGroupsService } from './question-groups.service.js';
-import { QuestionGroupDetail, QuestionGroupSummary } from './questions.types.js';
+import {
+  GroupBulkDeleteResult,
+  QuestionGroupDetail,
+  QuestionGroupSummary,
+} from './questions.types.js';
 
 const RULE_ERROR: ApiErrorExample = {
   code: ErrorCode.VALIDATION_ERROR,
@@ -106,19 +113,41 @@ export class QuestionGroupsController {
     return this.groupsService.update(id, dto, user);
   }
 
+  @Post('bulk-delete')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Xóa nhiều nhóm câu (tối đa 100)',
+    description:
+      'withQuestions = true thì xóa luôn các câu trong nhóm. Bỏ qua kèm lý do: NOT_FOUND, NOT_OWNER, ' +
+      'NOT_EMPTY (còn câu mà withQuestions = false), IN_PUBLISHED_EXAM (có câu ở đề đã xuất bản).',
+  })
+  @ApiEnvelope(GroupBulkDeleteResult)
+  bulkDeleteQuestionGroups(
+    @Body() dto: BulkDeleteGroupsDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<GroupBulkDeleteResult> {
+    return this.groupsService.bulkRemove(dto.ids, dto.withQuestions ?? false, user);
+  }
+
   @Delete(':id')
-  @ApiOperation({ summary: 'Xóa mềm nhóm câu (chỉ khi nhóm không còn câu nào)' })
+  @ApiOperation({
+    summary: 'Xóa mềm nhóm câu (chỉ người tạo)',
+    description:
+      'Nhóm còn câu: gửi withQuestions=true để xóa luôn các câu, không thì báo QUESTION_GROUP_NOT_EMPTY.',
+  })
   @ApiNullEnvelope()
   @ApiErrors(
     ErrorCode.FORBIDDEN,
     NOT_OWNER,
     ErrorCode.QUESTION_GROUP_NOT_FOUND,
     ErrorCode.QUESTION_GROUP_NOT_EMPTY,
+    ErrorCode.QUESTION_IN_PUBLISHED_EXAM,
   )
   deleteQuestionGroup(
     @Param('id', UuidParam(ErrorCode.QUESTION_GROUP_NOT_FOUND)) id: string,
+    @Query() query: DeleteGroupQueryDto,
     @CurrentUser() user: AuthUser,
   ): Promise<void> {
-    return this.groupsService.remove(id, user);
+    return this.groupsService.remove(id, user, query.withQuestions ?? false);
   }
 }

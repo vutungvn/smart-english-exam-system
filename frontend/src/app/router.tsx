@@ -19,6 +19,7 @@ import { QuestionFormPage } from '@/features/question-bank/pages/QuestionFormPag
 import { QuestionGroupDetailPage } from '@/features/question-bank/pages/QuestionGroupDetailPage';
 import { QuestionGroupFormPage } from '@/features/question-bank/pages/QuestionGroupFormPage';
 import { QuestionGroupsPage } from '@/features/question-bank/pages/QuestionGroupsPage';
+import { QuestionImportPage } from '@/features/question-import/pages/QuestionImportPage';
 import { GuestOnly } from './guards/GuestOnly';
 import { RequireAuth } from './guards/RequireAuth';
 import { RequireRole } from './guards/RequireRole';
@@ -35,9 +36,6 @@ const STUDENT_PLACEHOLDERS = [
   { path: 'assistant', title: 'Trợ giảng AI' },
   { path: 'flashcards', title: 'Flashcard' },
 ];
-
-// TẠM: mục menu giáo viên chưa làm
-const TEACHER_PLACEHOLDERS = [{ path: 'import', title: 'Nhập câu hỏi từ tệp' }];
 
 export const router = createBrowserRouter([
   // Landing mở cho mọi người; đã đăng nhập thì header đổi nút Đăng nhập/Đăng ký thành nút vào học
@@ -113,15 +111,12 @@ export const router = createBrowserRouter([
               { path: 'question-groups/new', element: <QuestionGroupFormPage /> },
               { path: 'question-groups/:id', element: <QuestionGroupDetailPage /> },
               { path: 'question-groups/:id/edit', element: <QuestionGroupFormPage /> },
+              { path: 'import', element: <QuestionImportPage /> },
               { path: 'exams', element: <ExamsPage /> },
               { path: 'exams/:id', element: <ExamBuilderPage /> },
               { path: 'exams/:id/preview', element: <ExamPreviewPage /> },
               { path: 'profile', element: <ProfilePage /> },
               { path: 'profile/password', element: <ChangePasswordPage /> },
-              ...TEACHER_PLACEHOLDERS.map(({ path, title }) => ({
-                path,
-                element: <ComingSoonPage title={title} backTo="/teacher/questions" />,
-              })),
             ],
           },
         ],

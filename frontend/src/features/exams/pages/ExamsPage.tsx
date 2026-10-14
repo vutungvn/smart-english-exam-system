@@ -4,6 +4,7 @@ import { DropdownMenu } from 'radix-ui';
 import { Eye, FilePlus2, MoreVertical, PencilRuler, Plus, Trash2 } from 'lucide-react';
 import { toApiError } from '@/api/errors';
 import {
+  useBulkDeleteExamsMutation,
   useCreateExamMutation,
   useDeleteExamMutation,
   useListExamsQuery,
@@ -13,6 +14,12 @@ import {
   type ScoringScale,
 } from '@/api/generated';
 import { AppDialog } from '@/components/AppDialog';
+import { BulkActionBar } from '@/components/bulk/BulkActionBar';
+import { BulkDeleteDialog } from '@/components/bulk/BulkDeleteDialog';
+import { toOutcome, type BulkOutcome } from '@/components/bulk/bulk-outcome';
+import { BulkResultBanner } from '@/components/bulk/BulkResultBanner';
+import { SelectCheckbox } from '@/components/bulk/SelectCheckbox';
+import { useSelection, type Selection } from '@/components/bulk/use-selection';
 import { FormAlert } from '@/components/form/FormAlert';
 import { PageHeader } from '@/components/PageHeader';
 import { Pagination } from '@/components/Pagination';
@@ -55,6 +62,12 @@ export function ExamsPage() {
   const [creating, setCreating] = useState(0); // đổi key để mở hộp thoại với form mới
   const [pendingDelete, setPendingDelete] = useState<ExamSummary | null>(null);
   const [deleteError, setDeleteError] = useState<string>();
+  // Chọn nhiều để xóa: đổi bộ lọc/trang thì bỏ chọn
+  const selection = useSelection(JSON.stringify(filters));
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkError, setBulkError] = useState<string>();
+  const [outcome, setOutcome] = useState<BulkOutcome>();
+  const [bulkDelete, { isLoading: bulkDeleting }] = useBulkDeleteExamsMutation();
 
   const [flash, setFlash] = useState(() => (location.state as ExamsLocationState | null)?.flash);
   useEffect(() => {
@@ -73,6 +86,19 @@ export function ExamsPage() {
 
   const exams = data?.data ?? [];
   const openCreate = () => setCreating((n) => n + 1);
+
+  const confirmBulk = async () => {
+    setBulkError(undefined);
+    try {
+      const { data: result } = await bulkDelete({ ids: [...selection.ids] }).unwrap();
+      setBulkOpen(false);
+      selection.clear();
+      setFlash(undefined);
+      setOutcome(toOutcome(result, 'đề thi'));
+    } catch (err) {
+      setBulkError(toApiError(err).message);
+    }
+  };
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
@@ -111,6 +137,7 @@ export function ExamsPage() {
       />
 
       {flash && <SuccessBanner message={flash} onClose={() => setFlash(undefined)} />}
+      {outcome && <BulkResultBanner outcome={outcome} onClose={() => setOutcome(undefined)} />}
 
       <section
         aria-label="Bộ lọc đề thi"
@@ -193,12 +220,20 @@ export function ExamsPage() {
         ) : (
           <div className={cn('transition-opacity', isFetching && 'opacity-60')}>
             {/* Bảng từ md trở lên; màn hẹp hiện dạng thẻ để không phải cuộn ngang */}
-            <ExamTable exams={exams} onDelete={setPendingDelete} />
-            <ul className="divide-y divide-border md:hidden">
-              {exams.map((exam) => (
-                <ExamCard key={exam.id} exam={exam} onDelete={() => setPendingDelete(exam)} />
-              ))}
-            </ul>
+            <ExamTable exams={exams} onDelete={setPendingDelete} selection={selection} />
+            <div className="md:hidden">
+              <SelectPageRow exams={exams} selection={selection} />
+              <ul className="divide-y divide-border">
+                {exams.map((exam) => (
+                  <ExamCard
+                    key={exam.id}
+                    exam={exam}
+                    onDelete={() => setPendingDelete(exam)}
+                    selection={selection}
+                  />
+                ))}
+              </ul>
+            </div>
           </div>
         )}
 
@@ -215,6 +250,27 @@ export function ExamsPage() {
           </div>
         )}
       </section>
+
+      <BulkActionBar
+        count={selection.count}
+        noun="đề"
+        onClear={selection.clear}
+        onDelete={() => {
+          setBulkError(undefined);
+          setBulkOpen(true);
+        }}
+      />
+
+      <BulkDeleteDialog
+        open={bulkOpen}
+        count={selection.count}
+        noun="đề thi"
+        description="Đề bị xóa không còn trong danh sách. Bài làm cũ của học viên (nếu có) vẫn được giữ. Đề đang xuất bản sẽ được bỏ qua."
+        busy={bulkDeleting}
+        error={bulkError}
+        onClose={() => setBulkOpen(false)}
+        onConfirm={() => void confirmBulk()}
+      />
 
       {creating > 0 && toeicId && (
         <ExamFormDialog
@@ -312,20 +368,57 @@ function Structure({ exam }: { exam: ExamSummary }) {
   );
 }
 
+/** Đề đang xuất bản không xóa được: ô chọn bị khóa */
+const PUBLISHED_REASON = 'Gỡ xuất bản trước khi xóa';
+
+function deletableIds(exams: ExamSummary[]): string[] {
+  return exams.filter((exam) => exam.status !== 'PUBLISHED').map((exam) => exam.id);
+}
+
+/** Ô "chọn cả trang" cho dạng thẻ trên màn hẹp */
+function SelectPageRow({ exams, selection }: { exams: ExamSummary[]; selection: Selection }) {
+  const ids = deletableIds(exams);
+  if (ids.length === 0) return null;
+  return (
+    <div className="flex items-center gap-1 border-b border-border px-3 py-1.5 text-sm text-slate-600">
+      <SelectCheckbox
+        checked={ids.every((id) => selection.has(id))}
+        indeterminate={selection.count > 0}
+        label="Chọn tất cả đề có thể xóa trong trang"
+        onChange={(checked) => selection.setMany(ids, checked)}
+      />
+      Chọn tất cả đề chưa xuất bản ({ids.length})
+    </div>
+  );
+}
+
 function ExamTable({
   exams,
   onDelete,
+  selection,
 }: {
   exams: ExamSummary[];
   onDelete: (exam: ExamSummary) => void;
+  selection: Selection;
 }) {
   const navigate = useNavigate();
+  const ids = deletableIds(exams);
   return (
     <div className="relative hidden overflow-x-auto md:block">
       <table className="w-full min-w-200 text-left text-sm">
         <thead>
           <tr className="border-b border-border text-xs font-semibold tracking-wider whitespace-nowrap text-subtle uppercase">
-            <th scope="col" className="py-3 pr-4 pl-5">
+            <th scope="col" className="w-10 py-1.5 pl-3">
+              <SelectCheckbox
+                checked={ids.length > 0 && ids.every((id) => selection.has(id))}
+                indeterminate={selection.count > 0}
+                disabled={ids.length === 0}
+                disabledReason="Mọi đề trong trang đang xuất bản"
+                label="Chọn tất cả đề có thể xóa trong trang"
+                onChange={(checked) => selection.setMany(ids, checked)}
+              />
+            </th>
+            <th scope="col" className="py-3 pr-4 pl-2">
               Tên đề
             </th>
             <th scope="col" className="px-4 py-3">
@@ -353,9 +446,21 @@ function ExamTable({
             <tr
               key={exam.id}
               onClick={() => void navigate(examPath(exam.id))}
-              className="cursor-pointer align-middle transition-colors hover:bg-slate-50"
+              className={cn(
+                'cursor-pointer align-middle transition-colors hover:bg-slate-50',
+                selection.has(exam.id) && 'bg-accent/60 hover:bg-accent',
+              )}
             >
-              <td className="max-w-sm py-4 pr-4 pl-5">
+              <td className="py-2.5 pl-3">
+                <SelectCheckbox
+                  checked={selection.has(exam.id)}
+                  disabled={exam.status === 'PUBLISHED'}
+                  disabledReason={PUBLISHED_REASON}
+                  label={`Chọn đề ${exam.title}`}
+                  onChange={() => selection.toggle(exam.id)}
+                />
+              </td>
+              <td className="max-w-sm py-4 pr-4 pl-2">
                 <Link
                   to={examPath(exam.id)}
                   onClick={(event) => event.stopPropagation()}
@@ -396,9 +501,24 @@ function ExamTable({
   );
 }
 
-function ExamCard({ exam, onDelete }: { exam: ExamSummary; onDelete: () => void }) {
+function ExamCard({
+  exam,
+  onDelete,
+  selection,
+}: {
+  exam: ExamSummary;
+  onDelete: () => void;
+  selection: Selection;
+}) {
   return (
-    <li className="flex gap-3 px-5 py-4">
+    <li className={cn('flex gap-2 py-4 pr-5 pl-3', selection.has(exam.id) && 'bg-accent/60')}>
+      <SelectCheckbox
+        checked={selection.has(exam.id)}
+        disabled={exam.status === 'PUBLISHED'}
+        disabledReason={PUBLISHED_REASON}
+        label={`Chọn đề ${exam.title}`}
+        onChange={() => selection.toggle(exam.id)}
+      />
       <div className="min-w-0 flex-1">
         <Link to={examPath(exam.id)} className="line-clamp-2 font-semibold text-foreground">
           {exam.title}

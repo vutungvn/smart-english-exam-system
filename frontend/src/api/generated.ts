@@ -5,6 +5,7 @@ export const addTagTypes = [
   'Subjects',
   'Questions',
   'Question Groups',
+  'Question Import',
   'Exams',
 ] as const;
 const injectedRtkApi = api
@@ -150,6 +151,17 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/api/v1/teacher/questions/${queryArg}`, method: 'DELETE' }),
         invalidatesTags: ['Questions'],
       }),
+      bulkDeleteQuestions: build.mutation<
+        BulkDeleteQuestionsApiResponse,
+        BulkDeleteQuestionsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/questions/bulk-delete`,
+          method: 'POST',
+          body: queryArg,
+        }),
+        invalidatesTags: ['Questions'],
+      }),
       listQuestionGroups: build.query<ListQuestionGroupsApiResponse, ListQuestionGroupsApiArg>({
         query: (queryArg) => ({
           url: `/api/v1/teacher/question-groups`,
@@ -196,10 +208,60 @@ const injectedRtkApi = api
         DeleteQuestionGroupApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/teacher/question-groups/${queryArg}`,
+          url: `/api/v1/teacher/question-groups/${queryArg.id}`,
           method: 'DELETE',
+          params: {
+            withQuestions: queryArg.withQuestions,
+          },
         }),
         invalidatesTags: ['Question Groups'],
+      }),
+      bulkDeleteQuestionGroups: build.mutation<
+        BulkDeleteQuestionGroupsApiResponse,
+        BulkDeleteQuestionGroupsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/question-groups/bulk-delete`,
+          method: 'POST',
+          body: queryArg,
+        }),
+        invalidatesTags: ['Question Groups'],
+      }),
+      getQuestionImportTemplate: build.query<
+        GetQuestionImportTemplateApiResponse,
+        GetQuestionImportTemplateApiArg
+      >({
+        query: () => ({ url: `/api/v1/teacher/questions/import/template` }),
+        providesTags: ['Question Import'],
+      }),
+      previewQuestionImport: build.mutation<
+        PreviewQuestionImportApiResponse,
+        PreviewQuestionImportApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/questions/import/preview`,
+          method: 'POST',
+          body: queryArg,
+        }),
+        invalidatesTags: ['Question Import'],
+      }),
+      confirmQuestionImport: build.mutation<
+        ConfirmQuestionImportApiResponse,
+        ConfirmQuestionImportApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/questions/import/${queryArg.token}/confirm`,
+          method: 'POST',
+          body: queryArg.confirmImportDto,
+        }),
+        invalidatesTags: ['Question Import'],
+      }),
+      getQuestionImportErrors: build.query<
+        GetQuestionImportErrorsApiResponse,
+        GetQuestionImportErrorsApiArg
+      >({
+        query: (queryArg) => ({ url: `/api/v1/teacher/questions/import/${queryArg}/errors` }),
+        providesTags: ['Question Import'],
       }),
       listExams: build.query<ListExamsApiResponse, ListExamsApiArg>({
         query: (queryArg) => ({
@@ -232,6 +294,14 @@ const injectedRtkApi = api
       }),
       deleteExam: build.mutation<DeleteExamApiResponse, DeleteExamApiArg>({
         query: (queryArg) => ({ url: `/api/v1/teacher/exams/${queryArg}`, method: 'DELETE' }),
+        invalidatesTags: ['Exams'],
+      }),
+      bulkDeleteExams: build.mutation<BulkDeleteExamsApiResponse, BulkDeleteExamsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/exams/bulk-delete`,
+          method: 'POST',
+          body: queryArg,
+        }),
         invalidatesTags: ['Exams'],
       }),
       addSection: build.mutation<AddSectionApiResponse, AddSectionApiArg>({
@@ -457,6 +527,12 @@ export type DeleteQuestionApiResponse = /** status 200 Thành công */ {
   data: object | null;
 };
 export type DeleteQuestionApiArg = string;
+export type BulkDeleteQuestionsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: BulkDeleteResult;
+};
+export type BulkDeleteQuestionsApiArg = BulkIdsDto;
 export type ListQuestionGroupsApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
@@ -499,7 +575,39 @@ export type DeleteQuestionGroupApiResponse = /** status 200 Thành công */ {
   status: number;
   data: object | null;
 };
-export type DeleteQuestionGroupApiArg = string;
+export type DeleteQuestionGroupApiArg = {
+  id: string;
+  /** true: xóa luôn các câu trong nhóm; false: nhóm còn câu thì không xóa được */
+  withQuestions?: boolean;
+};
+export type BulkDeleteQuestionGroupsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: GroupBulkDeleteResult;
+};
+export type BulkDeleteQuestionGroupsApiArg = BulkDeleteGroupsDto;
+export type GetQuestionImportTemplateApiResponse = /** status 200 Tệp .zip */ Blob;
+export type GetQuestionImportTemplateApiArg = void;
+export type PreviewQuestionImportApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ImportPreview;
+};
+export type PreviewQuestionImportApiArg = {
+  /** Tệp .zip gồm questions.xlsx và thư mục media/, tối đa 100 MB */
+  file: Blob;
+};
+export type ConfirmQuestionImportApiResponse = /** status 201 Thành công */ {
+  success: true;
+  status: number;
+  data: ImportResult;
+};
+export type ConfirmQuestionImportApiArg = {
+  token: string;
+  confirmImportDto: ConfirmImportDto;
+};
+export type GetQuestionImportErrorsApiResponse = /** status 200 Tệp .xlsx */ Blob;
+export type GetQuestionImportErrorsApiArg = string;
 export type ListExamsApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
@@ -541,6 +649,12 @@ export type DeleteExamApiResponse = /** status 200 Thành công */ {
   data: object | null;
 };
 export type DeleteExamApiArg = string;
+export type BulkDeleteExamsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: BulkDeleteResult;
+};
+export type BulkDeleteExamsApiArg = BulkIdsDto;
 export type AddSectionApiResponse = /** status 201 Thành công */ {
   success: true;
   status: number;
@@ -639,11 +753,19 @@ export type ErrorCode =
   | 'AUTH_GOOGLE_STUDENT_ONLY'
   | 'STORAGE_UNAVAILABLE'
   | 'AVATAR_INVALID_IMAGE'
+  | 'MEDIA_LINK_INVALID'
+  | 'MEDIA_RANGE_NOT_SATISFIABLE'
   | 'SUBJECT_NOT_FOUND'
   | 'QUESTION_NOT_FOUND'
   | 'QUESTION_GROUP_NOT_FOUND'
   | 'QUESTION_GROUP_NOT_EMPTY'
   | 'QUESTION_GROUP_ORDER_TAKEN'
+  | 'QUESTION_CODE_TAKEN'
+  | 'QUESTION_IN_PUBLISHED_EXAM'
+  | 'QUESTION_IMPORT_INVALID_FILE'
+  | 'QUESTION_IMPORT_NOT_FOUND'
+  | 'QUESTION_IMPORT_HAS_ERRORS'
+  | 'QUESTION_IMPORT_IN_PROGRESS'
   | 'EXAM_NOT_FOUND'
   | 'EXAM_SECTION_NOT_FOUND'
   | 'EXAM_QUESTION_NOT_FOUND'
@@ -794,6 +916,8 @@ export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type QuestionStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE';
 export type QuestionSummary = {
   id: string;
+  /** Mã câu trong tệp nhập; câu tạo bằng form thì null */
+  code: string | null;
   topic: TopicRef;
   author: AuthorRef;
   groupId: string | null;
@@ -816,6 +940,8 @@ export type QuestionOptionItem = {
 };
 export type QuestionDetail = {
   id: string;
+  /** Mã câu trong tệp nhập; câu tạo bằng form thì null */
+  code: string | null;
   topic: TopicRef;
   author: AuthorRef;
   groupId: string | null;
@@ -833,10 +959,14 @@ export type QuestionDetail = {
   sampleAnswer: string | null;
   prepSeconds: number | null;
   responseSeconds: number | null;
-  /** Gán khi làm chức năng tải media */
+  /** Key trong kho tệp, gán khi nhập .zip */
   audioKey: string | null;
-  /** Gán khi làm chức năng tải media */
+  /** Key trong kho tệp, gán khi nhập .zip */
   imageKey: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  audioUrl: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  imageUrl: string | null;
   /** Rỗng với câu trả lời mở */
   options: QuestionOptionItem[];
 };
@@ -888,6 +1018,26 @@ export type UpdateQuestionDto = {
   /** updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409 */
   updatedAt: string;
 };
+export type BulkSkipReason =
+  'NOT_FOUND' | 'NOT_OWNER' | 'IN_PUBLISHED_EXAM' | 'NOT_EMPTY' | 'PUBLISHED';
+export type BulkSkippedItem = {
+  id: string;
+  /** Mã câu, tên đề hoặc đoạn đầu nội dung; null khi không tìm thấy */
+  label: string | null;
+  /** NOT_FOUND: không tồn tại hoặc đã xóa · NOT_OWNER: của giáo viên khác · IN_PUBLISHED_EXAM: đang nằm trong đề đã xuất bản · NOT_EMPTY: nhóm còn câu · PUBLISHED: đề đang xuất bản */
+  reason: BulkSkipReason;
+  message: string;
+};
+export type BulkDeleteResult = {
+  /** Số mục đã xóa */
+  deleted: number;
+  /** Theo đúng thứ tự id gửi lên */
+  skipped: BulkSkippedItem[];
+};
+export type BulkIdsDto = {
+  /** Từ 1 đến 100 id, không trùng nhau */
+  ids: string[];
+};
 export type QuestionGroupSummary = {
   id: string;
   topic: TopicRef;
@@ -898,6 +1048,10 @@ export type QuestionGroupSummary = {
   transcript: string | null;
   audioKey: string | null;
   imageKey: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  audioUrl: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  imageUrl: string | null;
   status: QuestionStatus;
   /** Số câu còn hiệu lực trong nhóm */
   questionCount: number;
@@ -914,6 +1068,10 @@ export type QuestionGroupDetail = {
   transcript: string | null;
   audioKey: string | null;
   imageKey: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  audioUrl: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  imageUrl: string | null;
   status: QuestionStatus;
   /** Số câu còn hiệu lực trong nhóm */
   questionCount: number;
@@ -942,6 +1100,85 @@ export type UpdateQuestionGroupDto = {
   status?: QuestionStatus;
   /** updatedAt lần đọc gần nhất */
   updatedAt: string;
+};
+export type GroupBulkDeleteResult = {
+  /** Số mục đã xóa */
+  deleted: number;
+  /** Theo đúng thứ tự id gửi lên */
+  skipped: BulkSkippedItem[];
+  /** Số câu bị xóa theo nhóm (khi withQuestions = true) */
+  deletedQuestions: number;
+};
+export type BulkDeleteGroupsDto = {
+  /** Từ 1 đến 100 id, không trùng nhau */
+  ids: string[];
+  /** true: xóa luôn các câu trong nhóm; false: bỏ qua nhóm còn câu (NOT_EMPTY) */
+  withQuestions?: boolean;
+};
+export type ImportPartCount = {
+  skill: Skill;
+  part: number;
+  name: string;
+  groupCount: number;
+  questionCount: number;
+};
+export type ImportIssue = {
+  /** file: cấu trúc tệp; groups, questions: sheet trong Excel; media: thư mục media/ */
+  sheet: 'file' | 'groups' | 'questions' | 'media';
+  /** Số dòng trong Excel (dòng 1 là tiêu đề) */
+  row: number | null;
+  column: string | null;
+  message: string;
+};
+export type ImportQuestionRow = {
+  row: number;
+  code: string;
+  skill: Skill;
+  part: number;
+  difficulty: Difficulty;
+  topic: string;
+  groupCode: string | null;
+  orderInGroup: number | null;
+  /** Nội dung câu, cắt ngắn 120 ký tự */
+  content: string;
+  audioFile: string | null;
+  imageFile: string | null;
+};
+export type ImportPreview = {
+  /** Dùng cho /{token}/confirm và /{token}/errors */
+  token: string;
+  fileName: string;
+  /** Sau thời điểm này phải tải lại */
+  expiresAt: string;
+  /** false khi còn lỗi: phải sửa tệp rồi tải lên lại */
+  canConfirm: boolean;
+  /** Số nhóm hợp lệ */
+  groupCount: number;
+  /** Số câu hợp lệ */
+  questionCount: number;
+  /** Số tệp audio/ảnh được dùng */
+  mediaCount: number;
+  errorCount: number;
+  warningCount: number;
+  parts: ImportPartCount[];
+  /** Tối đa 500 lỗi đầu tiên; đầy đủ trong GET /{token}/errors */
+  errors: ImportIssue[];
+  /** Tối đa 500 cảnh báo đầu tiên */
+  warnings: ImportIssue[];
+  /** Các câu hợp lệ, theo thứ tự dòng */
+  questions: ImportQuestionRow[];
+};
+export type ImportResult = {
+  groupCount: number;
+  questionCount: number;
+  /** Số tệp audio/ảnh đã lưu vào kho */
+  mediaCount: number;
+  status: QuestionStatus;
+};
+export type ImportStatus = 'DRAFT' | 'ACTIVE';
+export type ConfirmImportDto = {
+  /** Trạng thái của mọi nhóm, câu được nhập. ACTIVE: dùng ngay để soạn đề xuất bản */
+  status?: ImportStatus;
 };
 export type SubjectRef = {
   id: string;
@@ -1085,6 +1322,10 @@ export type PaperGroup = {
   passage: string | null;
   audioKey: string | null;
   imageKey: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  audioUrl: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  imageUrl: string | null;
 };
 export type PaperOption = {
   id: string;
@@ -1099,6 +1340,10 @@ export type PaperQuestion = {
   content: string;
   audioKey: string | null;
   imageKey: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  audioUrl: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  imageUrl: string | null;
   prepSeconds: number | null;
   responseSeconds: number | null;
   /** Không có isCorrect; rỗng với câu trả lời mở */
@@ -1146,16 +1391,23 @@ export const {
   useGetQuestionQuery,
   useUpdateQuestionMutation,
   useDeleteQuestionMutation,
+  useBulkDeleteQuestionsMutation,
   useListQuestionGroupsQuery,
   useCreateQuestionGroupMutation,
   useGetQuestionGroupQuery,
   useUpdateQuestionGroupMutation,
   useDeleteQuestionGroupMutation,
+  useBulkDeleteQuestionGroupsMutation,
+  useGetQuestionImportTemplateQuery,
+  usePreviewQuestionImportMutation,
+  useConfirmQuestionImportMutation,
+  useGetQuestionImportErrorsQuery,
   useListExamsQuery,
   useCreateExamMutation,
   useGetExamQuery,
   useUpdateExamMutation,
   useDeleteExamMutation,
+  useBulkDeleteExamsMutation,
   useAddSectionMutation,
   useRemoveSectionMutation,
   useAddQuestionsMutation,

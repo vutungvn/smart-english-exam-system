@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { BulkDeleteResult, skip, type BulkSkippedItem } from '../../common/dto/bulk-delete.dto.js';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import { fieldError } from '../../common/errors/field-error.js';
@@ -142,6 +143,33 @@ export class ExamsService {
 
     // Xóa mềm: bài làm cũ (Giai đoạn 2) vẫn tham chiếu được tới đề
     await this.prisma.exam.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
+
+  /** Xóa nhiều đề: đề của người khác coi như không tồn tại, đề đang xuất bản thì bỏ qua */
+  async bulkRemove(ids: string[], user: AuthUser): Promise<BulkDeleteResult> {
+    const rows = await this.prisma.exam.findMany({
+      where: { id: { in: ids }, authorId: user.id, deletedAt: null },
+      select: { id: true, title: true, status: true },
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+
+    const skipped: BulkSkippedItem[] = [];
+    const deletable: string[] = [];
+    for (const id of ids) {
+      const row = byId.get(id);
+      if (!row) skipped.push(skip(id, null, 'NOT_FOUND'));
+      else if (row.status === ExamStatus.PUBLISHED) skipped.push(skip(id, row.title, 'PUBLISHED'));
+      else deletable.push(id);
+    }
+
+    // Điều kiện lặp lại trạng thái: đề vừa được xuất bản ở tab khác thì không bị xóa
+    const { count } = deletable.length
+      ? await this.prisma.exam.updateMany({
+          where: { id: { in: deletable }, deletedAt: null, status: { not: ExamStatus.PUBLISHED } },
+          data: { deletedAt: new Date() },
+        })
+      : { count: 0 };
+    return { deleted: count, skipped };
   }
 
   async validate(id: string, user: AuthUser): Promise<ExamValidation> {

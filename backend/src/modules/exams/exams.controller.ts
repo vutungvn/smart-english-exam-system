@@ -14,6 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RoleCode } from '../../common/constants/roles.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
+import { BulkDeleteResult, BulkIdsDto } from '../../common/dto/bulk-delete.dto.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import { UuidParam } from '../../common/pipes/uuid-param.pipe.js';
 import {
@@ -122,6 +123,21 @@ export class ExamsController {
     @CurrentUser() user: AuthUser,
   ): Promise<ExamDetail> {
     return this.examsService.update(id, dto, user);
+  }
+
+  @Post('bulk-delete')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Xóa nhiều đề (tối đa 100)',
+    description:
+      'Đề hợp lệ bị xóa mềm; đề không tồn tại/của người khác (NOT_FOUND), đang xuất bản (PUBLISHED) bị bỏ qua.',
+  })
+  @ApiEnvelope(BulkDeleteResult)
+  bulkDeleteExams(
+    @Body() dto: BulkIdsDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<BulkDeleteResult> {
+    return this.examsService.bulkRemove(dto.ids, user);
   }
 
   @Delete(':id')

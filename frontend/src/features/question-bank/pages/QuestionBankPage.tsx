@@ -1,9 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { FilePlus2, Layers, ListChecks, Plus } from 'lucide-react';
+import { FilePlus2, FileUp, Layers, ListChecks, Plus } from 'lucide-react';
 import { toApiError } from '@/api/errors';
-import { useListQuestionsQuery, type QuestionSummary } from '@/api/generated';
+import {
+  useListQuestionsQuery,
+  type QuestionSummary,
+  useBulkDeleteQuestionsMutation,
+} from '@/api/generated';
+import { BulkActionBar } from '@/components/bulk/BulkActionBar';
+import { BulkDeleteDialog } from '@/components/bulk/BulkDeleteDialog';
+import { toOutcome, type BulkOutcome } from '@/components/bulk/bulk-outcome';
+import { BulkResultBanner } from '@/components/bulk/BulkResultBanner';
+import { useSelection } from '@/components/bulk/use-selection';
 import { ButtonLink } from '@/components/ButtonLink';
+import { IMPORT_PATH } from '@/features/question-import/import-meta';
 import { PageHeader } from '@/components/PageHeader';
 import { Pagination } from '@/components/Pagination';
 import { useAppSelector } from '@/hooks/hooks';
@@ -27,6 +37,25 @@ export function QuestionBankPage() {
   const { filters, update, hasFilters, clear } = useQuestionFilters();
   const { data, error, isLoading, isFetching, refetch } = useListQuestionsQuery(toListArg(filters));
   const [pendingDelete, setPendingDelete] = useState<QuestionSummary | null>(null);
+  // Chọn nhiều để xóa: đổi bộ lọc/trang thì bỏ chọn
+  const selection = useSelection(JSON.stringify(filters));
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkError, setBulkError] = useState<string>();
+  const [outcome, setOutcome] = useState<BulkOutcome>();
+  const [bulkDelete, { isLoading: bulkDeleting }] = useBulkDeleteQuestionsMutation();
+
+  const confirmBulk = async () => {
+    setBulkError(undefined);
+    try {
+      const { data: result } = await bulkDelete({ ids: [...selection.ids] }).unwrap();
+      setBulkOpen(false);
+      selection.clear();
+      setFlash(undefined);
+      setOutcome(toOutcome(result, 'câu hỏi'));
+    } catch (err) {
+      setBulkError(toApiError(err).message);
+    }
+  };
 
   const [flash, setFlash] = useState(
     () => (location.state as QuestionBankLocationState | null)?.flash,
@@ -70,6 +99,14 @@ export function QuestionBankPage() {
               Nhóm câu hỏi
             </ButtonLink>
             <ButtonLink
+              to={IMPORT_PATH}
+              variant="secondary"
+              className="h-10 w-auto bg-white px-4 shadow-2xs ring-1 ring-border"
+            >
+              <FileUp />
+              Nhập từ tệp
+            </ButtonLink>
+            <ButtonLink
               to={createPath}
               className="h-10 w-auto bg-linear-to-r from-primary to-brand px-4 shadow-primary/30"
             >
@@ -81,6 +118,7 @@ export function QuestionBankPage() {
       />
 
       {flash && <SuccessBanner message={flash} onClose={() => setFlash(undefined)} />}
+      {outcome && <BulkResultBanner outcome={outcome} onClose={() => setOutcome(undefined)} />}
 
       <SkillStatCards selected={filters.skill} onSelect={(skill) => update({ skill })} />
 
@@ -143,6 +181,7 @@ export function QuestionBankPage() {
             currentUserId={user?.id}
             fetching={isFetching}
             onDelete={setPendingDelete}
+            selection={selection}
           />
         )}
 
@@ -159,6 +198,27 @@ export function QuestionBankPage() {
           </div>
         )}
       </section>
+
+      <BulkActionBar
+        count={selection.count}
+        noun="câu hỏi"
+        onClear={selection.clear}
+        onDelete={() => {
+          setBulkError(undefined);
+          setBulkOpen(true);
+        }}
+      />
+
+      <BulkDeleteDialog
+        open={bulkOpen}
+        count={selection.count}
+        noun="câu hỏi"
+        description="Câu bị xóa không còn trong ngân hàng. Câu đang nằm trong đề đã xuất bản sẽ được bỏ qua; đề nháp có chứa câu bị xóa sẽ báo lỗi ở màn soạn đề cho tới khi bạn gỡ câu đó."
+        busy={bulkDeleting}
+        error={bulkError}
+        onClose={() => setBulkOpen(false)}
+        onConfirm={() => void confirmBulk()}
+      />
 
       <DeleteQuestionDialog
         question={pendingDelete}

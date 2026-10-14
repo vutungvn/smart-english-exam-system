@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { shortLabel, skip, type BulkSkippedItem } from '../../common/dto/bulk-delete.dto.js';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
@@ -20,7 +21,11 @@ import {
   toGroupDetail,
   toGroupSummary,
 } from './questions.mapper.js';
-import type { QuestionGroupDetail, QuestionGroupSummary } from './questions.types.js';
+import type {
+  GroupBulkDeleteResult,
+  QuestionGroupDetail,
+  QuestionGroupSummary,
+} from './questions.types.js';
 
 function blankToNull(value: string | null | undefined): string | null {
   return value ? value : null;
@@ -132,19 +137,91 @@ export class QuestionGroupsService {
     return this.get(id);
   }
 
-  async remove(id: string, user: AuthUser): Promise<void> {
+  /** withQuestions: xóa luôn các câu trong nhóm (nhóm là một khối, câu không đứng riêng được) */
+  async remove(id: string, user: AuthUser, withQuestions = false): Promise<void> {
     const existing = await this.prisma.questionGroup.findFirst({
       where: { id, deletedAt: null },
-      select: { authorId: true, _count: { select: { questions: { where: { deletedAt: null } } } } },
+      select: { authorId: true, questions: { where: { deletedAt: null }, select: { id: true } } },
     });
     if (!existing) throw new AppException(ErrorCode.QUESTION_GROUP_NOT_FOUND);
     assertOwner(existing.authorId, user.id);
 
+    const questionIds = existing.questions.map((question) => question.id);
     // Không để câu hỏi còn hiệu lực trỏ vào một nhóm đã xóa
-    if (existing._count.questions > 0) {
+    if (questionIds.length > 0 && !withQuestions) {
       throw new AppException(ErrorCode.QUESTION_GROUP_NOT_EMPTY);
     }
+    if ((await this.refs.publishedQuestionIds(questionIds)).size > 0) {
+      throw new AppException(ErrorCode.QUESTION_IN_PUBLISHED_EXAM);
+    }
 
-    await this.prisma.questionGroup.update({ where: { id }, data: { deletedAt: new Date() } });
+    const now = new Date();
+    await this.prisma.$transaction([
+      this.prisma.question.updateMany({
+        where: { groupId: id, deletedAt: null },
+        data: { deletedAt: now },
+      }),
+      this.prisma.questionGroup.update({ where: { id }, data: { deletedAt: now } }),
+    ]);
+  }
+
+  /**
+   * Xóa nhiều nhóm. Bỏ qua (kèm lý do) nhóm không tồn tại, của giáo viên khác, còn câu khi
+   * withQuestions = false, hoặc có câu đang ở đề đã xuất bản (bỏ cả nhóm vì nhóm là một khối)
+   */
+  async bulkRemove(
+    ids: string[],
+    withQuestions: boolean,
+    user: AuthUser,
+  ): Promise<GroupBulkDeleteResult> {
+    const rows = await this.prisma.questionGroup.findMany({
+      where: { id: { in: ids }, deletedAt: null },
+      select: {
+        id: true,
+        skill: true,
+        part: true,
+        passage: true,
+        transcript: true,
+        authorId: true,
+        questions: { where: { deletedAt: null }, select: { id: true } },
+      },
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    const locked = await this.refs.publishedQuestionIds(
+      rows.flatMap((row) => row.questions.map((question) => question.id)),
+    );
+
+    const skipped: BulkSkippedItem[] = [];
+    const deletable: string[] = [];
+    for (const id of ids) {
+      const row = byId.get(id);
+      if (!row) {
+        skipped.push(skip(id, null, 'NOT_FOUND'));
+        continue;
+      }
+      // Nhóm không có mã: hiện "R7 · đoạn đầu đoạn văn" để giáo viên nhận ra
+      const label = `${row.skill.charAt(0)}${row.part} · ${shortLabel(row.transcript ?? row.passage, 32) ?? 'Chưa có nội dung'}`;
+      if (row.authorId !== user.id) skipped.push(skip(id, label, 'NOT_OWNER'));
+      else if (row.questions.length > 0 && !withQuestions) {
+        skipped.push(skip(id, label, 'NOT_EMPTY'));
+      } else if (row.questions.some((question) => locked.has(question.id))) {
+        skipped.push(skip(id, label, 'IN_PUBLISHED_EXAM'));
+      } else deletable.push(id);
+    }
+
+    if (deletable.length === 0) return { deleted: 0, deletedQuestions: 0, skipped };
+
+    const now = new Date();
+    const [questions, groups] = await this.prisma.$transaction([
+      this.prisma.question.updateMany({
+        where: { groupId: { in: deletable }, deletedAt: null },
+        data: { deletedAt: now },
+      }),
+      this.prisma.questionGroup.updateMany({
+        where: { id: { in: deletable }, deletedAt: null },
+        data: { deletedAt: now },
+      }),
+    ]);
+    return { deleted: groups.count, deletedQuestions: questions.count, skipped };
   }
 }

@@ -12,6 +12,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { BulkIdsDto } from '../../../common/dto/bulk-delete.dto.js';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto.js';
 import { Trim } from '../../../common/transforms/trim.transform.js';
 import { QuestionStatus, Skill } from '../../../generated/prisma/enums.js';
@@ -105,4 +106,31 @@ export class QuestionGroupQueryDto extends PaginationQueryDto {
   )
   @IsBoolean({ message: 'mine phải là true hoặc false' })
   mine?: boolean;
+}
+
+/** Tham số chuỗi "true"/"false" → boolean (query string luôn là chuỗi) */
+const toBoolean = ({ value }: { value: unknown }) =>
+  value === 'true' ? true : value === 'false' ? false : value;
+
+export class DeleteGroupQueryDto {
+  @ApiPropertyOptional({
+    type: Boolean,
+    default: false,
+    description: 'true: xóa luôn các câu trong nhóm; false: nhóm còn câu thì không xóa được',
+  })
+  @IsOptional()
+  @Transform(toBoolean)
+  @IsBoolean({ message: 'withQuestions phải là true hoặc false' })
+  withQuestions?: boolean;
+}
+
+export class BulkDeleteGroupsDto extends BulkIdsDto {
+  @ApiPropertyOptional({
+    type: Boolean,
+    default: false,
+    description: 'true: xóa luôn các câu trong nhóm; false: bỏ qua nhóm còn câu (NOT_EMPTY)',
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'withQuestions phải là true hoặc false' })
+  withQuestions?: boolean;
 }
