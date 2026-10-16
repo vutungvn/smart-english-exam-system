@@ -112,6 +112,24 @@ enum ExamStatus {
   @@map("exam_status")
 }
 
+/// FULL: làm cả đề, đếm giờ theo thời gian của đề · PART: luyện riêng một Part, không đếm giờ
+enum AttemptMode {
+  FULL
+  PART
+
+  @@map("attempt_mode")
+}
+
+/// IN_PROGRESS → SUBMITTED (đã nộp) → GRADED (đã chấm, SPRINT-52) · CANCELLED: học viên hủy để làm lại
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+  CANCELLED
+
+  @@map("attempt_status")
+}
+
 // ================================================================
 // Nhóm Người dùng và phân quyền
 // ================================================================
@@ -195,7 +213,8 @@ model Student {
   currentScore Int?   @map("current_score")
   targetScore  Int?   @map("target_score")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_students_user_id")
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_students_user_id")
+  attempts ExamAttempt[]
 
   @@map("students")
 }
@@ -366,7 +385,8 @@ model QuestionOption {
   isCorrect  Boolean @default(false) @map("is_correct")
   orderIndex Int     @map("order_index") @db.SmallInt
 
-  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade, map: "fk_question_options_question_id")
+  question Question        @relation(fields: [questionId], references: [id], onDelete: Cascade, map: "fk_question_options_question_id")
+  answers  AttemptAnswer[]
 
   @@unique([questionId, label], map: "uq_question_options_question_label")
   @@map("question_options")
@@ -400,6 +420,7 @@ model Exam {
   author   Teacher       @relation(fields: [authorId], references: [userId], onDelete: Restrict, map: "fk_exams_author_id")
   subject  Subject       @relation(fields: [subjectId], references: [id], onDelete: Restrict, map: "fk_exams_subject_id")
   sections ExamSection[]
+  attempts ExamAttempt[]
 
   @@index([authorId], map: "ix_exams_author_id")
   @@index([subjectId], map: "ix_exams_subject_id")
@@ -417,6 +438,7 @@ model ExamSection {
 
   exam      Exam           @relation(fields: [examId], references: [id], onDelete: Cascade, map: "fk_exam_sections_exam_id")
   questions ExamQuestion[]
+  attempts  ExamAttempt[]
 
   @@unique([examId, skill, part], map: "uq_exam_sections_exam_part")
   @@index([examId, orderIndex], map: "ix_exam_sections_exam_order")
@@ -430,10 +452,64 @@ model ExamQuestion {
   questionId String @map("question_id") @db.Uuid
   orderIndex Int    @map("order_index")
 
-  section  ExamSection @relation(fields: [sectionId], references: [id], onDelete: Cascade, map: "fk_exam_questions_section_id")
-  question Question    @relation(fields: [questionId], references: [id], onDelete: Restrict, map: "fk_exam_questions_question_id")
+  section  ExamSection     @relation(fields: [sectionId], references: [id], onDelete: Cascade, map: "fk_exam_questions_section_id")
+  question Question        @relation(fields: [questionId], references: [id], onDelete: Restrict, map: "fk_exam_questions_question_id")
+  answers  AttemptAnswer[]
 
   @@unique([sectionId, questionId], map: "uq_exam_questions_section_question")
   @@index([questionId], map: "ix_exam_questions_question_id")
   @@map("exam_questions")
+}
+
+// ================================================================
+// Nhóm Làm bài
+// ================================================================
+
+/// Một lượt làm bài. Đồng hồ tính ở server: còn lại = expires_at - now (D25: bỏ remaining_seconds).
+/// Mỗi học viên chỉ có một lượt IN_PROGRESS cho mỗi đề: chỉ mục unique một phần uq_attempts_one_in_progress
+model ExamAttempt {
+  id          String        @id(map: "pk_exam_attempts") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId   String        @map("student_id") @db.Uuid
+  examId      String        @map("exam_id") @db.Uuid
+  mode        AttemptMode
+  /// Part đang luyện (chỉ có khi mode = PART)
+  sectionId   String?       @map("section_id") @db.Uuid
+  status      AttemptStatus @default(IN_PROGRESS)
+  startedAt   DateTime      @default(now()) @map("started_at") @db.Timestamptz(6)
+  /// Hạn nộp bài; NULL khi không đếm giờ (luyện theo Part)
+  expiresAt   DateTime?     @map("expires_at") @db.Timestamptz(6)
+  submittedAt DateTime?     @map("submitted_at") @db.Timestamptz(6)
+
+  student Student         @relation(fields: [studentId], references: [userId], onDelete: Restrict, map: "fk_exam_attempts_student_id")
+  exam    Exam            @relation(fields: [examId], references: [id], onDelete: Restrict, map: "fk_exam_attempts_exam_id")
+  section ExamSection?    @relation(fields: [sectionId], references: [id], onDelete: Restrict, map: "fk_exam_attempts_section_id")
+  answers AttemptAnswer[]
+
+  @@index([studentId, examId], map: "ix_exam_attempts_student_exam")
+  @@index([examId], map: "ix_exam_attempts_exam_id")
+  @@map("exam_attempts")
+}
+
+/// Câu trả lời của một câu trong lượt làm bài, ghi đè khi tự động lưu (upsert).
+/// D25: câu trắc nghiệm chỉ chọn một phương án nên lưu thẳng selected_option_id, không dùng bảng attempt_answer_options
+model AttemptAnswer {
+  id               String   @id(map: "pk_attempt_answers") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attemptId        String   @map("attempt_id") @db.Uuid
+  examQuestionId   String   @map("exam_question_id") @db.Uuid
+  selectedOptionId String?  @map("selected_option_id") @db.Uuid
+  /// Câu Writing
+  textAnswer       String?  @map("text_answer")
+  /// Học viên đánh dấu để xem lại
+  isFlagged        Boolean  @default(false) @map("is_flagged")
+  /// Thời điểm học viên trả lời (đồng bộ sau mất mạng: bản có answered_at mới hơn được giữ)
+  answeredAt       DateTime @map("answered_at") @db.Timestamptz(6)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  attempt        ExamAttempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade, map: "fk_attempt_answers_attempt_id")
+  examQuestion   ExamQuestion    @relation(fields: [examQuestionId], references: [id], onDelete: Restrict, map: "fk_attempt_answers_exam_question_id")
+  selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: Restrict, map: "fk_attempt_answers_selected_option_id")
+
+  @@unique([attemptId, examQuestionId], map: "uq_attempt_answers_attempt_question")
+  @@index([examQuestionId], map: "ix_attempt_answers_exam_question_id")
+  @@map("attempt_answers")
 }

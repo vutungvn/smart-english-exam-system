@@ -46,13 +46,19 @@ function toOptionRows(options: QuestionOptionDto[]) {
   }));
 }
 
-/** Vi phạm chỉ mục uq_questions_group_order: vị trí trong nhóm đã có câu khác */
+/**
+ * P2002 (uq_questions_group_order): vị trí trong nhóm đã có câu khác.
+ * P2003 (fk_attempt_answers_selected_option_id): bỏ một phương án học viên đã chọn
+ */
 async function withGroupOrderCheck<T>(action: () => Promise<T>): Promise<T> {
   try {
     return await action();
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       throw new AppException(ErrorCode.QUESTION_GROUP_ORDER_TAKEN);
+    }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+      throw new AppException(ErrorCode.QUESTION_OPTION_IN_USE);
     }
     throw error;
   }
@@ -210,12 +216,20 @@ export class QuestionsService {
         });
         if (count === 0) throw new AppException(ErrorCode.VERSION_CONFLICT);
 
-        // Thay toàn bộ phương án (chưa có bài làm tham chiếu tới phương án nên xóa được)
+        // Cập nhật phương án tại chỗ theo nhãn (A, B, C, D) để giữ nguyên id: câu trả lời của
+        // học viên (attempt_answers) trỏ tới id phương án. Chỉ xóa phương án có nhãn không còn dùng
         if (dto.options) {
-          await tx.questionOption.deleteMany({ where: { questionId: id } });
-          await tx.questionOption.createMany({
-            data: toOptionRows(dto.options).map((option) => ({ ...option, questionId: id })),
+          const rows = toOptionRows(dto.options);
+          await tx.questionOption.deleteMany({
+            where: { questionId: id, label: { notIn: rows.map((option) => option.label) } },
           });
+          for (const { label, ...option } of rows) {
+            await tx.questionOption.upsert({
+              where: { questionId_label: { questionId: id, label } },
+              create: { ...option, label, questionId: id },
+              update: option,
+            });
+          }
         }
       }),
     );
