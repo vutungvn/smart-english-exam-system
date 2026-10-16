@@ -468,17 +468,27 @@ model ExamQuestion {
 /// Một lượt làm bài. Đồng hồ tính ở server: còn lại = expires_at - now (D25: bỏ remaining_seconds).
 /// Mỗi học viên chỉ có một lượt IN_PROGRESS cho mỗi đề: chỉ mục unique một phần uq_attempts_one_in_progress
 model ExamAttempt {
-  id          String        @id(map: "pk_exam_attempts") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId   String        @map("student_id") @db.Uuid
-  examId      String        @map("exam_id") @db.Uuid
-  mode        AttemptMode
+  id           String        @id(map: "pk_exam_attempts") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId    String        @map("student_id") @db.Uuid
+  examId       String        @map("exam_id") @db.Uuid
+  mode         AttemptMode
   /// Part đang luyện (chỉ có khi mode = PART)
-  sectionId   String?       @map("section_id") @db.Uuid
-  status      AttemptStatus @default(IN_PROGRESS)
-  startedAt   DateTime      @default(now()) @map("started_at") @db.Timestamptz(6)
+  sectionId    String?       @map("section_id") @db.Uuid
+  status       AttemptStatus @default(IN_PROGRESS)
+  startedAt    DateTime      @default(now()) @map("started_at") @db.Timestamptz(6)
   /// Hạn nộp bài; NULL khi không đếm giờ (luyện theo Part)
-  expiresAt   DateTime?     @map("expires_at") @db.Timestamptz(6)
-  submittedAt DateTime?     @map("submitted_at") @db.Timestamptz(6)
+  expiresAt    DateTime?     @map("expires_at") @db.Timestamptz(6)
+  submittedAt  DateTime?     @map("submitted_at") @db.Timestamptz(6)
+  /// Kết quả chấm câu trắc nghiệm (ghi một lần khi nộp bài, SPRINT-52)
+  correctCount Int           @default(0) @map("correct_count")
+  wrongCount   Int           @default(0) @map("wrong_count")
+  skippedCount Int           @default(0) @map("skipped_count")
+  /// Số câu trắc nghiệm đúng
+  rawScore     Decimal?      @map("raw_score") @db.Decimal(7, 2)
+  /// Điểm theo thang của đề (TOEIC 10–990, %); NULL khi còn câu Speaking/Writing chờ AI chấm
+  scaledScore  Decimal?      @map("scaled_score") @db.Decimal(7, 2)
+  /// Điểm từng kỹ năng: [{ skill, correct, wrong, skipped, total, openCount, scaled }]
+  skillScores  Json?         @map("skill_scores")
 
   student Student         @relation(fields: [studentId], references: [userId], onDelete: Restrict, map: "fk_exam_attempts_student_id")
   exam    Exam            @relation(fields: [examId], references: [id], onDelete: Restrict, map: "fk_exam_attempts_exam_id")
@@ -501,6 +511,8 @@ model AttemptAnswer {
   textAnswer       String?  @map("text_answer")
   /// Học viên đánh dấu để xem lại
   isFlagged        Boolean  @default(false) @map("is_flagged")
+  /// Câu trắc nghiệm: đúng/sai khi nộp bài; NULL khi bỏ trống hoặc câu Speaking/Writing
+  isCorrect        Boolean? @map("is_correct")
   /// Thời điểm học viên trả lời (đồng bộ sau mất mạng: bản có answered_at mới hơn được giữ)
   answeredAt       DateTime @map("answered_at") @db.Timestamptz(6)
   updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)

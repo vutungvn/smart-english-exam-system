@@ -9736,6 +9736,207 @@
         ]
       }
     },
+    "/api/v1/attempts/{id}/submit": {
+      "post": {
+        "description": "Chấm ngay câu trắc nghiệm (đề TOEIC LR làm cả đề quy đổi 10–990, đề luyện tập và luyện theo Part tính %). Đề có câu Speaking/Writing: trạng thái SUBMITTED, scaledScore null chờ AI chấm. Nộp lại bài đã nộp (hoặc đã được tự nộp khi hết giờ) trả về kết quả cũ, không chấm lại.",
+        "operationId": "submitAttempt",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AttemptResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: ATTEMPT_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ATTEMPT_NOT_FOUND": {
+                    "summary": "ATTEMPT_NOT_FOUND: Không tìm thấy bài làm",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "ATTEMPT_NOT_FOUND",
+                        "message": "Không tìm thấy bài làm"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: ATTEMPT_NOT_IN_PROGRESS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ATTEMPT_NOT_IN_PROGRESS": {
+                    "summary": "ATTEMPT_NOT_IN_PROGRESS: Bài làm đã hủy, không nộp được",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "ATTEMPT_NOT_IN_PROGRESS",
+                        "message": "Bài làm đã hủy, không nộp được"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Nộp bài và chấm phần trắc nghiệm",
+        "tags": [
+          "Attempts"
+        ]
+      }
+    },
     "/api/v1/attempts/{id}/cancel": {
       "post": {
         "description": "Lượt đã hủy không tính vào giới hạn số lượt; câu trả lời của lượt đó được giữ lại.",
@@ -12979,6 +13180,120 @@
           "name"
         ]
       },
+      "SkillScoreItem": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "correct": {
+            "type": "integer"
+          },
+          "wrong": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer",
+            "description": "Câu trắc nghiệm bỏ trống"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Số câu trắc nghiệm của kỹ năng"
+          },
+          "openCount": {
+            "type": "integer",
+            "description": "Số câu Speaking/Writing (chấm bằng AI, làm sau)"
+          },
+          "scaled": {
+            "type": "number",
+            "nullable": true,
+            "description": "TOEIC LR: 5–495 · %: 0–100 · null khi kỹ năng chỉ có câu chờ AI chấm"
+          }
+        },
+        "required": [
+          "skill",
+          "correct",
+          "wrong",
+          "skipped",
+          "total",
+          "openCount",
+          "scaled"
+        ]
+      },
+      "AttemptResult": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "description": "GRADED: đã có điểm · SUBMITTED: còn câu Speaking/Writing chờ AI chấm",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttemptStatus"
+              }
+            ]
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scoring": {
+            "type": "string",
+            "enum": [
+              "TOEIC_990",
+              "PERCENT"
+            ],
+            "description": "TOEIC_990: làm cả đề TOEIC LR · PERCENT: đề luyện tập và mọi lượt luyện theo Part"
+          },
+          "correctCount": {
+            "type": "integer"
+          },
+          "wrongCount": {
+            "type": "integer"
+          },
+          "skippedCount": {
+            "type": "integer"
+          },
+          "rawScore": {
+            "type": "number",
+            "description": "Số câu trắc nghiệm đúng"
+          },
+          "scaledScore": {
+            "type": "number",
+            "nullable": true,
+            "description": "Điểm theo thang (TOEIC 10–990 hoặc %); null khi còn câu chờ AI chấm"
+          },
+          "pendingOpenCount": {
+            "type": "integer",
+            "description": "Số câu Speaking/Writing chờ AI chấm"
+          },
+          "skillScores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillScoreItem"
+            }
+          }
+        },
+        "required": [
+          "attemptId",
+          "status",
+          "submittedAt",
+          "scoring",
+          "correctCount",
+          "wrongCount",
+          "skippedCount",
+          "rawScore",
+          "scaledScore",
+          "pendingOpenCount",
+          "skillScores"
+        ]
+      },
       "AttemptAnswerItem": {
         "type": "object",
         "properties": {
@@ -13069,6 +13384,16 @@
               }
             ]
           },
+          "result": {
+            "nullable": true,
+            "description": "Có khi bài đã nộp",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttemptResult"
+              }
+            ]
+          },
           "resumed": {
             "type": "boolean",
             "description": "true: trả lại bài đang làm dở thay vì tạo lượt mới"
@@ -13099,6 +13424,7 @@
           "serverTime",
           "exam",
           "section",
+          "result",
           "resumed",
           "paper",
           "answers"

@@ -205,8 +205,88 @@ export class InProgressAttempt extends AttemptSummary {
   totalQuestions: number;
 }
 
+export const SCORING_STRATEGIES = ['TOEIC_990', 'PERCENT'] as const;
+
+export class SkillScoreItem {
+  @ApiProperty({ enum: Skill, enumName: 'Skill' })
+  skill: Skill;
+
+  @ApiProperty({ type: 'integer' })
+  correct: number;
+
+  @ApiProperty({ type: 'integer' })
+  wrong: number;
+
+  @ApiProperty({ type: 'integer', description: 'Câu trắc nghiệm bỏ trống' })
+  skipped: number;
+
+  @ApiProperty({ type: 'integer', description: 'Số câu trắc nghiệm của kỹ năng' })
+  total: number;
+
+  @ApiProperty({ type: 'integer', description: 'Số câu Speaking/Writing (chấm bằng AI, làm sau)' })
+  openCount: number;
+
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: 'TOEIC LR: 5–495 · %: 0–100 · null khi kỹ năng chỉ có câu chờ AI chấm',
+  })
+  scaled: number | null;
+}
+
+/** Kết quả chấm khi nộp bài (chi tiết từng câu, xem lại đáp án: SPRINT-53) */
+export class AttemptResult {
+  @ApiProperty({ format: 'uuid' })
+  attemptId: string;
+
+  @ApiProperty({
+    enum: AttemptStatus,
+    enumName: 'AttemptStatus',
+    description: 'GRADED: đã có điểm · SUBMITTED: còn câu Speaking/Writing chờ AI chấm',
+  })
+  status: AttemptStatus;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  submittedAt: Date;
+
+  @ApiProperty({
+    enum: SCORING_STRATEGIES,
+    description:
+      'TOEIC_990: làm cả đề TOEIC LR · PERCENT: đề luyện tập và mọi lượt luyện theo Part',
+  })
+  scoring: (typeof SCORING_STRATEGIES)[number];
+
+  @ApiProperty({ type: 'integer' })
+  correctCount: number;
+
+  @ApiProperty({ type: 'integer' })
+  wrongCount: number;
+
+  @ApiProperty({ type: 'integer' })
+  skippedCount: number;
+
+  @ApiProperty({ type: 'number', description: 'Số câu trắc nghiệm đúng' })
+  rawScore: number;
+
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: 'Điểm theo thang (TOEIC 10–990 hoặc %); null khi còn câu chờ AI chấm',
+  })
+  scaledScore: number | null;
+
+  @ApiProperty({ type: 'integer', description: 'Số câu Speaking/Writing chờ AI chấm' })
+  pendingOpenCount: number;
+
+  @ApiProperty({ type: [SkillScoreItem] })
+  skillScores: SkillScoreItem[];
+}
+
 /** Đầy đủ để làm bài hoặc khôi phục bài: đề (không đáp án) + các câu đã trả lời */
 export class AttemptDetail extends AttemptSummary {
+  @ApiProperty({ type: AttemptResult, nullable: true, description: 'Có khi bài đã nộp' })
+  result: AttemptResult | null;
+
   @ApiProperty({ description: 'true: trả lại bài đang làm dở thay vì tạo lượt mới' })
   resumed: boolean;
 

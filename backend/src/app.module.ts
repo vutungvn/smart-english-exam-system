@@ -3,6 +3,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PrismaModule } from './infra/prisma/prisma.module.js';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { validateEnv } from './config/env.schema.js';
 import { CommonModule } from './common/common.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
@@ -24,6 +25,8 @@ import { QuestionImportModule } from './modules/question-import/question-import.
       cache: true,
       validate: validateEnv,
     }),
+    // Tác vụ định kỳ (@Interval): tự nộp bài hết giờ
+    ScheduleModule.forRoot(),
     PrismaModule,
     RedisModule,
     MailModule,
