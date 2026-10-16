@@ -1,6 +1,14 @@
 import { downloadResponse } from '@/lib/download';
 import { api } from './generated';
 
+// Codegen gửi body { file } dạng JSON, backend nhận multipart/form-data (field "file").
+// Không tự đặt Content-Type: trình duyệt tự thêm boundary của multipart
+function toFormData(file: Blob): FormData {
+  const body = new FormData();
+  body.append('file', file);
+  return body;
+}
+
 /**
  * Bổ sung cho endpoint do codegen sinh, không sửa generated.ts (sinh lại sẽ mất).
  * File này chạy một lần khi nạp store (xem store.ts), sửa thẳng định nghĩa endpoint
@@ -27,6 +35,48 @@ export const enhancedApi = api.enhanceEndpoints({
     bulkDeleteQuestions: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
     deleteQuestionGroup: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
     bulkDeleteQuestionGroups: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
+
+    // Tải/gỡ audio, ảnh của câu, nhóm: gửi multipart; đổi tệp làm đổi kết quả kiểm tra xuất bản
+    // của đề chứa câu đó. Ghi ngay bản server trả về vào trang chi tiết để ô tệp không nháy lại
+    // tệp cũ trong lúc chờ tải lại theo tag
+    uploadQuestionMedia: {
+      query: ({ id, kind, body: { file } }) => ({
+        url: `/api/v1/teacher/questions/${id}/media/${kind}`,
+        method: 'PUT',
+        body: toFormData(file),
+      }),
+      invalidatesTags: ['Questions', 'Exams'],
+      onQueryStarted: async ({ id }, { dispatch, queryFulfilled }) => {
+        const { data } = await queryFulfilled.catch(() => ({ data: null }));
+        if (data) dispatch(api.util.upsertQueryData('getQuestion', id, data));
+      },
+    },
+    removeQuestionMedia: {
+      invalidatesTags: ['Questions', 'Exams'],
+      onQueryStarted: async ({ id }, { dispatch, queryFulfilled }) => {
+        const { data } = await queryFulfilled.catch(() => ({ data: null }));
+        if (data) dispatch(api.util.upsertQueryData('getQuestion', id, data));
+      },
+    },
+    uploadQuestionGroupMedia: {
+      query: ({ id, kind, body: { file } }) => ({
+        url: `/api/v1/teacher/question-groups/${id}/media/${kind}`,
+        method: 'PUT',
+        body: toFormData(file),
+      }),
+      invalidatesTags: ['Question Groups', 'Exams'],
+      onQueryStarted: async ({ id }, { dispatch, queryFulfilled }) => {
+        const { data } = await queryFulfilled.catch(() => ({ data: null }));
+        if (data) dispatch(api.util.upsertQueryData('getQuestionGroup', id, data));
+      },
+    },
+    removeQuestionGroupMedia: {
+      invalidatesTags: ['Question Groups', 'Exams'],
+      onQueryStarted: async ({ id }, { dispatch, queryFulfilled }) => {
+        const { data } = await queryFulfilled.catch(() => ({ data: null }));
+        if (data) dispatch(api.util.upsertQueryData('getQuestionGroup', id, data));
+      },
+    },
 
     // Làm bài: lưu câu trả lời không được làm tải lại cả đề (getAttempt) sau mỗi lần chọn;
     // bắt đầu, nộp, hủy bài làm đổi số lượt và nút "Làm tiếp" ở danh sách đề

@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FormProvider, useForm, useWatch, type Path } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { Eye, FileQuestion, RotateCw, Save, Trash2, TriangleAlert } from 'lucide-react';
 import { toApiError } from '@/api/errors';
 import {
   useCreateQuestionMutation,
   useGetQuestionQuery,
   useUpdateQuestionMutation,
+  useUploadQuestionMediaMutation,
   type QuestionDetail,
   type Skill,
 } from '@/api/generated';
@@ -22,13 +23,15 @@ import { formatDateTime } from '@/features/profile/format';
 import { useSavedFlag } from '@/features/profile/hooks/use-saved-flag';
 import { useAppSelector } from '@/hooks/hooks';
 import { applyFieldErrors } from '@/lib/form-errors';
+import { describeMediaError } from '@/lib/media-file';
 import { selectCurrentUser } from '@/store/slice/auth-slice';
 import { DeleteQuestionDialog } from '../components/DeleteQuestionDialog';
 import { EmptyState, ErrorState } from '../components/ListStates';
 import { AnswerFields } from '../form/AnswerFields';
 import { ClassificationFields } from '../form/ClassificationFields';
-import { ExplanationField, GroupFields, MediaNotice } from '../form/ExtraFields';
+import { ExplanationField, GroupFields } from '../form/ExtraFields';
 import { FormSection } from '../form/FormSection';
+import { MediaFields } from '../form/MediaFields';
 import {
   emptyFormValues,
   questionFormSchema,
@@ -37,8 +40,16 @@ import {
   type QuestionFormValues,
 } from '../form/question-form';
 import { QuestionSidePanel } from '../form/QuestionPreview';
-import { groupPath, QUESTION_LIST_PATH } from '../paths';
-import { findPartRule, OPTION_LABELS, SKILLS, STATUS_META } from '../toeic';
+import { usePendingMedia } from '../form/use-pending-media';
+import { groupPath, QUESTION_LIST_PATH, questionPath } from '../paths';
+import {
+  findPartRule,
+  OPTION_LABELS,
+  questionMediaKinds,
+  SKILLS,
+  STATUS_META,
+  type PartRule,
+} from '../toeic';
 import type { QuestionBankLocationState } from './QuestionBankPage';
 
 // Lỗi VALIDATION_ERROR của server gắn được vào các ô này
@@ -58,6 +69,11 @@ const SERVER_FIELDS: Path<QuestionFormValues>[] = [
   'options',
   ...OPTION_LABELS.map((_, i) => `options.${i}.content` as const),
 ];
+
+/** Trang tạo câu chuyển sang trang sửa khi câu đã tạo nhưng tải tệp lỗi */
+interface QuestionFormLocationState {
+  mediaError?: string;
+}
 
 /** `/teacher/questions/new` (tạo) và `/teacher/questions/:id` (sửa, hoặc chỉ xem nếu không phải tác giả) */
 export function QuestionFormPage() {
@@ -82,6 +98,17 @@ function CreateQuestion() {
 
 function EditQuestion({ id }: { id: string }) {
   const { data, error, isLoading, refetch } = useGetQuestionQuery(id);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [mediaError, setMediaError] = useState(
+    () => (location.state as QuestionFormLocationState | null)?.mediaError,
+  );
+  // Xóa thông báo khỏi lịch sử để tải lại trang không hiện lại
+  useEffect(() => {
+    if ((location.state as QuestionFormLocationState | null)?.mediaError) {
+      void navigate({ search: location.search }, { replace: true, state: null });
+    }
+  }, [location, navigate]);
 
   if (isLoading) return <EditorSkeleton />;
   if (!data) {
@@ -110,6 +137,11 @@ function EditQuestion({ id }: { id: string }) {
       question={data.data}
       defaultValues={toFormValues(data.data)}
       reload={async () => toFormValues((await refetch().unwrap()).data)}
+      notice={
+        mediaError &&
+        `Đã tạo câu hỏi nhưng chưa tải được tệp (${mediaError}). Hãy tải lại ở mục "Âm thanh & hình ảnh".`
+      }
+      onDismissNotice={() => setMediaError(undefined)}
     />
   );
 }
@@ -122,13 +154,25 @@ interface QuestionEditorProps {
   reload?: () => Promise<QuestionFormValues>;
   /** Trang quay về khi Hủy, sau khi tạo/xóa (mặc định: câu thuộc nhóm thì về nhóm, không thì về danh sách) */
   backPath?: string;
+  /** Thông báo đầu trang (câu vừa tạo nhưng tải tệp lỗi) */
+  notice?: string;
+  onDismissNotice?: () => void;
 }
 
-function QuestionEditor({ defaultValues, question, reload, backPath }: QuestionEditorProps) {
+function QuestionEditor({
+  defaultValues,
+  question,
+  reload,
+  backPath,
+  notice,
+  onDismissNotice,
+}: QuestionEditorProps) {
   const navigate = useNavigate();
   const user = useAppSelector(selectCurrentUser);
   const [createQuestion] = useCreateQuestionMutation();
   const [updateQuestion] = useUpdateQuestionMutation();
+  const [uploadMedia] = useUploadQuestionMediaMutation();
+  const pendingMedia = usePendingMedia();
   const { saved, markSaved, clearSaved } = useSavedFlag(4000);
   const [savedMessage, setSavedMessage] = useState('');
   const [conflict, setConflict] = useState(false);
@@ -148,6 +192,7 @@ function QuestionEditor({ defaultValues, question, reload, backPath }: QuestionE
   const {
     handleSubmit,
     reset,
+    resetField,
     setError,
     clearErrors,
     getValues,
@@ -184,6 +229,31 @@ function QuestionEditor({ defaultValues, question, reload, backPath }: QuestionE
     });
   };
 
+  /** Câu vừa tạo: tải các tệp đã chọn; trả về lỗi của từng tệp không tải được */
+  const uploadPending = async (id: string, currentRule: PartRule): Promise<string[]> => {
+    const failures: string[] = [];
+    for (const kind of questionMediaKinds(currentRule.skill, currentRule.part)) {
+      const item = pendingMedia.pending[kind];
+      if (!item) continue;
+      try {
+        await uploadMedia({ id, kind, body: { file: item.file } }).unwrap();
+      } catch (err) {
+        failures.push(`${kind === 'audio' ? 'âm thanh' : 'hình ảnh'}: ${describeMediaError(err)}`);
+      }
+    }
+    return failures;
+  };
+
+  /** Tải/gỡ tệp ở câu đang sửa làm đổi updatedAt: đổi mốc của form để lần Lưu sau không bị 409 */
+  const mediaSaved = (previousUpdatedAt: string, saved: QuestionDetail) => {
+    // Form đang giữ bản cũ hơn (câu bị sửa ở nơi khác) thì để nguyên, lần Lưu sau vẫn báo xung đột
+    if (getValues('updatedAt') === previousUpdatedAt) {
+      resetField('updatedAt', { defaultValue: saved.updatedAt });
+    }
+    setSavedMessage('Đã lưu tệp');
+    markSaved();
+  };
+
   const save = async (values: QuestionFormValues, createAnother: boolean) => {
     const currentRule = values.skill ? findPartRule(values.skill, values.part) : undefined;
     if (!currentRule) return;
@@ -201,7 +271,14 @@ function QuestionEditor({ defaultValues, question, reload, backPath }: QuestionE
         return;
       }
 
-      await createQuestion(payload).unwrap();
+      const { data: created } = await createQuestion(payload).unwrap();
+      const failures = await uploadPending(created.id, currentRule);
+      pendingMedia.clear();
+      if (failures.length) {
+        // Câu đã tạo: sang trang sửa câu đó để tải lại tệp
+        const state: QuestionFormLocationState = { mediaError: failures.join('; ') };
+        return void navigate(questionPath(created.id), { state });
+      }
       if (!createAnother) {
         const state: QuestionBankLocationState = { flash: 'Đã tạo câu hỏi mới' };
         return void navigate(returnPath, { state });
@@ -247,6 +324,9 @@ function QuestionEditor({ defaultValues, question, reload, backPath }: QuestionE
         onSubmit={handleSubmit((values) => save(values, false))}
         className="space-y-6"
       >
+        {/* Mốc khóa lạc quan không có ô nhập: đăng ký để resetField đổi được sau khi tải tệp
+            (resetField bỏ qua trường chưa đăng ký); để ngoài fieldset vì ô bị disabled thì RHF bỏ giá trị */}
+        <input type="hidden" {...register('updatedAt')} />
         <PageHeader
           breadcrumbs={[
             { label: 'Ngân hàng câu hỏi', to: QUESTION_LIST_PATH },
@@ -282,6 +362,8 @@ function QuestionEditor({ defaultValues, question, reload, backPath }: QuestionE
             giả mới sửa hoặc xóa được.
           </p>
         )}
+
+        {notice && <FormAlert message={notice} onClose={() => onDismissNotice?.()} />}
 
         {conflict && (
           <div
@@ -340,10 +422,14 @@ function QuestionEditor({ defaultValues, question, reload, backPath }: QuestionE
 
             {rule && (
               <FormSection step={rule.group === 'required' ? 5 : 4} title="Âm thanh & hình ảnh">
-                <MediaNotice
+                <MediaFields
                   rule={rule}
-                  audioUrl={question?.audioUrl}
-                  imageUrl={question?.imageUrl}
+                  question={question}
+                  readOnly={readOnly}
+                  disabled={isSubmitting}
+                  pending={pendingMedia.pending}
+                  onPendingChange={pendingMedia.setFile}
+                  onSaved={mediaSaved}
                 />
               </FormSection>
             )}

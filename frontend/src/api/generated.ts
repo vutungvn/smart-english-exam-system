@@ -229,6 +229,48 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ['Question Groups'],
       }),
+      uploadQuestionMedia: build.mutation<
+        UploadQuestionMediaApiResponse,
+        UploadQuestionMediaApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/questions/${queryArg.id}/media/${queryArg.kind}`,
+          method: 'PUT',
+          body: queryArg.body,
+        }),
+        invalidatesTags: ['Questions'],
+      }),
+      removeQuestionMedia: build.mutation<
+        RemoveQuestionMediaApiResponse,
+        RemoveQuestionMediaApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/questions/${queryArg.id}/media/${queryArg.kind}`,
+          method: 'DELETE',
+        }),
+        invalidatesTags: ['Questions'],
+      }),
+      uploadQuestionGroupMedia: build.mutation<
+        UploadQuestionGroupMediaApiResponse,
+        UploadQuestionGroupMediaApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/question-groups/${queryArg.id}/media/${queryArg.kind}`,
+          method: 'PUT',
+          body: queryArg.body,
+        }),
+        invalidatesTags: ['Question Groups'],
+      }),
+      removeQuestionGroupMedia: build.mutation<
+        RemoveQuestionGroupMediaApiResponse,
+        RemoveQuestionGroupMediaApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/question-groups/${queryArg.id}/media/${queryArg.kind}`,
+          method: 'DELETE',
+        }),
+        invalidatesTags: ['Question Groups'],
+      }),
       getQuestionImportTemplate: build.query<
         GetQuestionImportTemplateApiResponse,
         GetQuestionImportTemplateApiArg
@@ -648,6 +690,54 @@ export type BulkDeleteQuestionGroupsApiResponse = /** status 200 Thành công */
   data: GroupBulkDeleteResult;
 };
 export type BulkDeleteQuestionGroupsApiArg = BulkDeleteGroupsDto;
+export type UploadQuestionMediaApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionDetail;
+};
+export type UploadQuestionMediaApiArg = {
+  id: string;
+  /** audio hoặc image */
+  kind: 'audio' | 'image';
+  body: {
+    /** audio: MP3 tối đa 20 MB · image: JPG, PNG, WebP tối đa 5 MB */
+    file: Blob;
+  };
+};
+export type RemoveQuestionMediaApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionDetail;
+};
+export type RemoveQuestionMediaApiArg = {
+  id: string;
+  /** audio hoặc image */
+  kind: 'audio' | 'image';
+};
+export type UploadQuestionGroupMediaApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionGroupDetail;
+};
+export type UploadQuestionGroupMediaApiArg = {
+  id: string;
+  /** audio hoặc image */
+  kind: 'audio' | 'image';
+  body: {
+    /** audio: MP3 tối đa 20 MB · image: JPG, PNG, WebP tối đa 5 MB */
+    file: Blob;
+  };
+};
+export type RemoveQuestionGroupMediaApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionGroupDetail;
+};
+export type RemoveQuestionGroupMediaApiArg = {
+  id: string;
+  /** audio hoặc image */
+  kind: 'audio' | 'image';
+};
 export type GetQuestionImportTemplateApiResponse = /** status 200 Tệp .zip */ Blob;
 export type GetQuestionImportTemplateApiArg = void;
 export type PreviewQuestionImportApiResponse = /** status 200 Thành công */ {
@@ -896,6 +986,7 @@ export type ErrorCode =
   | 'AVATAR_INVALID_IMAGE'
   | 'MEDIA_LINK_INVALID'
   | 'MEDIA_RANGE_NOT_SATISFIABLE'
+  | 'MEDIA_INVALID_FILE'
   | 'SUBJECT_NOT_FOUND'
   | 'QUESTION_NOT_FOUND'
   | 'QUESTION_GROUP_NOT_FOUND'
@@ -1742,6 +1833,10 @@ export const {
   useUpdateQuestionGroupMutation,
   useDeleteQuestionGroupMutation,
   useBulkDeleteQuestionGroupsMutation,
+  useUploadQuestionMediaMutation,
+  useRemoveQuestionMediaMutation,
+  useUploadQuestionGroupMediaMutation,
+  useRemoveQuestionGroupMediaMutation,
   useGetQuestionImportTemplateQuery,
   usePreviewQuestionImportMutation,
   useConfirmQuestionImportMutation,

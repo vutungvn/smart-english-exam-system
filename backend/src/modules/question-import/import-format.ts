@@ -1,4 +1,4 @@
-import { Skill } from '../../generated/prisma/enums.js';
+import { MEDIA_LIMITS } from '../questions/question-media.js';
 
 /**
  * Định dạng tệp nhập câu hỏi (Ke_hoach_soan_cau_hoi.md Mục 5): một tệp .zip gồm questions.xlsx
@@ -20,8 +20,8 @@ export const IMPORT_LIMITS = {
   /** .xlsx cũng là một tệp zip: tổng kích thước các phần XML bên trong sau giải nén */
   xlsxInnerBytes: 100 * MB,
   xlsxInnerEntries: 500,
-  audioBytes: 20 * MB,
-  imageBytes: 5 * MB,
+  audioBytes: MEDIA_LIMITS.audio,
+  imageBytes: MEDIA_LIMITS.image,
   groupRows: 500,
   questionRows: 2000,
 } as const;
@@ -104,47 +104,5 @@ export const MEDIA_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,150}\.(mp3|jpe?g
 /** Writing Part 1: dòng cuối của content là hai từ cho trước, ví dụ "Words: airport / because" */
 export const WRITING_WORDS_PATTERN = /^words:\s*[^/]*\S[^/]*\/[^/]*\S[^/]*$/i;
 
-export type MediaKind = 'audio' | 'image';
-
-/** Part nào được gắn audio/ảnh (ở câu hay ở nhóm), và Part nào nên có (thiếu thì cảnh báo) */
-interface MediaRule {
-  allowed: boolean;
-  recommended: boolean;
-}
-
-const key = (skill: Skill, part: number) => `${skill}-${part}`;
-
-// Câu: L1 ảnh + audio; L2 audio; S2, W1 ảnh; S3, S4 audio đọc câu hỏi
-const QUESTION_AUDIO = new Set([
-  key(Skill.LISTENING, 1),
-  key(Skill.LISTENING, 2),
-  key(Skill.SPEAKING, 3),
-  key(Skill.SPEAKING, 4),
-]);
-const QUESTION_IMAGE = new Set([
-  key(Skill.LISTENING, 1),
-  key(Skill.SPEAKING, 2),
-  key(Skill.WRITING, 1),
-]);
-// Nhóm: L3, L4 audio hội thoại; biểu đồ L3, L4, ảnh đoạn văn R6, R7, bảng thông tin S4
-const GROUP_AUDIO = new Set([key(Skill.LISTENING, 3), key(Skill.LISTENING, 4)]);
-const GROUP_IMAGE = new Set([
-  key(Skill.LISTENING, 3),
-  key(Skill.LISTENING, 4),
-  key(Skill.READING, 6),
-  key(Skill.READING, 7),
-  key(Skill.SPEAKING, 4),
-]);
-
-export function questionMediaRule(kind: MediaKind, skill: Skill, part: number): MediaRule {
-  const set = kind === 'audio' ? QUESTION_AUDIO : QUESTION_IMAGE;
-  const has = set.has(key(skill, part));
-  return { allowed: has, recommended: has };
-}
-
-export function groupMediaRule(kind: MediaKind, skill: Skill, part: number): MediaRule {
-  const k = key(skill, part);
-  if (kind === 'audio') return { allowed: GROUP_AUDIO.has(k), recommended: GROUP_AUDIO.has(k) };
-  // Ảnh của nhóm là tùy chọn (chỉ một số đoạn hội thoại có biểu đồ)
-  return { allowed: GROUP_IMAGE.has(k), recommended: false };
-}
+// Quy tắc audio/ảnh theo Part dùng chung với tải lên trong form câu hỏi
+export { groupMediaRule, questionMediaRule, type MediaKind } from '../questions/question-media.js';

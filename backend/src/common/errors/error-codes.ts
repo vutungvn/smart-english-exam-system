@@ -41,6 +41,7 @@ export const ErrorCode = {
   AVATAR_INVALID_IMAGE: 'AVATAR_INVALID_IMAGE',
   MEDIA_LINK_INVALID: 'MEDIA_LINK_INVALID',
   MEDIA_RANGE_NOT_SATISFIABLE: 'MEDIA_RANGE_NOT_SATISFIABLE',
+  MEDIA_INVALID_FILE: 'MEDIA_INVALID_FILE',
 
   // Ngân hàng câu hỏi
   SUBJECT_NOT_FOUND: 'SUBJECT_NOT_FOUND',
@@ -196,6 +197,10 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.MEDIA_LINK_INVALID]: {
     status: HttpStatus.FORBIDDEN,
     message: 'Liên kết tệp không hợp lệ hoặc đã hết hạn, vui lòng tải lại trang',
+  },
+  [ErrorCode.MEDIA_INVALID_FILE]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: 'Tệp không hợp lệ: âm thanh phải là MP3, hình ảnh phải là JPG, PNG hoặc WebP',
   },
   [ErrorCode.MEDIA_RANGE_NOT_SATISFIABLE]: {
     status: HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE,

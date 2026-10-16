@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { fileTypeFromBuffer } from 'file-type';
 import { randomUUID } from 'node:crypto';
 import type { Readable } from 'node:stream';
 import { AppException } from '../../common/errors/app.exception.js';
@@ -12,13 +11,10 @@ import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { RedisService } from '../../infra/redis/redis.service.js';
 import { StorageService } from '../../infra/storage/storage.service.js';
 import { excerpt, partOrder } from '../exams/exam-structure.js';
-import {
-  QUESTION_MEDIA_KEY_PREFIX,
-  QUESTION_MEDIA_TYPES,
-  type QuestionMediaExt,
-} from '../media/media.constants.js';
+import { QUESTION_MEDIA_KEY_PREFIX, QUESTION_MEDIA_TYPES } from '../media/media.constants.js';
+import { sniffMedia } from '../questions/question-media.js';
 import { findPartRule } from '../questions/toeic-parts.js';
-import { CODE_PATTERN, IMPORT_LIMITS, MEDIA_DIR, type MediaKind } from './import-format.js';
+import { CODE_PATTERN, IMPORT_LIMITS, MEDIA_DIR } from './import-format.js';
 import {
   validateImport,
   type ImportCatalog,
@@ -52,14 +48,6 @@ const importZipKey = (userId: string) => `imports/${userId}.zip`;
 const recordKey = (token: string) => `question-import:${token}`;
 const userKey = (userId: string) => `question-import:user:${userId}`;
 const lockKey = (token: string) => `question-import:lock:${token}`;
-
-/** Định dạng nhận được, nhận dạng theo nội dung tệp (file-type) */
-const SNIFFED: Record<string, { kind: MediaKind; ext: QuestionMediaExt }> = {
-  'audio/mpeg': { kind: 'audio', ext: 'mp3' },
-  'image/jpeg': { kind: 'image', ext: 'jpg' },
-  'image/png': { kind: 'image', ext: 'png' },
-  'image/webp': { kind: 'image', ext: 'webp' },
-};
 
 /** Kết quả đọc và kiểm tra một tệp .zip; confirm và script seed dùng lại */
 export interface ImportAnalysis {
@@ -430,7 +418,7 @@ export class QuestionImportService {
       try {
         // Giải nén cả tệp: phát hiện luôn tệp hỏng ngay ở bước xem trước
         const data = await zip.read(file.entryName, maxBytes);
-        const sniffed = SNIFFED[(await fileTypeFromBuffer(data))?.mime ?? ''];
+        const sniffed = await sniffMedia(data);
         if (sniffed) Object.assign(info, sniffed);
       } catch (error) {
         if (!(error instanceof AppException)) throw error;

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Link } from 'react-router';
-import { ArrowUpRight, Clock, Info, Layers, Plus } from 'lucide-react';
+import { ArrowUpRight, Layers, Plus } from 'lucide-react';
 import {
   useGetQuestionGroupQuery,
   useListQuestionGroupsQuery,
@@ -9,8 +9,6 @@ import {
 } from '@/api/generated';
 import { FormField } from '@/components/form/FormField';
 import { NativeSelect } from '@/components/form/NativeSelect';
-import { QuestionMedia } from '@/components/QuestionMedia';
-import { IMPORT_PATH } from '@/features/question-import/import-meta';
 import { groupPath, newGroupPath } from '../paths';
 import { groupText, type PartRule } from '../toeic';
 import { Counter } from './AnswerFields';
@@ -226,52 +224,5 @@ export function ExplanationField({ rule }: { rule?: PartRule }) {
         {...register('explanation')}
       />
     </FormField>
-  );
-}
-
-const MEDIA_TEXT: Record<Exclude<PartRule['media'], 'none'>, string> = {
-  audio: 'tệp âm thanh',
-  image: 'hình ảnh',
-  'audio+image': 'tệp âm thanh và hình ảnh',
-};
-
-// Âm thanh, hình ảnh gắn khi nhập câu hỏi từ tệp .zip (form không tải tệp lên)
-export function MediaNotice({
-  rule,
-  audioUrl,
-  imageUrl,
-}: {
-  rule: PartRule;
-  audioUrl?: string | null;
-  imageUrl?: string | null;
-}) {
-  if (rule.media === 'none') {
-    return (
-      <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Info className="size-4 shrink-0 text-subtle" />
-        Part {rule.part} không dùng âm thanh hay hình ảnh.
-      </p>
-    );
-  }
-
-  const needAudio = rule.media.includes('audio');
-  const needImage = rule.media.includes('image');
-  return (
-    <div className="space-y-3">
-      <div className="grid items-start gap-3 sm:grid-cols-2">
-        {needImage && <QuestionMedia kind="image" url={imageUrl} />}
-        {needAudio && <QuestionMedia kind="audio" url={audioUrl} />}
-      </div>
-      <p className="flex items-start gap-2 text-xs text-subtle">
-        <Clock className="mt-0.5 size-3.5 shrink-0" />
-        <span>
-          Part {rule.part} cần {MEDIA_TEXT[rule.media]}. Tệp được gắn khi{' '}
-          <Link to={IMPORT_PATH} className="font-semibold text-primary hover:text-brand">
-            nhập câu hỏi từ tệp .zip
-          </Link>
-          ; chưa có tệp thì vẫn lưu câu được, đề thi chỉ cảnh báo khi xuất bản.
-        </span>
-      </p>
-    </div>
   );
 }
