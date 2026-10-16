@@ -28,6 +28,14 @@ export const enhancedApi = api.enhanceEndpoints({
     deleteQuestionGroup: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
     bulkDeleteQuestionGroups: { invalidatesTags: ['Questions', 'Question Groups', 'Exams'] },
 
+    // Làm bài: lưu câu trả lời không được làm tải lại cả đề (getAttempt) sau mỗi lần chọn;
+    // bắt đầu, nộp, hủy bài làm đổi số lượt và nút "Làm tiếp" ở danh sách đề
+    saveAnswer: { invalidatesTags: [] },
+    syncAnswers: { invalidatesTags: [] },
+    startAttempt: { invalidatesTags: ['Attempts', 'Exam Catalog'] },
+    submitAttempt: { invalidatesTags: ['Attempts', 'Exam Catalog'] },
+    cancelAttempt: { invalidatesTags: ['Attempts', 'Exam Catalog'] },
+
     // Nhập câu hỏi từ tệp .zip
     previewQuestionImport: {
       query: ({ file }) => {

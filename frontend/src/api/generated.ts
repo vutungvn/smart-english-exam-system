@@ -7,6 +7,8 @@ export const addTagTypes = [
   'Question Groups',
   'Question Import',
   'Exams',
+  'Exam Catalog',
+  'Attempts',
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -352,6 +354,66 @@ const injectedRtkApi = api
           method: 'POST',
         }),
         invalidatesTags: ['Exams'],
+      }),
+      listPublishedExams: build.query<ListPublishedExamsApiResponse, ListPublishedExamsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/exams`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+            scoringScale: queryArg.scoringScale,
+            skill: queryArg.skill,
+            q: queryArg.q,
+          },
+        }),
+        providesTags: ['Exam Catalog'],
+      }),
+      getPublishedExam: build.query<GetPublishedExamApiResponse, GetPublishedExamApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/exams/${queryArg}` }),
+        providesTags: ['Exam Catalog'],
+      }),
+      startAttempt: build.mutation<StartAttemptApiResponse, StartAttemptApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/exams/${queryArg.id}/attempts`,
+          method: 'POST',
+          body: queryArg.startAttemptDto,
+        }),
+        invalidatesTags: ['Attempts'],
+      }),
+      listInProgressAttempts: build.query<
+        ListInProgressAttemptsApiResponse,
+        ListInProgressAttemptsApiArg
+      >({
+        query: () => ({ url: `/api/v1/me/attempts/in-progress` }),
+        providesTags: ['Attempts'],
+      }),
+      getAttempt: build.query<GetAttemptApiResponse, GetAttemptApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/attempts/${queryArg}` }),
+        providesTags: ['Attempts'],
+      }),
+      saveAnswer: build.mutation<SaveAnswerApiResponse, SaveAnswerApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/attempts/${queryArg.id}/answers/${queryArg.examQuestionId}`,
+          method: 'PUT',
+          body: queryArg.saveAnswerDto,
+        }),
+        invalidatesTags: ['Attempts'],
+      }),
+      syncAnswers: build.mutation<SyncAnswersApiResponse, SyncAnswersApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/attempts/${queryArg.id}/answers`,
+          method: 'PATCH',
+          body: queryArg.syncAnswersDto,
+        }),
+        invalidatesTags: ['Attempts'],
+      }),
+      submitAttempt: build.mutation<SubmitAttemptApiResponse, SubmitAttemptApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/attempts/${queryArg}/submit`, method: 'POST' }),
+        invalidatesTags: ['Attempts'],
+      }),
+      cancelAttempt: build.mutation<CancelAttemptApiResponse, CancelAttemptApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/attempts/${queryArg}/cancel`, method: 'POST' }),
+        invalidatesTags: ['Attempts'],
       }),
     }),
     overrideExisting: false,
@@ -717,6 +779,85 @@ export type UnpublishExamApiResponse = /** status 200 Thành công */ {
   data: ExamDetail;
 };
 export type UnpublishExamApiArg = string;
+export type ListPublishedExamsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamCatalogItem[];
+  meta: PaginationMetaDto;
+};
+export type ListPublishedExamsApiArg = {
+  page?: number;
+  limit?: number;
+  scoringScale?: ScoringScale;
+  /** Đề có Part của kỹ năng này */
+  skill?: Skill;
+  /** Tìm theo tên đề (không phân biệt hoa thường) */
+  q?: string;
+};
+export type GetPublishedExamApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamCatalogDetail;
+};
+export type GetPublishedExamApiArg = string;
+export type StartAttemptApiResponse =
+  | /** status 200 Làm tiếp bài đang dở (resumed = true) */ {
+      success: true;
+      status: number;
+      data: AttemptDetail;
+    }
+  | /** status 201 Tạo lượt mới */ {
+      success: true;
+      status: number;
+      data: AttemptDetail;
+    };
+export type StartAttemptApiArg = {
+  id: string;
+  startAttemptDto: StartAttemptDto;
+};
+export type ListInProgressAttemptsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: InProgressAttempt[];
+};
+export type ListInProgressAttemptsApiArg = void;
+export type GetAttemptApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AttemptDetail;
+};
+export type GetAttemptApiArg = string;
+export type SaveAnswerApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: SaveAnswerResult;
+};
+export type SaveAnswerApiArg = {
+  id: string;
+  examQuestionId: string;
+  saveAnswerDto: SaveAnswerDto;
+};
+export type SyncAnswersApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: SyncAnswersResult;
+};
+export type SyncAnswersApiArg = {
+  id: string;
+  syncAnswersDto: SyncAnswersDto;
+};
+export type SubmitAttemptApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AttemptResult;
+};
+export type SubmitAttemptApiArg = string;
+export type CancelAttemptApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: object | null;
+};
+export type CancelAttemptApiArg = string;
 export type UserStatus = 'PENDING_VERIFICATION' | 'PENDING_APPROVAL' | 'ACTIVE' | 'LOCKED';
 export type RegisterResult = {
   id: string;
@@ -762,6 +903,7 @@ export type ErrorCode =
   | 'QUESTION_GROUP_ORDER_TAKEN'
   | 'QUESTION_CODE_TAKEN'
   | 'QUESTION_IN_PUBLISHED_EXAM'
+  | 'QUESTION_OPTION_IN_USE'
   | 'QUESTION_IMPORT_INVALID_FILE'
   | 'QUESTION_IMPORT_NOT_FOUND'
   | 'QUESTION_IMPORT_HAS_ERRORS'
@@ -772,7 +914,14 @@ export type ErrorCode =
   | 'EXAM_PUBLISHED'
   | 'EXAM_SECTION_EXISTS'
   | 'EXAM_QUESTION_DUPLICATE'
-  | 'EXAM_NOT_PUBLISHABLE';
+  | 'EXAM_NOT_PUBLISHABLE'
+  | 'ATTEMPT_NOT_FOUND'
+  | 'ATTEMPT_IN_PROGRESS'
+  | 'ATTEMPT_LIMIT_REACHED'
+  | 'ATTEMPT_PART_PRACTICE_DISABLED'
+  | 'ATTEMPT_NOT_IN_PROGRESS'
+  | 'ATTEMPT_EXPIRED'
+  | 'ATTEMPT_QUESTION_NOT_FOUND';
 export type FieldErrorDto = {
   /** Trường lỗi, trường lồng nhau dạng address.city */
   field: string;
@@ -1368,6 +1517,201 @@ export type ExamPaper = {
   totalQuestions: number;
   sections: PaperSection[];
 };
+export type AttemptMode = 'FULL' | 'PART';
+export type MyInProgressRef = {
+  id: string;
+  mode: AttemptMode;
+  sectionId: string | null;
+  /** Số giây còn lại do server tính từ expiresAt; null khi không đếm giờ (luyện theo Part) */
+  remainingSeconds: number | null;
+};
+export type ExamCatalogItem = {
+  id: string;
+  title: string;
+  description: string | null;
+  kind: ExamKind;
+  scoringScale: ScoringScale;
+  /** Thời gian làm cả đề (phút) */
+  durationMinutes: number;
+  /** null: không giới hạn */
+  maxAttempts: number | null;
+  allowPartPractice: boolean;
+  publishedAt: string | null;
+  /** Theo thứ tự trong đề */
+  skills: Skill[];
+  sectionCount: number;
+  questionCount: number;
+  /** Số lượt làm cả đề đã dùng (không tính lượt đã hủy và lượt luyện theo Part) */
+  attemptsUsed: number;
+  /** null: không giới hạn */
+  attemptsLeft: number | null;
+  inProgress: MyInProgressRef | null;
+};
+export type ExamCatalogSection = {
+  /** Gửi khi bắt đầu luyện riêng Part này */
+  id: string;
+  skill: Skill;
+  part: number;
+  name: string;
+  questionCount: number;
+};
+export type ExamCatalogDetail = {
+  id: string;
+  title: string;
+  description: string | null;
+  kind: ExamKind;
+  scoringScale: ScoringScale;
+  /** Thời gian làm cả đề (phút) */
+  durationMinutes: number;
+  /** null: không giới hạn */
+  maxAttempts: number | null;
+  allowPartPractice: boolean;
+  publishedAt: string | null;
+  /** Theo thứ tự trong đề */
+  skills: Skill[];
+  sectionCount: number;
+  questionCount: number;
+  /** Số lượt làm cả đề đã dùng (không tính lượt đã hủy và lượt luyện theo Part) */
+  attemptsUsed: number;
+  /** null: không giới hạn */
+  attemptsLeft: number | null;
+  inProgress: MyInProgressRef | null;
+  sections: ExamCatalogSection[];
+};
+export type AttemptStatus = 'IN_PROGRESS' | 'SUBMITTED' | 'GRADED' | 'CANCELLED';
+export type AttemptExamRef = {
+  id: string;
+  title: string;
+  scoringScale: ScoringScale;
+  durationMinutes: number;
+};
+export type AttemptSectionRef = {
+  id: string;
+  skill: Skill;
+  part: number;
+  name: string;
+};
+export type SkillScoreItem = {
+  skill: Skill;
+  correct: number;
+  wrong: number;
+  /** Câu trắc nghiệm bỏ trống */
+  skipped: number;
+  /** Số câu trắc nghiệm của kỹ năng */
+  total: number;
+  /** Số câu Speaking/Writing (chấm bằng AI, làm sau) */
+  openCount: number;
+  /** TOEIC LR: 5–495 · %: 0–100 · null khi kỹ năng chỉ có câu chờ AI chấm */
+  scaled: number | null;
+};
+export type AttemptResult = {
+  attemptId: string;
+  /** GRADED: đã có điểm · SUBMITTED: còn câu Speaking/Writing chờ AI chấm */
+  status: AttemptStatus;
+  submittedAt: string;
+  /** TOEIC_990: làm cả đề TOEIC LR · PERCENT: đề luyện tập và mọi lượt luyện theo Part */
+  scoring: 'TOEIC_990' | 'PERCENT';
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  /** Số câu trắc nghiệm đúng */
+  rawScore: number;
+  /** Điểm theo thang (TOEIC 10–990 hoặc %); null khi còn câu chờ AI chấm */
+  scaledScore: number | null;
+  /** Số câu Speaking/Writing chờ AI chấm */
+  pendingOpenCount: number;
+  skillScores: SkillScoreItem[];
+};
+export type AttemptAnswerItem = {
+  examQuestionId: string;
+  selectedOptionId: string | null;
+  textAnswer: string | null;
+  isFlagged: boolean;
+  answeredAt: string;
+};
+export type AttemptDetail = {
+  id: string;
+  mode: AttemptMode;
+  status: AttemptStatus;
+  startedAt: string;
+  expiresAt: string | null;
+  submittedAt: string | null;
+  /** Số giây còn lại do server tính từ expiresAt; null khi không đếm giờ (luyện theo Part) */
+  remainingSeconds: number | null;
+  /** Giờ server, để FE bù lệch đồng hồ */
+  serverTime: string;
+  exam: AttemptExamRef;
+  /** Part đang luyện (mode PART) */
+  section: AttemptSectionRef | null;
+  /** Có khi bài đã nộp */
+  result: AttemptResult | null;
+  /** true: trả lại bài đang làm dở thay vì tạo lượt mới */
+  resumed: boolean;
+  /** Không có isCorrect, sampleAnswer, explanation, transcript. Luyện theo Part chỉ có Part đó */
+  paper: ExamPaper;
+  answers: AttemptAnswerItem[];
+};
+export type StartAttemptDto = {
+  /** FULL: làm cả đề, đếm giờ · PART: luyện riêng một Part, không đếm giờ */
+  mode: AttemptMode;
+  /** Bắt buộc khi mode = PART */
+  sectionId?: string;
+};
+export type InProgressAttempt = {
+  id: string;
+  mode: AttemptMode;
+  status: AttemptStatus;
+  startedAt: string;
+  expiresAt: string | null;
+  submittedAt: string | null;
+  /** Số giây còn lại do server tính từ expiresAt; null khi không đếm giờ (luyện theo Part) */
+  remainingSeconds: number | null;
+  /** Giờ server, để FE bù lệch đồng hồ */
+  serverTime: string;
+  exam: AttemptExamRef;
+  /** Part đang luyện (mode PART) */
+  section: AttemptSectionRef | null;
+  /** Số câu đã chọn đáp án hoặc đã viết */
+  answeredCount: number;
+  totalQuestions: number;
+};
+export type SaveAnswerResult = {
+  answer: AttemptAnswerItem;
+  /** false: server đã có bản trả lời mới hơn (answeredAt lớn hơn) nên giữ bản đó */
+  applied: boolean;
+  /** Số giây còn lại do server tính từ expiresAt; null khi không đếm giờ (luyện theo Part) */
+  remainingSeconds: number | null;
+};
+export type SaveAnswerDto = {
+  selectedOptionId?: string | null;
+  /** Câu Writing */
+  textAnswer?: string | null;
+  /** Đánh dấu để xem lại */
+  isFlagged?: boolean;
+  /** Lúc học viên trả lời (mặc định: lúc server nhận); bản mới hơn được giữ */
+  answeredAt?: string;
+};
+export type SyncAnswersResult = {
+  /** Số câu trả lời đã ghi */
+  applied: number;
+  /** Bỏ qua: server có bản mới hơn, hoặc trả lời sau khi đã hết giờ */
+  ignored: number;
+  /** Số giây còn lại do server tính từ expiresAt; null khi không đếm giờ (luyện theo Part) */
+  remainingSeconds: number | null;
+};
+export type SyncAnswerItemDto = {
+  selectedOptionId?: string | null;
+  /** Câu Writing */
+  textAnswer?: string | null;
+  /** Đánh dấu để xem lại */
+  isFlagged?: boolean;
+  examQuestionId: string;
+  /** Bắt buộc khi đồng bộ lô */
+  answeredAt: string;
+};
+export type SyncAnswersDto = {
+  answers: SyncAnswerItemDto[];
+};
 export const {
   useRegisterMutation,
   useVerifyEmailMutation,
@@ -1416,4 +1760,13 @@ export const {
   usePreviewExamQuery,
   usePublishExamMutation,
   useUnpublishExamMutation,
+  useListPublishedExamsQuery,
+  useGetPublishedExamQuery,
+  useStartAttemptMutation,
+  useListInProgressAttemptsQuery,
+  useGetAttemptQuery,
+  useSaveAnswerMutation,
+  useSyncAnswersMutation,
+  useSubmitAttemptMutation,
+  useCancelAttemptMutation,
 } = injectedRtkApi;
