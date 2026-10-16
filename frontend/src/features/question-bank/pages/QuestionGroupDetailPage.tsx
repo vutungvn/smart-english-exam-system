@@ -20,13 +20,13 @@ import {
   type QuestionSummary,
 } from '@/api/generated';
 import { ButtonLink } from '@/components/ButtonLink';
+import { FormAlert } from '@/components/form/FormAlert';
 import { MediaUploadSlot } from '@/components/media/MediaUploadSlot';
 import { PageHeader } from '@/components/PageHeader';
 import { QuestionMedia } from '@/components/QuestionMedia';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/features/profile/format';
 import { useAppSelector } from '@/hooks/hooks';
-import type { MediaKind } from '@/lib/media-file';
 import { cn } from '@/lib/utils';
 import { selectCurrentUser } from '@/store/slice/auth-slice';
 import { DeleteGroupDialog } from '../components/DeleteGroupDialog';
@@ -38,6 +38,7 @@ import { GROUP_LIST_PATH, groupEditPath, newQuestionPath, questionPath } from '.
 import {
   findPartRule,
   groupMediaKinds,
+  groupMediaLabel,
   groupMediaOptional,
   groupSize,
   groupSizeLabel,
@@ -90,8 +91,12 @@ function GroupDetail({ group }: { group: QuestionGroupDetail }) {
   const [flash, setFlash] = useState(
     () => (location.state as QuestionBankLocationState | null)?.flash,
   );
+  const [mediaError, setMediaError] = useState(
+    () => (location.state as QuestionBankLocationState | null)?.mediaError,
+  );
   useEffect(() => {
-    if ((location.state as QuestionBankLocationState | null)?.flash) {
+    const state = location.state as QuestionBankLocationState | null;
+    if (state?.flash || state?.mediaError) {
       void navigate({ search: location.search }, { replace: true, state: null });
     }
   }, [location, navigate]);
@@ -154,6 +159,12 @@ function GroupDetail({ group }: { group: QuestionGroupDetail }) {
       )}
 
       {flash && <SuccessBanner message={flash} onClose={() => setFlash(undefined)} />}
+      {mediaError && (
+        <FormAlert
+          message={`Chưa tải được tệp (${mediaError}). Hãy tải lại ở khung "Nội dung dùng chung".`}
+          onClose={() => setMediaError(undefined)}
+        />
+      )}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <SharedContentCard group={group} size={size} editable={mine} />
@@ -227,11 +238,6 @@ function GroupDetail({ group }: { group: QuestionGroupDetail }) {
   );
 }
 
-function mediaLabel(group: QuestionGroupDetail, kind: MediaKind): string {
-  if (kind === 'audio') return 'Âm thanh hội thoại';
-  return group.skill === 'SPEAKING' ? 'Bảng thông tin' : 'Hình ảnh, biểu đồ';
-}
-
 function SharedContentCard({
   group,
   size,
@@ -262,7 +268,7 @@ function SharedContentCard({
             <MediaUploadSlot
               key={kind}
               kind={kind}
-              label={mediaLabel(group, kind)}
+              label={groupMediaLabel(group.skill, group.part, kind)}
               url={url}
               optional={groupMediaOptional(kind)}
               owner="nhóm câu"
@@ -273,7 +279,14 @@ function SharedContentCard({
         }
         // Người xem: audio luôn hiện (chưa có thì báo); ảnh tùy chọn nên chỉ hiện khi có
         if (!url && groupMediaOptional(kind)) return null;
-        return <QuestionMedia key={kind} kind={kind} url={url} label={mediaLabel(group, kind)} />;
+        return (
+          <QuestionMedia
+            key={kind}
+            kind={kind}
+            url={url}
+            label={groupMediaLabel(group.skill, group.part, kind)}
+          />
+        );
       })}
 
       <div>

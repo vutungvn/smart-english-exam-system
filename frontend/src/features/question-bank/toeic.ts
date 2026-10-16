@@ -332,3 +332,10 @@ export function groupMediaKinds(skill: Skill, part: number): MediaKind[] {
 export function groupMediaOptional(kind: MediaKind): boolean {
   return kind === 'image';
 }
+
+/** Tên ô tệp của nhóm câu: dùng chung cho form nhóm và trang chi tiết nhóm */
+export function groupMediaLabel(skill: Skill, part: number, kind: MediaKind): string {
+  if (kind === 'audio') return part === 4 ? 'Âm thanh bài nói' : 'Âm thanh hội thoại';
+  if (skill === 'SPEAKING') return 'Bảng thông tin';
+  return skill === 'READING' ? 'Hình ảnh đoạn văn' : 'Hình ảnh, biểu đồ';
+}

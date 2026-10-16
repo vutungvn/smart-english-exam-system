@@ -119,7 +119,7 @@ export function MediaFields({
           <Info className="mt-0.5 size-4 shrink-0 text-subtle" />
           <span>
             {groupText.charAt(0).toUpperCase() + groupText.slice(1)} dùng chung cho cả nhóm (Part{' '}
-            {rule.part}) được tải lên ở trang nhóm câu.{' '}
+            {rule.part}) được tải lên ở nhóm câu (form tạo/sửa nhóm hoặc trang chi tiết nhóm).{' '}
             {groupId && (
               <Link
                 to={groupPath(groupId)}

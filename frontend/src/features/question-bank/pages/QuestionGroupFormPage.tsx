@@ -2,23 +2,13 @@ import { useState } from 'react';
 import { FormProvider, useForm, useFormContext, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
-import {
-  Eye,
-  EyeOff,
-  Headphones,
-  ImageIcon,
-  Info,
-  Lightbulb,
-  Lock,
-  RotateCw,
-  Save,
-  TriangleAlert,
-} from 'lucide-react';
+import { Eye, EyeOff, Lightbulb, Lock, RotateCw, Save, TriangleAlert } from 'lucide-react';
 import { toApiError } from '@/api/errors';
 import {
   useCreateQuestionGroupMutation,
   useGetQuestionGroupQuery,
   useUpdateQuestionGroupMutation,
+  useUploadQuestionGroupMediaMutation,
   type QuestionGroupDetail,
   type Skill,
 } from '@/api/generated';
@@ -30,14 +20,18 @@ import { NativeSelect } from '@/components/form/NativeSelect';
 import { SubmitButton } from '@/components/form/SubmitButton';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
+import { SaveFeedback } from '@/features/profile/components/SaveFeedback';
+import { useSavedFlag } from '@/features/profile/hooks/use-saved-flag';
 import { useAppSelector } from '@/hooks/hooks';
 import { applyFieldErrors } from '@/lib/form-errors';
+import { describeMediaError } from '@/lib/media-file';
 import { cn } from '@/lib/utils';
 import { selectCurrentUser } from '@/store/slice/auth-slice';
 import { PassageView, TranscriptView } from '../components/GroupContent';
 import { EmptyState, ErrorState } from '../components/ListStates';
 import { Counter } from '../form/AnswerFields';
 import { FormSection } from '../form/FormSection';
+import { GroupMediaFields } from '../form/GroupMediaFields';
 import {
   emptyGroupValues,
   GROUP_CONTENT_MAX,
@@ -48,11 +42,13 @@ import {
   type GroupFormValues,
 } from '../form/group-form';
 import { textareaClass } from '../form/styles';
+import { usePendingMedia } from '../form/use-pending-media';
 import { useToeicTopics } from '../hooks/use-toeic-topics';
 import { GROUP_LIST_PATH, groupPath } from '../paths';
 import {
   findPartRule,
   GROUP_SKILLS,
+  groupMediaKinds,
   groupPartsOfSkill,
   groupSize,
   groupSizeLabel,
@@ -121,6 +117,9 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
   const navigate = useNavigate();
   const [createGroup] = useCreateQuestionGroupMutation();
   const [updateGroup] = useUpdateQuestionGroupMutation();
+  const [uploadMedia] = useUploadQuestionGroupMediaMutation();
+  const pendingMedia = usePendingMedia();
+  const { saved, markSaved } = useSavedFlag(4000);
   const [conflict, setConflict] = useState(false);
   const [reloading, setReloading] = useState(false);
   const editing = !!group;
@@ -133,6 +132,8 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
   const {
     handleSubmit,
     reset,
+    resetField,
+    getValues,
     setError,
     clearErrors,
     register,
@@ -142,6 +143,30 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
   const rule = skill ? findPartRule(skill, part) : undefined;
   const formError = errors.root?.server?.message;
   const cancelPath = group ? groupPath(group.id) : GROUP_LIST_PATH;
+
+  /** Nhóm vừa tạo: tải các tệp đã chọn; trả về lỗi của từng tệp không tải được */
+  const uploadPending = async (id: string, currentRule: PartRule): Promise<string[]> => {
+    const failures: string[] = [];
+    for (const kind of groupMediaKinds(currentRule.skill, currentRule.part)) {
+      const item = pendingMedia.pending[kind];
+      if (!item) continue;
+      try {
+        await uploadMedia({ id, kind, body: { file: item.file } }).unwrap();
+      } catch (err) {
+        failures.push(`${kind === 'audio' ? 'âm thanh' : 'hình ảnh'}: ${describeMediaError(err)}`);
+      }
+    }
+    return failures;
+  };
+
+  /** Tải/gỡ tệp ở nhóm đang sửa làm đổi updatedAt: đổi mốc của form để lần Lưu sau không bị 409 */
+  const mediaSaved = (previousUpdatedAt: string, savedGroup: QuestionGroupDetail) => {
+    // Form đang giữ bản cũ hơn (nhóm bị sửa ở nơi khác) thì để nguyên, lần Lưu sau vẫn báo xung đột
+    if (getValues('updatedAt') === previousUpdatedAt) {
+      resetField('updatedAt', { defaultValue: savedGroup.updatedAt });
+    }
+    markSaved();
+  };
 
   const save = async (values: GroupFormValues) => {
     const currentRule = values.skill ? findPartRule(values.skill, values.part) : undefined;
@@ -157,8 +182,12 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
             ),
           }).unwrap()
         : await createGroup(toCreateGroupPayload(values, currentRule)).unwrap();
+      // Nhóm mới: tải tệp đã chọn; lỗi thì báo ở trang nhóm (ở đó tải lại được)
+      const failures = group ? [] : await uploadPending(data.id, currentRule);
+      pendingMedia.clear();
       const state: QuestionBankLocationState = {
         flash: group ? 'Đã lưu nhóm câu' : 'Đã tạo nhóm câu, thêm câu hỏi cho nhóm ngay bên dưới',
+        mediaError: failures.length ? failures.join('; ') : undefined,
       };
       void navigate(groupPath(data.id), { state });
     } catch (err) {
@@ -206,6 +235,9 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
     <FormProvider {...form}>
       <title>{`${title} – Smart English Exam`}</title>
       <form noValidate onSubmit={handleSubmit(save)} className="space-y-6">
+        {/* Mốc khóa lạc quan không có ô nhập: đăng ký để resetField đổi được sau khi tải tệp
+            (resetField bỏ qua trường chưa đăng ký); để ngoài fieldset vì ô bị disabled thì RHF bỏ giá trị */}
+        <input type="hidden" {...register('updatedAt')} />
         <PageHeader
           breadcrumbs={[
             { label: 'Nhóm câu hỏi', to: GROUP_LIST_PATH },
@@ -279,7 +311,14 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
 
             {rule && (
               <FormSection step={3} title="Âm thanh & hình ảnh">
-                <GroupMedia rule={rule} />
+                <GroupMediaFields
+                  rule={rule}
+                  group={group}
+                  disabled={isSubmitting}
+                  pending={pendingMedia.pending}
+                  onPendingChange={pendingMedia.setFile}
+                  onSaved={mediaSaved}
+                />
               </FormSection>
             )}
           </fieldset>
@@ -293,7 +332,7 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
         {formError && <FormAlert message={formError} onClose={() => clearErrors('root.server')} />}
 
         <div className="sticky bottom-4 z-20 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-white/95 px-4 py-3 shadow-lg shadow-slate-900/10 backdrop-blur">
-          <div className="mr-auto flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <label htmlFor="status" className="text-sm font-medium text-slate-700">
               Trạng thái
             </label>
@@ -313,6 +352,7 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
               ))}
             </NativeSelect>
           </div>
+          <SaveFeedback show={saved} message="Đã lưu tệp" />
           <div className="flex w-full gap-3 sm:w-auto">
             <Link
               to={cancelPath}
@@ -551,37 +591,6 @@ function GroupContentField({ rule }: { rule?: PartRule }) {
           {...register('content')}
         />
       </FormField>
-    </div>
-  );
-}
-
-function GroupMedia({ rule }: { rule: PartRule }) {
-  const listening = rule.skill === 'LISTENING';
-  const Icon = listening ? Headphones : ImageIcon;
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-slate-50 px-4 py-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-subtle">
-          <Icon className="size-4" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-slate-700">
-            {listening ? 'Âm thanh hội thoại / bài nói' : 'Hình ảnh (không bắt buộc)'}
-          </span>
-          <span className="block text-xs text-subtle">
-            {listening
-              ? 'Bắt buộc khi dùng trong đề thi'
-              : 'Dùng khi đoạn văn là ảnh chụp, biểu mẫu'}
-          </span>
-        </span>
-        <span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-          Sắp có
-        </span>
-      </div>
-      <p className="flex items-start gap-2 text-xs text-subtle">
-        <Info className="mt-0.5 size-3.5 shrink-0" />
-        Tải tệp sẽ làm cùng chức năng “Nhập từ tệp”; hiện có thể lưu nhóm ở trạng thái Nháp trước.
-      </p>
     </div>
   );
 }

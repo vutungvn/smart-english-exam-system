@@ -33,7 +33,7 @@ function requiredQuotas(exam: ExamCheckRow): PartQuota[] {
   return TOEIC_QUOTAS.filter((quota) => skills.includes(quota.skill));
 }
 
-/** Câu cần tệp âm thanh/hình ảnh theo Part (chỉ cảnh báo: tệp gắn ở chức năng nhập .zip) */
+/** Câu cần tệp âm thanh/hình ảnh theo Part (chỉ cảnh báo: câu vẫn lưu được khi chưa có tệp) */
 function missingMedia(skill: Skill, part: number, question: CheckedQuestion): string[] {
   const needAudio = skill === Skill.LISTENING && part <= 2;
   const needImage =
@@ -161,7 +161,7 @@ export function checkExam(exam: ExamCheckRow): ExamValidation {
       add(
         ExamIssueLevel.WARNING,
         ExamIssueCode.MISSING_MEDIA,
-        `${count} câu ${partName} chưa có ${kind} (gắn tệp ở chức năng Nhập từ tệp)`,
+        `${count} câu ${partName} chưa có ${kind} (tải tệp ở form sửa câu hỏi hoặc Nhập từ tệp)`,
         ref,
       );
     }
@@ -198,7 +198,7 @@ export function checkExam(exam: ExamCheckRow): ExamValidation {
         add(
           ExamIssueLevel.WARNING,
           ExamIssueCode.MISSING_MEDIA,
-          `${name} chưa có âm thanh (gắn tệp ở chức năng Nhập từ tệp)`,
+          `${name} chưa có âm thanh (tải tệp ở trang nhóm câu hoặc Nhập từ tệp)`,
           ref,
         );
       }

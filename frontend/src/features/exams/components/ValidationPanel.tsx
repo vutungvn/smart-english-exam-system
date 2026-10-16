@@ -74,8 +74,8 @@ export function ValidationPanel({ validation, published, onGoToSection }: Valida
 
       <p className="mt-5 flex items-start gap-2 border-t border-border pt-4 text-xs text-subtle">
         <Info className="mt-0.5 size-3.5 shrink-0" />
-        Lỗi đỏ chặn xuất bản. Nhắc nhở vàng vẫn xuất bản được; tệp âm thanh, hình ảnh gắn ở chức
-        năng Nhập từ tệp.
+        Lỗi đỏ chặn xuất bản. Nhắc nhở vàng vẫn xuất bản được; tệp âm thanh, hình ảnh tải ở form câu
+        hỏi, trang nhóm câu hoặc chức năng Nhập từ tệp.
       </p>
     </section>
   );
