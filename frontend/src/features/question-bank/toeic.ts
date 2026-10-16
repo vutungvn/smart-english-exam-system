@@ -1,5 +1,6 @@
 import { BookOpen, Headphones, Mic, PenLine, type LucideIcon } from 'lucide-react';
 import type { Difficulty, QuestionStatus, QuestionType, Skill } from '@/api/generated';
+import type { MediaKind } from '@/lib/media-file';
 
 /**
  * Bản sao danh mục TOEIC_PARTS của backend (backend/src/modules/questions/toeic-parts.ts).
@@ -297,4 +298,37 @@ export function isDefaultContent(content: string): boolean {
     text === defaultContent('LISTENING', 2) ||
     /^Chỗ trống( \[\d+\])?$/.test(text)
   );
+}
+
+/**
+ * Bản sao quy tắc audio/ảnh của backend (backend/src/modules/questions/question-media.ts):
+ * loại tệp tải lên được cho một câu / một nhóm câu. Sửa bên nào thì sửa cả bên kia.
+ */
+const QUESTION_MEDIA: Record<string, MediaKind[]> = {
+  'LISTENING-1': ['image', 'audio'],
+  'LISTENING-2': ['audio'],
+  'SPEAKING-2': ['image'],
+  'SPEAKING-3': ['audio'],
+  'SPEAKING-4': ['audio'],
+  'WRITING-1': ['image'],
+};
+const GROUP_MEDIA: Record<string, MediaKind[]> = {
+  'LISTENING-3': ['audio', 'image'],
+  'LISTENING-4': ['audio', 'image'],
+  'READING-6': ['image'],
+  'READING-7': ['image'],
+  'SPEAKING-4': ['image'],
+};
+
+export function questionMediaKinds(skill: Skill, part: number): MediaKind[] {
+  return QUESTION_MEDIA[`${skill}-${part}`] ?? [];
+}
+
+export function groupMediaKinds(skill: Skill, part: number): MediaKind[] {
+  return GROUP_MEDIA[`${skill}-${part}`] ?? [];
+}
+
+/** Ảnh của nhóm là tùy chọn (chỉ một số đoạn có biểu đồ); audio hội thoại L3, L4 thì nên có */
+export function groupMediaOptional(kind: MediaKind): boolean {
+  return kind === 'image';
 }

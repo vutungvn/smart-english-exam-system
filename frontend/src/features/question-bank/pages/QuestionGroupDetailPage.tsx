@@ -14,15 +14,19 @@ import {
 import { toApiError } from '@/api/errors';
 import {
   useGetQuestionGroupQuery,
+  useRemoveQuestionGroupMediaMutation,
+  useUploadQuestionGroupMediaMutation,
   type QuestionGroupDetail,
   type QuestionSummary,
 } from '@/api/generated';
 import { ButtonLink } from '@/components/ButtonLink';
+import { MediaUploadSlot } from '@/components/media/MediaUploadSlot';
 import { PageHeader } from '@/components/PageHeader';
 import { QuestionMedia } from '@/components/QuestionMedia';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/features/profile/format';
 import { useAppSelector } from '@/hooks/hooks';
+import type { MediaKind } from '@/lib/media-file';
 import { cn } from '@/lib/utils';
 import { selectCurrentUser } from '@/store/slice/auth-slice';
 import { DeleteGroupDialog } from '../components/DeleteGroupDialog';
@@ -31,7 +35,14 @@ import { PassageView, TranscriptView } from '../components/GroupContent';
 import { EmptyState, ErrorState, SuccessBanner } from '../components/ListStates';
 import { DifficultyPill, StatusPill } from '../components/Pills';
 import { GROUP_LIST_PATH, groupEditPath, newQuestionPath, questionPath } from '../paths';
-import { findPartRule, groupSize, groupSizeLabel, SKILL_META } from '../toeic';
+import {
+  findPartRule,
+  groupMediaKinds,
+  groupMediaOptional,
+  groupSize,
+  groupSizeLabel,
+  SKILL_META,
+} from '../toeic';
 import type { QuestionBankLocationState } from './QuestionBankPage';
 
 /** `/teacher/question-groups/:id`: nội dung dùng chung bên trái, các câu trong nhóm bên phải */
@@ -145,7 +156,7 @@ function GroupDetail({ group }: { group: QuestionGroupDetail }) {
       {flash && <SuccessBanner message={flash} onClose={() => setFlash(undefined)} />}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <SharedContentCard group={group} size={size} />
+        <SharedContentCard group={group} size={size} editable={mine} />
 
         <section className="rounded-3xl border border-border bg-white p-5 shadow-2xs sm:p-6">
           <div className="flex flex-wrap items-center gap-3">
@@ -216,15 +227,26 @@ function GroupDetail({ group }: { group: QuestionGroupDetail }) {
   );
 }
 
+function mediaLabel(group: QuestionGroupDetail, kind: MediaKind): string {
+  if (kind === 'audio') return 'Âm thanh hội thoại';
+  return group.skill === 'SPEAKING' ? 'Bảng thông tin' : 'Hình ảnh, biểu đồ';
+}
+
 function SharedContentCard({
   group,
   size,
+  editable,
 }: {
   group: QuestionGroupDetail;
   size?: { min: number; max: number };
+  /** Tác giả nhóm: tải lên, thay, gỡ audio/ảnh ngay tại đây */
+  editable: boolean;
 }) {
   const listening = group.skill === 'LISTENING';
   const text = listening ? group.transcript : group.passage;
+  const [uploadMedia] = useUploadQuestionGroupMediaMutation();
+  const [removeMedia] = useRemoveQuestionGroupMediaMutation();
+  const kinds = groupMediaKinds(group.skill, group.part);
 
   return (
     <section className="space-y-5 rounded-3xl border border-border bg-white p-5 shadow-2xs sm:p-6 lg:sticky lg:top-24">
@@ -233,21 +255,26 @@ function SharedContentCard({
         Nội dung dùng chung
       </h2>
 
-      {listening && (
-        <QuestionMedia
-          kind="audio"
-          url={group.audioUrl}
-          label="Âm thanh hội thoại"
-          emptyHint="Chưa có tệp · gắn khi nhập từ tệp .zip"
-        />
-      )}
-      {group.imageUrl && (
-        <QuestionMedia
-          kind="image"
-          url={group.imageUrl}
-          label={group.skill === 'SPEAKING' ? 'Bảng thông tin' : 'Hình ảnh, biểu đồ'}
-        />
-      )}
+      {kinds.map((kind) => {
+        const url = kind === 'audio' ? group.audioUrl : group.imageUrl;
+        if (editable) {
+          return (
+            <MediaUploadSlot
+              key={kind}
+              kind={kind}
+              label={mediaLabel(group, kind)}
+              url={url}
+              optional={groupMediaOptional(kind)}
+              owner="nhóm câu"
+              onSelect={(file) => uploadMedia({ id: group.id, kind, body: { file } }).unwrap()}
+              onRemove={() => removeMedia({ id: group.id, kind }).unwrap()}
+            />
+          );
+        }
+        // Người xem: audio luôn hiện (chưa có thì báo); ảnh tùy chọn nên chỉ hiện khi có
+        if (!url && groupMediaOptional(kind)) return null;
+        return <QuestionMedia key={kind} kind={kind} url={url} label={mediaLabel(group, kind)} />;
+      })}
 
       <div>
         <div className="mb-3 flex items-center justify-between gap-3">

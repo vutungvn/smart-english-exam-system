@@ -14,6 +14,10 @@ import { ExamBuilderPage } from '@/features/exams/pages/ExamBuilderPage';
 import { ExamPreviewPage } from '@/features/exams/pages/ExamPreviewPage';
 import { ExamsPage } from '@/features/exams/pages/ExamsPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
+import { AttemptPage } from '@/features/practice/pages/AttemptPage';
+import { AttemptResultPage } from '@/features/practice/pages/AttemptResultPage';
+import { PracticeExamDetailPage } from '@/features/practice/pages/PracticeExamDetailPage';
+import { PracticeExamsPage } from '@/features/practice/pages/PracticeExamsPage';
 import { QuestionBankPage } from '@/features/question-bank/pages/QuestionBankPage';
 import { QuestionFormPage } from '@/features/question-bank/pages/QuestionFormPage';
 import { QuestionGroupDetailPage } from '@/features/question-bank/pages/QuestionGroupDetailPage';
@@ -29,7 +33,6 @@ import { TeacherLayout } from './layouts/teacher/TeacherLayout';
 // TẠM: các mục menu học viên chưa làm, hiện trang "đang phát triển" trong layout
 const STUDENT_PLACEHOLDERS = [
   { path: 'courses', title: 'Khóa học của tôi' },
-  { path: 'exams', title: 'Luyện đề thi' },
   { path: 'results', title: 'Kết quả & xem lại' },
   { path: 'progress', title: 'Tiến độ học tập' },
   { path: 'ai-analysis', title: 'Phân tích AI' },
@@ -73,6 +76,8 @@ export const router = createBrowserRouter([
       {
         element: <RequireRole roles={['STUDENT']} />,
         children: [
+          // Làm bài ở chế độ tập trung: không sidebar, không thanh trên của khu học viên
+          { path: '/app/attempts/:id', element: <AttemptPage /> },
           {
             path: '/app',
             element: <StudentLayout />,
@@ -85,6 +90,9 @@ export const router = createBrowserRouter([
                     Component: m.StudentDashboardPage,
                   })),
               },
+              { path: 'exams', element: <PracticeExamsPage /> },
+              { path: 'exams/:id', element: <PracticeExamDetailPage /> },
+              { path: 'attempts/:id/result', element: <AttemptResultPage /> },
               { path: 'profile', element: <ProfilePage /> },
               { path: 'profile/password', element: <ChangePasswordPage /> },
               ...STUDENT_PLACEHOLDERS.map(({ path, title }) => ({
