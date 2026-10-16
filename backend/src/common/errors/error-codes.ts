@@ -50,6 +50,7 @@ export const ErrorCode = {
   QUESTION_GROUP_ORDER_TAKEN: 'QUESTION_GROUP_ORDER_TAKEN',
   QUESTION_CODE_TAKEN: 'QUESTION_CODE_TAKEN',
   QUESTION_IN_PUBLISHED_EXAM: 'QUESTION_IN_PUBLISHED_EXAM',
+  QUESTION_OPTION_IN_USE: 'QUESTION_OPTION_IN_USE',
 
   // Nhập câu hỏi từ tệp .zip
   QUESTION_IMPORT_INVALID_FILE: 'QUESTION_IMPORT_INVALID_FILE',
@@ -65,6 +66,15 @@ export const ErrorCode = {
   EXAM_SECTION_EXISTS: 'EXAM_SECTION_EXISTS',
   EXAM_QUESTION_DUPLICATE: 'EXAM_QUESTION_DUPLICATE',
   EXAM_NOT_PUBLISHABLE: 'EXAM_NOT_PUBLISHABLE',
+
+  // Làm bài
+  ATTEMPT_NOT_FOUND: 'ATTEMPT_NOT_FOUND',
+  ATTEMPT_IN_PROGRESS: 'ATTEMPT_IN_PROGRESS',
+  ATTEMPT_LIMIT_REACHED: 'ATTEMPT_LIMIT_REACHED',
+  ATTEMPT_PART_PRACTICE_DISABLED: 'ATTEMPT_PART_PRACTICE_DISABLED',
+  ATTEMPT_NOT_IN_PROGRESS: 'ATTEMPT_NOT_IN_PROGRESS',
+  ATTEMPT_EXPIRED: 'ATTEMPT_EXPIRED',
+  ATTEMPT_QUESTION_NOT_FOUND: 'ATTEMPT_QUESTION_NOT_FOUND',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -216,6 +226,10 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
     status: HttpStatus.CONFLICT,
     message: 'Mã câu hỏi đã có trong ngân hàng, vui lòng xem trước lại tệp',
   },
+  [ErrorCode.QUESTION_OPTION_IN_USE]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Phương án đã có học viên chọn khi làm bài, không bỏ được. Hãy giữ đủ các phương án',
+  },
   [ErrorCode.QUESTION_IN_PUBLISHED_EXAM]: {
     status: HttpStatus.CONFLICT,
     message: 'Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa',
@@ -265,6 +279,35 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.EXAM_NOT_PUBLISHABLE]: {
     status: HttpStatus.UNPROCESSABLE_ENTITY,
     message: 'Đề chưa đủ điều kiện xuất bản',
+  },
+  // Làm bài
+  [ErrorCode.ATTEMPT_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy bài làm',
+  },
+  [ErrorCode.ATTEMPT_IN_PROGRESS]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Bạn đang có một bài làm dở của đề này, hãy làm tiếp hoặc hủy bài đó trước',
+  },
+  [ErrorCode.ATTEMPT_LIMIT_REACHED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Bạn đã dùng hết số lượt làm đề này',
+  },
+  [ErrorCode.ATTEMPT_PART_PRACTICE_DISABLED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Đề này không cho luyện riêng từng Part',
+  },
+  [ErrorCode.ATTEMPT_NOT_IN_PROGRESS]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Bài làm đã nộp hoặc đã hủy',
+  },
+  [ErrorCode.ATTEMPT_EXPIRED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Đã hết giờ làm bài',
+  },
+  [ErrorCode.ATTEMPT_QUESTION_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Câu hỏi không thuộc bài làm này',
   },
 };
 
