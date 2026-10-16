@@ -27,6 +27,7 @@ import type { ApiErrorExample } from '../../common/swagger/api-errors.decorator.
 import type { AuthUser } from '../../common/types/auth-user.js';
 import {
   AttemptDetail,
+  AttemptResult,
   InProgressAttempt,
   SaveAnswerResult,
   SyncAnswersResult,
@@ -155,6 +156,27 @@ export class AttemptsController {
     @CurrentUser() user: AuthUser,
   ): Promise<SyncAnswersResult> {
     return this.attempts.syncAnswers(id, dto, user);
+  }
+
+  @Post('attempts/:id/submit')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Nộp bài và chấm phần trắc nghiệm',
+    description:
+      'Chấm ngay câu trắc nghiệm (đề TOEIC LR làm cả đề quy đổi 10–990, đề luyện tập và luyện theo Part ' +
+      'tính %). Đề có câu Speaking/Writing: trạng thái SUBMITTED, scaledScore null chờ AI chấm. Nộp lại ' +
+      'bài đã nộp (hoặc đã được tự nộp khi hết giờ) trả về kết quả cũ, không chấm lại.',
+  })
+  @ApiEnvelope(AttemptResult)
+  @ApiErrors(ErrorCode.ATTEMPT_NOT_FOUND, {
+    code: ErrorCode.ATTEMPT_NOT_IN_PROGRESS,
+    message: 'Bài làm đã hủy, không nộp được',
+  })
+  submitAttempt(
+    @Param('id', attemptId()) id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<AttemptResult> {
+    return this.attempts.submit(id, user);
   }
 
   @Post('attempts/:id/cancel')

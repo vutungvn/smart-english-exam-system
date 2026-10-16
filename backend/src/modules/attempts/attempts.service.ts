@@ -8,6 +8,7 @@ import { AttemptMode, AttemptStatus, ExamKind, ExamStatus } from '../../generate
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { examPaperSelect, toExamPaper } from '../exams/exams.mapper.js';
 import { MediaUrlService } from '../media/media-url.service.js';
+import { AttemptSubmissionService, resultSelect, toResult } from './attempt-submission.service.js';
 import { findPartRule } from '../questions/toeic-parts.js';
 import {
   ANSWER_GRACE_SECONDS,
@@ -24,6 +25,7 @@ import {
 import type {
   AttemptAnswerItem,
   AttemptDetail,
+  AttemptResult,
   AttemptSummary,
   InProgressAttempt,
   SaveAnswerResult,
@@ -87,7 +89,28 @@ export class AttemptsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly media: MediaUrlService,
+    private readonly submission: AttemptSubmissionService,
   ) {}
+
+  /** Nộp bài: chấm phần trắc nghiệm; gọi lại sau khi đã nộp thì trả kết quả cũ */
+  submit(id: string, user: AuthUser): Promise<AttemptResult> {
+    return this.submission.submit(id, user.id);
+  }
+
+  /**
+   * Quá hạn nộp + thời gian ân hạn mà job tự nộp chưa tới lượt: nộp luôn khi học viên mở lại bài,
+   * để không bao giờ trả về một bài "đang làm" mà thực ra đã hết giờ
+   */
+  private async submitIfOverdue(row: AttemptRow, now: Date): Promise<boolean> {
+    if (
+      row.status !== AttemptStatus.IN_PROGRESS ||
+      withinDeadline(row.expiresAt, now, SYNC_GRACE_SECONDS)
+    ) {
+      return false;
+    }
+    await this.submission.submit(row.id);
+    return true;
+  }
 
   async start(examId: string, dto: StartAttemptDto, user: AuthUser): Promise<AttemptDetail> {
     const exam = await this.prisma.exam.findFirst({
@@ -170,7 +193,11 @@ export class AttemptsService {
 
   /** Khôi phục bài: đề (không đáp án) + câu đã trả lời + thời gian còn lại */
   async detail(id: string, user: AuthUser, resumed = false): Promise<AttemptDetail> {
-    const row = await this.loadOwned(id, user);
+    let row = await this.loadOwned(id, user);
+    if (await this.submitIfOverdue(row, new Date())) row = await this.loadOwned(id, user);
+    const result = toResult(
+      await this.prisma.examAttempt.findUniqueOrThrow({ where: { id }, select: resultSelect }),
+    );
     const paper = await this.prisma.exam.findUniqueOrThrow({
       where: { id: row.examId },
       select: examPaperSelect,
@@ -183,6 +210,7 @@ export class AttemptsService {
     return {
       ...toSummary(row, new Date()),
       resumed,
+      result,
       // Luyện theo Part: chỉ đưa Part đó, câu đánh số lại từ 1
       paper: toExamPaper(
         row.sectionId
@@ -218,7 +246,12 @@ export class AttemptsService {
     });
 
     const now = new Date();
-    return rows.map(({ _count, exam: { sections, ...exam }, ...row }) => ({
+    // Bài đã quá hạn mà job chưa tự nộp: nộp ngay và không đưa vào danh sách "làm tiếp"
+    const active = [];
+    for (const row of rows) {
+      if (!(await this.submitIfOverdue({ ...row, exam: row.exam }, now))) active.push(row);
+    }
+    return active.map(({ _count, exam: { sections, ...exam }, ...row }) => ({
       ...toSummary({ ...row, exam }, now),
       answeredCount: _count.answers,
       totalQuestions: sections
