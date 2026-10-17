@@ -6,7 +6,7 @@ import {
   ScoringScale,
   Skill,
 } from '../../generated/prisma/enums.js';
-import { ExamPaper } from '../exams/exams.types.js';
+import { ExamPaper, PaperGroup, PaperOption, PaperQuestion } from '../exams/exams.types.js';
 
 const REMAINING_NOTE =
   'Số giây còn lại do server tính từ expiresAt; null khi không đếm giờ (luyện theo Part)';
@@ -299,6 +299,154 @@ export class AttemptDetail extends AttemptSummary {
 
   @ApiProperty({ type: [AttemptAnswerItem] })
   answers: AttemptAnswerItem[];
+}
+
+// ---------------------------------------------------------------
+// Xem lại bài làm, lịch sử làm bài (SPRINT-53)
+// ---------------------------------------------------------------
+
+/**
+ * Kết quả từng câu khi xem lại. PENDING: câu Speaking/Writing đã trả lời, chờ AI chấm (SPRINT-86).
+ * Câu trả lời mở chưa làm cũng là SKIPPED.
+ */
+export const ReviewOutcome = {
+  CORRECT: 'CORRECT',
+  WRONG: 'WRONG',
+  SKIPPED: 'SKIPPED',
+  PENDING: 'PENDING',
+} as const;
+export type ReviewOutcome = (typeof ReviewOutcome)[keyof typeof ReviewOutcome];
+
+export class ReviewOption extends PaperOption {
+  @ApiProperty()
+  isCorrect: boolean;
+}
+
+export class ReviewQuestion extends PaperQuestion {
+  @ApiProperty({ type: [ReviewOption], description: 'Có isCorrect; rỗng với câu trả lời mở' })
+  declare options: ReviewOption[];
+
+  @ApiProperty({ enum: ReviewOutcome, enumName: 'ReviewOutcome' })
+  outcome: ReviewOutcome;
+
+  @ApiProperty({ type: String, format: 'uuid', nullable: true, description: 'Phương án đã chọn' })
+  selectedOptionId: string | null;
+
+  @ApiProperty({ type: String, nullable: true, description: 'Bài viết (Writing)' })
+  textAnswer: string | null;
+
+  @ApiProperty()
+  isFlagged: boolean;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Giải thích đáp án (trắc nghiệm) hoặc gợi ý cách làm (câu trả lời mở)',
+  })
+  explanation: string | null;
+
+  @ApiProperty({ type: String, nullable: true, description: 'Câu trả lời mẫu (Speaking/Writing)' })
+  sampleAnswer: string | null;
+}
+
+export class ReviewGroup extends PaperGroup {
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Lời thoại Listening (chỉ hiện ở màn xem lại)',
+  })
+  transcript: string | null;
+}
+
+export class ReviewBlock {
+  @ApiProperty({ type: ReviewGroup, nullable: true })
+  group: ReviewGroup | null;
+
+  @ApiProperty({ type: [ReviewQuestion] })
+  questions: ReviewQuestion[];
+}
+
+export class ReviewCounts {
+  @ApiProperty({ type: 'integer' })
+  correct: number;
+
+  @ApiProperty({ type: 'integer' })
+  wrong: number;
+
+  @ApiProperty({ type: 'integer' })
+  skipped: number;
+
+  @ApiProperty({ type: 'integer', description: 'Câu Speaking/Writing chờ AI chấm' })
+  pending: number;
+}
+
+export class ReviewSection {
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty({ enum: Skill, enumName: 'Skill' })
+  skill: Skill;
+
+  @ApiProperty({ type: 'integer' })
+  part: number;
+
+  @ApiProperty({ example: 'Photographs' })
+  name: string;
+
+  @ApiProperty({ type: ReviewCounts })
+  counts: ReviewCounts;
+
+  @ApiProperty({ type: [ReviewBlock] })
+  blocks: ReviewBlock[];
+}
+
+/** Bài đã nộp kèm đáp án, giải thích từng câu (nội dung câu hỏi hiện tại trong ngân hàng) */
+export class AttemptReview extends AttemptSummary {
+  @ApiProperty({ type: AttemptResult })
+  result: AttemptResult;
+
+  @ApiProperty({ type: 'integer' })
+  totalQuestions: number;
+
+  @ApiProperty({ type: [ReviewSection], description: 'Luyện theo Part chỉ có Part đó' })
+  sections: ReviewSection[];
+}
+
+/** Một dòng trong lịch sử làm bài (chỉ bài đã nộp) */
+export class AttemptHistoryItem {
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty({ enum: AttemptMode, enumName: 'AttemptMode' })
+  mode: AttemptMode;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  startedAt: Date;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  submittedAt: Date;
+
+  @ApiProperty({
+    type: 'integer',
+    description: 'Thời gian làm bài (giây), từ lúc bắt đầu đến khi nộp',
+  })
+  durationSeconds: number;
+
+  @ApiProperty({ description: 'true: hệ thống tự nộp khi hết giờ' })
+  autoSubmitted: boolean;
+
+  @ApiProperty({ type: AttemptExamRef })
+  exam: AttemptExamRef;
+
+  @ApiProperty({
+    type: AttemptSectionRef,
+    nullable: true,
+    description: 'Part đã luyện (mode PART)',
+  })
+  section: AttemptSectionRef | null;
+
+  @ApiProperty({ type: AttemptResult })
+  result: AttemptResult;
 }
 
 export class SaveAnswerResult {

@@ -496,6 +496,8 @@ model ExamAttempt {
   answers AttemptAnswer[]
 
   @@index([studentId, examId], map: "ix_exam_attempts_student_exam")
+  /// Lịch sử làm bài, biểu đồ điểm theo thời gian: bài đã nộp của một học viên, mới nhất trước
+  @@index([studentId, submittedAt(sort: Desc)], map: "ix_exam_attempts_student_submitted")
   @@index([examId], map: "ix_exam_attempts_exam_id")
   @@map("exam_attempts")
 }

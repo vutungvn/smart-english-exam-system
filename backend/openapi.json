@@ -10007,6 +10007,424 @@
         ]
       }
     },
+    "/api/v1/me/attempts": {
+      "get": {
+        "description": "Mới nhất trước. Lọc theo đề (examId) và kiểu làm (FULL cả đề / PART luyện một Part). Mỗi dòng có kết quả chấm, thời gian làm và cờ autoSubmitted (hệ thống tự nộp khi hết giờ).",
+        "operationId": "listAttemptHistory",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "examId",
+            "required": false,
+            "in": "query",
+            "description": "Chỉ bài của đề này",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "mode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AttemptMode"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "submittedAt:desc",
+              "type": "string",
+              "enum": [
+                "submittedAt:desc",
+                "submittedAt:asc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AttemptHistoryItem"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "page",
+                            "message": "page không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lịch sử làm bài của tôi (chỉ bài đã nộp)",
+        "tags": [
+          "Attempts"
+        ]
+      }
+    },
+    "/api/v1/attempts/{id}/review": {
+      "get": {
+        "description": "Có ngay sau khi nộp. Mỗi câu có kết quả (CORRECT, WRONG, SKIPPED; PENDING: câu Speaking/Writing chờ AI chấm), lựa chọn hoặc bài viết của học viên, đáp án đúng (isCorrect), giải thích, câu trả lời mẫu; nhóm Listening có lời thoại. Nội dung câu theo bản hiện tại trong ngân hàng câu hỏi. Bài quá hạn chưa kịp tự nộp thì được nộp luôn.",
+        "operationId": "getAttemptReview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AttemptReview"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: ATTEMPT_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ATTEMPT_NOT_FOUND": {
+                    "summary": "ATTEMPT_NOT_FOUND: Không tìm thấy bài làm",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "ATTEMPT_NOT_FOUND",
+                        "message": "Không tìm thấy bài làm"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: ATTEMPT_NOT_SUBMITTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ATTEMPT_NOT_SUBMITTED": {
+                    "summary": "ATTEMPT_NOT_SUBMITTED: Bài làm chưa nộp nên chưa xem được đáp án",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "ATTEMPT_NOT_SUBMITTED",
+                        "message": "Bài làm chưa nộp nên chưa xem được đáp án"
+                      }
+                    }
+                  },
+                  "ATTEMPT_NOT_SUBMITTED_2": {
+                    "summary": "ATTEMPT_NOT_SUBMITTED: Bài làm đã hủy, không có kết quả để xem lại",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "ATTEMPT_NOT_SUBMITTED",
+                        "message": "Bài làm đã hủy, không có kết quả để xem lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xem lại bài đã nộp: đáp án, giải thích từng câu",
+        "tags": [
+          "Attempts"
+        ]
+      }
+    },
     "/api/v1/attempts/{id}": {
       "get": {
         "description": "Đề (không đáp án, câu trả lời mẫu, lời thoại), các câu đã trả lời, thời gian còn lại tính ở server.",
@@ -11135,7 +11553,8 @@
           "ATTEMPT_PART_PRACTICE_DISABLED",
           "ATTEMPT_NOT_IN_PROGRESS",
           "ATTEMPT_EXPIRED",
-          "ATTEMPT_QUESTION_NOT_FOUND"
+          "ATTEMPT_QUESTION_NOT_FOUND",
+          "ATTEMPT_NOT_SUBMITTED"
         ]
       },
       "FieldErrorDto": {
@@ -14443,6 +14862,427 @@
           "section",
           "answeredCount",
           "totalQuestions"
+        ]
+      },
+      "AttemptHistoryItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttemptMode"
+              }
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "description": "Thời gian làm bài (giây), từ lúc bắt đầu đến khi nộp"
+          },
+          "autoSubmitted": {
+            "type": "boolean",
+            "description": "true: hệ thống tự nộp khi hết giờ"
+          },
+          "exam": {
+            "$ref": "#/components/schemas/AttemptExamRef"
+          },
+          "section": {
+            "nullable": true,
+            "description": "Part đã luyện (mode PART)",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttemptSectionRef"
+              }
+            ]
+          },
+          "result": {
+            "$ref": "#/components/schemas/AttemptResult"
+          }
+        },
+        "required": [
+          "id",
+          "mode",
+          "startedAt",
+          "submittedAt",
+          "durationSeconds",
+          "autoSubmitted",
+          "exam",
+          "section",
+          "result"
+        ]
+      },
+      "ReviewCounts": {
+        "type": "object",
+        "properties": {
+          "correct": {
+            "type": "integer"
+          },
+          "wrong": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer"
+          },
+          "pending": {
+            "type": "integer",
+            "description": "Câu Speaking/Writing chờ AI chấm"
+          }
+        },
+        "required": [
+          "correct",
+          "wrong",
+          "skipped",
+          "pending"
+        ]
+      },
+      "ReviewGroup": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "passage": {
+            "type": "string",
+            "nullable": true,
+            "description": "Đoạn văn, bảng thông tin"
+          },
+          "audioKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "imageKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "audioUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
+          "transcript": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lời thoại Listening (chỉ hiện ở màn xem lại)"
+          }
+        },
+        "required": [
+          "id",
+          "passage",
+          "audioKey",
+          "imageKey",
+          "audioUrl",
+          "imageUrl",
+          "transcript"
+        ]
+      },
+      "ReviewOption": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "example": "A"
+          },
+          "content": {
+            "type": "string"
+          },
+          "isCorrect": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "content",
+          "isCorrect"
+        ]
+      },
+      "ReviewOutcome": {
+        "type": "string",
+        "enum": [
+          "CORRECT",
+          "WRONG",
+          "SKIPPED",
+          "PENDING"
+        ]
+      },
+      "ReviewQuestion": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "description": "Số câu liên tục trong cả đề: 1, 2, 3…"
+          },
+          "examQuestionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestionType"
+              }
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "audioKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "imageKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "audioUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp"
+          },
+          "prepSeconds": {
+            "type": "integer",
+            "nullable": true
+          },
+          "responseSeconds": {
+            "type": "integer",
+            "nullable": true
+          },
+          "options": {
+            "description": "Có isCorrect; rỗng với câu trả lời mở",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewOption"
+            }
+          },
+          "outcome": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewOutcome"
+              }
+            ]
+          },
+          "selectedOptionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Phương án đã chọn"
+          },
+          "textAnswer": {
+            "type": "string",
+            "nullable": true,
+            "description": "Bài viết (Writing)"
+          },
+          "isFlagged": {
+            "type": "boolean"
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true,
+            "description": "Giải thích đáp án (trắc nghiệm) hoặc gợi ý cách làm (câu trả lời mở)"
+          },
+          "sampleAnswer": {
+            "type": "string",
+            "nullable": true,
+            "description": "Câu trả lời mẫu (Speaking/Writing)"
+          }
+        },
+        "required": [
+          "number",
+          "examQuestionId",
+          "type",
+          "content",
+          "audioKey",
+          "imageKey",
+          "audioUrl",
+          "imageUrl",
+          "prepSeconds",
+          "responseSeconds",
+          "options",
+          "outcome",
+          "selectedOptionId",
+          "textAnswer",
+          "isFlagged",
+          "explanation",
+          "sampleAnswer"
+        ]
+      },
+      "ReviewBlock": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewGroup"
+              }
+            ]
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewQuestion"
+            }
+          }
+        },
+        "required": [
+          "group",
+          "questions"
+        ]
+      },
+      "ReviewSection": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "example": "Photographs"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/ReviewCounts"
+          },
+          "blocks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewBlock"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "skill",
+          "part",
+          "name",
+          "counts",
+          "blocks"
+        ]
+      },
+      "AttemptReview": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttemptMode"
+              }
+            ]
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttemptStatus"
+              }
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "remainingSeconds": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Số giây còn lại do server tính từ expiresAt; null khi không đếm giờ (luyện theo Part)"
+          },
+          "serverTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Giờ server, để FE bù lệch đồng hồ"
+          },
+          "exam": {
+            "$ref": "#/components/schemas/AttemptExamRef"
+          },
+          "section": {
+            "nullable": true,
+            "description": "Part đang luyện (mode PART)",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttemptSectionRef"
+              }
+            ]
+          },
+          "result": {
+            "$ref": "#/components/schemas/AttemptResult"
+          },
+          "totalQuestions": {
+            "type": "integer"
+          },
+          "sections": {
+            "description": "Luyện theo Part chỉ có Part đó",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewSection"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "mode",
+          "status",
+          "startedAt",
+          "expiresAt",
+          "submittedAt",
+          "remainingSeconds",
+          "serverTime",
+          "exam",
+          "section",
+          "result",
+          "totalQuestions",
+          "sections"
         ]
       },
       "SaveAnswerResult": {

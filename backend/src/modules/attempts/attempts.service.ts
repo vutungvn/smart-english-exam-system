@@ -33,7 +33,7 @@ import type {
 } from './attempts.types.js';
 import type { SaveAnswerDto, StartAttemptDto, SyncAnswersDto } from './dto/attempt.dto.js';
 
-const attemptSelect = {
+export const attemptSelect = {
   id: true,
   examId: true,
   sectionId: true,
@@ -54,10 +54,10 @@ const answerSelect = {
   answeredAt: true,
 } satisfies Prisma.AttemptAnswerSelect;
 
-type AttemptRow = Prisma.ExamAttemptGetPayload<{ select: typeof attemptSelect }>;
+export type AttemptRow = Prisma.ExamAttemptGetPayload<{ select: typeof attemptSelect }>;
 type Db = Prisma.TransactionClient | PrismaService;
 
-function toSummary(row: AttemptRow, now: Date): AttemptSummary {
+export function toSummary(row: AttemptRow, now: Date): AttemptSummary {
   const { section } = row;
   return {
     id: row.id,

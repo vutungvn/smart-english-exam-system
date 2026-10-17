@@ -76,6 +76,7 @@ export const ErrorCode = {
   ATTEMPT_NOT_IN_PROGRESS: 'ATTEMPT_NOT_IN_PROGRESS',
   ATTEMPT_EXPIRED: 'ATTEMPT_EXPIRED',
   ATTEMPT_QUESTION_NOT_FOUND: 'ATTEMPT_QUESTION_NOT_FOUND',
+  ATTEMPT_NOT_SUBMITTED: 'ATTEMPT_NOT_SUBMITTED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -313,6 +314,10 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.ATTEMPT_QUESTION_NOT_FOUND]: {
     status: HttpStatus.NOT_FOUND,
     message: 'Câu hỏi không thuộc bài làm này',
+  },
+  [ErrorCode.ATTEMPT_NOT_SUBMITTED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Bài làm chưa nộp nên chưa xem được đáp án',
   },
 };
 
