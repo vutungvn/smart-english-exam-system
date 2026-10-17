@@ -1,4 +1,5 @@
 import { Headphones, ImageIcon } from 'lucide-react';
+import { MediaAudio } from '@/components/media/MediaAudio';
 import { cn } from '@/lib/utils';
 
 interface QuestionMediaProps {
@@ -12,7 +13,8 @@ interface QuestionMediaProps {
 }
 
 /**
- * Ảnh, audio của câu hỏi/nhóm câu. Thẻ <audio> tự gửi header Range khi tua, backend trả 206.
+ * Ảnh, audio của câu hỏi/nhóm câu. Audio phát qua MediaAudio (tải bằng fetch rồi phát từ blob:,
+ * tránh trình quản lý tải xuống như IDM bắt tệp .mp3).
  * Chưa có tệp thì hiện ô gạch đứt để giáo viên biết Part này cần tệp.
  */
 export function QuestionMedia({ kind, url, label, emptyHint, className }: QuestionMediaProps) {
@@ -45,9 +47,7 @@ export function QuestionMedia({ kind, url, label, emptyHint, className }: Questi
         {title}
       </figcaption>
       {kind === 'audio' ? (
-        <audio controls preload="metadata" src={url} className="w-full">
-          Trình duyệt không phát được âm thanh.
-        </audio>
+        <MediaAudio url={url} />
       ) : (
         <a href={url} target="_blank" rel="noreferrer" title="Mở ảnh cỡ gốc">
           <img

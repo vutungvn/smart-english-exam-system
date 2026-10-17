@@ -120,7 +120,7 @@ export class ExamDetail extends ExamSummary {
 export const ExamIssueLevel = {
   /** Chặn xuất bản */
   ERROR: 'ERROR',
-  /** Chỉ nhắc, vẫn xuất bản được (ví dụ chưa có tệp âm thanh vì chức năng nhập .zip chưa làm) */
+  /** Chỉ nhắc, vẫn xuất bản được (ví dụ câu Listening chưa có tệp âm thanh) */
   WARNING: 'WARNING',
 } as const;
 export type ExamIssueLevel = (typeof ExamIssueLevel)[keyof typeof ExamIssueLevel];

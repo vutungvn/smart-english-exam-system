@@ -69,14 +69,16 @@ export class MediaController {
   @IsPublic()
   @ApiExcludeEndpoint()
   async getQuestionMedia(
-    @Param('file') file: string,
+    @Param('file') fileParam: string,
     @Query('exp') exp: unknown,
     @Query('sig') sig: unknown,
     @Headers('range') range: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    const match = QUESTION_MEDIA_FILE_PATTERN.exec(file);
+    const match = QUESTION_MEDIA_FILE_PATTERN.exec(fileParam);
     if (!match) throw new AppException(ErrorCode.NOT_FOUND);
+    // Tên tệp trong kho, cũng là chuỗi đã ký: <uuid>.<đuôi>
+    const file = `${match[1]}.${match[2]}`;
     if (!this.mediaUrls.verify(file, exp, sig)) {
       throw new AppException(ErrorCode.MEDIA_LINK_INVALID);
     }
@@ -97,7 +99,7 @@ export class MediaController {
 
     return new StreamableFile(object.body, {
       // Content-Type lấy theo đuôi do hệ thống đặt (đã kiểm tra nội dung lúc nhập)
-      type: QUESTION_MEDIA_TYPES[match[1] as QuestionMediaExt],
+      type: QUESTION_MEDIA_TYPES[match[2] as QuestionMediaExt],
       length: object.contentLength,
     });
   }

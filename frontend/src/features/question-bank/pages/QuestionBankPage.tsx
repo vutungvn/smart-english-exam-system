@@ -28,6 +28,8 @@ import { PAGE_SIZES, toListArg, useQuestionFilters } from '../hooks/use-question
 /** Trang tạo/sửa câu gửi kèm thông báo khi quay về danh sách */
 export interface QuestionBankLocationState {
   flash?: string;
+  /** Trang nhóm: nhóm vừa tạo nhưng tải tệp lỗi */
+  mediaError?: string;
 }
 
 export function QuestionBankPage() {
