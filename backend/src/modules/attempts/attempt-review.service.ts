@@ -21,7 +21,7 @@ import type {
   ReviewSection,
 } from './attempts.types.js';
 import type { AttemptHistoryQueryDto } from './dto/attempt.dto.js';
-import { addOutcome, emptyCounts, reviewOutcome } from './review-outcome.js';
+import { addOutcome, durationOf, emptyCounts, reviewOutcome } from './review-outcome.js';
 
 /** Bài làm kèm các cột kết quả */
 const reviewAttemptSelect = {
@@ -215,10 +215,7 @@ export class AttemptReviewService {
         mode: row.mode,
         startedAt: row.startedAt,
         submittedAt: result.submittedAt,
-        durationSeconds: Math.max(
-          0,
-          Math.round((result.submittedAt.getTime() - row.startedAt.getTime()) / 1000),
-        ),
+        durationSeconds: durationOf(row.startedAt, result.submittedAt, row.expiresAt),
         autoSubmitted: isAutoSubmitted(row.expiresAt, result.submittedAt),
         exam: summary.exam,
         section: summary.section,

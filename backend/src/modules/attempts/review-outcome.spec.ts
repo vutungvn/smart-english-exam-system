@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { QuestionType } from '../../generated/prisma/enums.js';
 import { ReviewOutcome } from './attempts.types.js';
-import { addOutcome, emptyCounts, reviewOutcome } from './review-outcome.js';
+import { addOutcome, durationOf, emptyCounts, reviewOutcome } from './review-outcome.js';
 
 const { SINGLE_CHOICE, WRITTEN_RESPONSE, SPOKEN_RESPONSE } = QuestionType;
 const answer = (patch: Partial<Parameters<typeof reviewOutcome>[1]> = {}) => ({
@@ -58,5 +58,21 @@ describe('reviewOutcome', () => {
       addOutcome(counts, outcome);
     }
     expect(counts).toEqual({ correct: 2, wrong: 1, skipped: 1, pending: 1 });
+  });
+});
+
+describe('durationOf', () => {
+  const at = (minutes: number) => new Date(Date.UTC(2026, 9, 17, 8, minutes));
+
+  it('nộp trước giờ: từ lúc bắt đầu đến lúc nộp', () => {
+    expect(durationOf(at(0), at(25), at(60))).toBe(25 * 60);
+  });
+
+  it('tự nộp trễ (job chạy sau hạn): không vượt thời lượng đề', () => {
+    expect(durationOf(at(0), at(70), at(60))).toBe(60 * 60);
+  });
+
+  it('luyện theo Part không đếm giờ: tính tới lúc nộp', () => {
+    expect(durationOf(at(0), at(12), null)).toBe(12 * 60);
   });
 });

@@ -429,6 +429,23 @@ const injectedRtkApi = api
         query: () => ({ url: `/api/v1/me/attempts/in-progress` }),
         providesTags: ['Attempts'],
       }),
+      listAttemptHistory: build.query<ListAttemptHistoryApiResponse, ListAttemptHistoryApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/me/attempts`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+            examId: queryArg.examId,
+            mode: queryArg.mode,
+            sort: queryArg.sort,
+          },
+        }),
+        providesTags: ['Attempts'],
+      }),
+      getAttemptReview: build.query<GetAttemptReviewApiResponse, GetAttemptReviewApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/attempts/${queryArg}/review` }),
+        providesTags: ['Attempts'],
+      }),
       getAttempt: build.query<GetAttemptApiResponse, GetAttemptApiArg>({
         query: (queryArg) => ({ url: `/api/v1/attempts/${queryArg}` }),
         providesTags: ['Attempts'],
@@ -911,6 +928,26 @@ export type ListInProgressAttemptsApiResponse = /** status 200 Thành công */ {
   data: InProgressAttempt[];
 };
 export type ListInProgressAttemptsApiArg = void;
+export type ListAttemptHistoryApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AttemptHistoryItem[];
+  meta: PaginationMetaDto;
+};
+export type ListAttemptHistoryApiArg = {
+  page?: number;
+  limit?: number;
+  /** Chỉ bài của đề này */
+  examId?: string;
+  mode?: AttemptMode;
+  sort?: 'submittedAt:desc' | 'submittedAt:asc';
+};
+export type GetAttemptReviewApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AttemptReview;
+};
+export type GetAttemptReviewApiArg = string;
 export type GetAttemptApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
@@ -1012,7 +1049,8 @@ export type ErrorCode =
   | 'ATTEMPT_PART_PRACTICE_DISABLED'
   | 'ATTEMPT_NOT_IN_PROGRESS'
   | 'ATTEMPT_EXPIRED'
-  | 'ATTEMPT_QUESTION_NOT_FOUND';
+  | 'ATTEMPT_QUESTION_NOT_FOUND'
+  | 'ATTEMPT_NOT_SUBMITTED';
 export type FieldErrorDto = {
   /** Trường lỗi, trường lồng nhau dạng address.city */
   field: string;
@@ -1766,6 +1804,105 @@ export type InProgressAttempt = {
   answeredCount: number;
   totalQuestions: number;
 };
+export type AttemptHistoryItem = {
+  id: string;
+  mode: AttemptMode;
+  startedAt: string;
+  submittedAt: string;
+  /** Thời gian làm bài (giây), từ lúc bắt đầu đến khi nộp */
+  durationSeconds: number;
+  /** true: hệ thống tự nộp khi hết giờ */
+  autoSubmitted: boolean;
+  exam: AttemptExamRef;
+  /** Part đã luyện (mode PART) */
+  section: AttemptSectionRef | null;
+  result: AttemptResult;
+};
+export type ReviewCounts = {
+  correct: number;
+  wrong: number;
+  skipped: number;
+  /** Câu Speaking/Writing chờ AI chấm */
+  pending: number;
+};
+export type ReviewGroup = {
+  id: string;
+  /** Đoạn văn, bảng thông tin */
+  passage: string | null;
+  audioKey: string | null;
+  imageKey: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  audioUrl: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  imageUrl: string | null;
+  /** Lời thoại Listening (chỉ hiện ở màn xem lại) */
+  transcript: string | null;
+};
+export type ReviewOption = {
+  id: string;
+  label: string;
+  content: string;
+  isCorrect: boolean;
+};
+export type ReviewOutcome = 'CORRECT' | 'WRONG' | 'SKIPPED' | 'PENDING';
+export type ReviewQuestion = {
+  /** Số câu liên tục trong cả đề: 1, 2, 3… */
+  number: number;
+  examQuestionId: string;
+  type: QuestionType;
+  content: string;
+  audioKey: string | null;
+  imageKey: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  audioUrl: string | null;
+  /** URL có chữ ký để phát trong <audio>/<img>, còn hạn ít nhất 4 giờ; null khi chưa có tệp */
+  imageUrl: string | null;
+  prepSeconds: number | null;
+  responseSeconds: number | null;
+  /** Có isCorrect; rỗng với câu trả lời mở */
+  options: ReviewOption[];
+  outcome: ReviewOutcome;
+  /** Phương án đã chọn */
+  selectedOptionId: string | null;
+  /** Bài viết (Writing) */
+  textAnswer: string | null;
+  isFlagged: boolean;
+  /** Giải thích đáp án (trắc nghiệm) hoặc gợi ý cách làm (câu trả lời mở) */
+  explanation: string | null;
+  /** Câu trả lời mẫu (Speaking/Writing) */
+  sampleAnswer: string | null;
+};
+export type ReviewBlock = {
+  group: ReviewGroup | null;
+  questions: ReviewQuestion[];
+};
+export type ReviewSection = {
+  id: string;
+  skill: Skill;
+  part: number;
+  name: string;
+  counts: ReviewCounts;
+  blocks: ReviewBlock[];
+};
+export type AttemptReview = {
+  id: string;
+  mode: AttemptMode;
+  status: AttemptStatus;
+  startedAt: string;
+  expiresAt: string | null;
+  submittedAt: string | null;
+  /** Số giây còn lại do server tính từ expiresAt; null khi không đếm giờ (luyện theo Part) */
+  remainingSeconds: number | null;
+  /** Giờ server, để FE bù lệch đồng hồ */
+  serverTime: string;
+  exam: AttemptExamRef;
+  /** Part đang luyện (mode PART) */
+  section: AttemptSectionRef | null;
+  result: AttemptResult;
+  totalQuestions: number;
+  /** Luyện theo Part chỉ có Part đó */
+  sections: ReviewSection[];
+};
 export type SaveAnswerResult = {
   answer: AttemptAnswerItem;
   /** false: server đã có bản trả lời mới hơn (answeredAt lớn hơn) nên giữ bản đó */
@@ -1859,6 +1996,8 @@ export const {
   useGetPublishedExamQuery,
   useStartAttemptMutation,
   useListInProgressAttemptsQuery,
+  useListAttemptHistoryQuery,
+  useGetAttemptReviewQuery,
   useGetAttemptQuery,
   useSaveAnswerMutation,
   useSyncAnswersMutation,

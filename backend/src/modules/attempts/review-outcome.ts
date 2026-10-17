@@ -40,3 +40,12 @@ const COUNT_KEY: Record<ReviewOutcome, keyof ReviewCounts> = {
 export function addOutcome(counts: ReviewCounts, outcome: ReviewOutcome): void {
   counts[COUNT_KEY[outcome]]++;
 }
+
+/**
+ * Thời gian làm bài (giây). Bài tự nộp có thể được chấm trễ hơn giờ hết hạn (job quét định kỳ, hoặc
+ * học viên mở lại bài sau nhiều giờ) nên tính tới mốc sớm hơn giữa lúc nộp và lúc hết giờ
+ */
+export function durationOf(startedAt: Date, submittedAt: Date, expiresAt: Date | null): number {
+  const end = expiresAt && expiresAt < submittedAt ? expiresAt : submittedAt;
+  return Math.max(0, Math.round((end.getTime() - startedAt.getTime()) / 1000));
+}
