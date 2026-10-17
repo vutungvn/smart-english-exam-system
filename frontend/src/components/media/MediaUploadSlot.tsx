@@ -8,6 +8,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
+import { MediaAudio } from '@/components/media/MediaAudio';
 import { Button } from '@/components/ui/button';
 import {
   describeMediaError,
@@ -167,9 +168,7 @@ export function MediaUploadSlot({
 
       {url ? (
         kind === 'audio' ? (
-          <audio controls preload="metadata" src={url} className="w-full">
-            Trình duyệt không phát được âm thanh.
-          </audio>
+          <MediaAudio url={url} />
         ) : (
           <a href={url} target="_blank" rel="noreferrer" title="Mở ảnh cỡ gốc">
             <img

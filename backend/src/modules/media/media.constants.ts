@@ -21,11 +21,15 @@ export function avatarKeyFromUrl(url: string | null): string | null {
 }
 
 // Audio, ảnh của câu hỏi và nhóm câu: key questions/<uuid>.<đuôi>, phát qua
-// GET /api/v1/media/questions/<uuid>.<đuôi>?exp=…&sig=… (URL ký, xem MediaUrlService)
+// GET /api/v1/media/questions/<uuid>_<đuôi>?exp=…&sig=… (URL ký, xem MediaUrlService).
+// Đường dẫn KHÔNG có đuôi tệp (.mp3): trình quản lý tải xuống như IDM bắt mọi request có đuôi nằm
+// trong danh sách loại tệp của nó (kể cả request fetch), trả cho trình duyệt một phản hồi rỗng
+// (audio không phát được) và bật hộp thoại tải xuống.
 export const QUESTION_MEDIA_KEY_PREFIX = 'questions/';
 export const QUESTION_MEDIA_URL_PREFIX = '/api/v1/media/questions/';
+/** Tên tệp trên URL: <uuid>_<đuôi>; vẫn nhận <uuid>.<đuôi> của URL ký phát ra trước đây (còn hạn vài giờ) */
 export const QUESTION_MEDIA_FILE_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(mp3|jpg|png|webp)$/;
+  /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})[._](mp3|jpg|png|webp)$/;
 
 /** Định dạng tệp câu hỏi được nhận: đuôi lưu trong kho và Content-Type khi phát lại */
 export const QUESTION_MEDIA_TYPES = {

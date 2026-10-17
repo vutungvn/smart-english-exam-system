@@ -44,7 +44,9 @@ export class MediaUrlService {
       Math.ceil(now / 1000 / ROUND_SECONDS) * ROUND_SECONDS +
       URL_TTL_SECONDS
     ).toString();
-    return `${QUESTION_MEDIA_URL_PREFIX}${file}?exp=${exp}&sig=${this.sign(file, exp)}`;
+    // Chữ ký tính trên tên tệp trong kho (<uuid>.<đuôi>); trên URL đổi dấu chấm để đường dẫn không có đuôi tệp
+    const segment = file.replace('.', '_');
+    return `${QUESTION_MEDIA_URL_PREFIX}${segment}?exp=${exp}&sig=${this.sign(file, exp)}`;
   }
 
   /** Thêm audioUrl, imageUrl cạnh audioKey, imageKey */
