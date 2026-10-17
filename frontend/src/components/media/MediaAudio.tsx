@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AudioLines, LoaderCircle, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AudioPlayer } from './AudioPlayer';
 
 /**
  * Tệp đã tải, dùng lại khi quay lại câu cũ (giới hạn số tệp để không giữ quá nhiều trong bộ nhớ).
@@ -72,13 +73,8 @@ export function MediaAudio({ url, className }: MediaAudioProps) {
 
   const src = direct ? url : current?.src;
 
-  if (src) {
-    return (
-      <audio controls preload="metadata" src={src} className={cn('w-full', className)}>
-        Trình duyệt không phát được âm thanh.
-      </audio>
-    );
-  }
+  // Trình phát tự làm, không có nút/menu tải xuống của trình duyệt (xem AudioPlayer)
+  if (src) return <AudioPlayer src={src} className={className} />;
 
   const boxClass = cn(
     'flex h-13.5 w-full items-center gap-2.5 rounded-full bg-slate-100 px-4 text-sm',
