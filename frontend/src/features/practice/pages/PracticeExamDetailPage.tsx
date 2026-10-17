@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import {
   CircleCheck,
   CirclePlay,
@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Trash2,
   TriangleAlert,
+  History,
 } from 'lucide-react';
 import { toApiError } from '@/api/errors';
 import {
@@ -28,7 +29,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState, ErrorState } from '@/features/question-bank/components/ListStates';
 import { SkillPill } from '@/features/question-bank/components/Pills';
 import { cn } from '@/lib/utils';
-import { attemptPath, formatClock, PRACTICE_PATH, SCALE_META } from '../practice-meta';
+import { attemptPath, formatClock, PRACTICE_PATH, resultsPath, SCALE_META } from '../practice-meta';
 
 const NOTES = [
   'Câu trả lời tự lưu sau mỗi lần chọn hoặc ngừng gõ.',
@@ -322,6 +323,13 @@ function ExamDetail({ exam }: { exam: ExamCatalogDetail }) {
                 {canStartFull ? 'Bắt đầu làm cả đề' : 'Đã hết lượt làm cả đề'}
               </Button>
             )}
+            <Link
+              to={resultsPath(exam.id)}
+              className="mt-3 flex items-center justify-center gap-1.5 text-sm font-semibold text-primary hover:text-brand"
+            >
+              <History className="size-4" />
+              Lịch sử làm đề này
+            </Link>
           </section>
 
           <section className="rounded-3xl border border-border bg-white p-5 shadow-2xs">

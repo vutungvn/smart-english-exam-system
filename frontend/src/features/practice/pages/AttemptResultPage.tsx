@@ -1,16 +1,22 @@
 import { Navigate, useParams } from 'react-router';
-import { Eye, Hourglass, ListRestart, Timer, Trophy } from 'lucide-react';
+import { Eye, History, Hourglass, ListRestart, Timer, Trophy } from 'lucide-react';
 import { toApiError } from '@/api/errors';
 import { useGetAttemptQuery, type AttemptResult, type SkillScoreItem } from '@/api/generated';
 import { ButtonLink } from '@/components/ButtonLink';
 import { PageHeader } from '@/components/PageHeader';
-import { Button } from '@/components/ui/button';
 import { EmptyState, ErrorState } from '@/features/question-bank/components/ListStates';
 import { SkillPill } from '@/features/question-bank/components/Pills';
 import { cn } from '@/lib/utils';
-import { attemptPath, formatDateTime, PRACTICE_PATH, practiceExamPath } from '../practice-meta';
+import {
+  attemptPath,
+  attemptReviewPath,
+  formatDateTime,
+  PRACTICE_PATH,
+  practiceExamPath,
+  resultsPath,
+} from '../practice-meta';
 
-/** Kết quả sau khi nộp (bản gọn). Xem lại đáp án từng câu làm ở SPRINT-55 */
+/** Kết quả sau khi nộp (bản gọn); đáp án từng câu ở trang Xem lại (AttemptReviewPage) */
 export function AttemptResultPage() {
   const { id = '' } = useParams();
   const { data, error, isLoading, refetch } = useGetAttemptQuery(id, {
@@ -95,15 +101,22 @@ export function AttemptResultPage() {
             <ListRestart />
             Làm lại đề
           </ButtonLink>
-          <Button
-            type="button"
-            variant="outline"
-            disabled
-            className="h-11 w-full rounded-xl font-semibold"
+          <ButtonLink
+            to={attemptReviewPath(attempt.id)}
+            variant="secondary"
+            className="h-11 bg-white ring-1 ring-border"
           >
             <Eye />
-            Xem lại đáp án (sắp có)
-          </Button>
+            Xem lại đáp án
+          </ButtonLink>
+          <ButtonLink
+            to={resultsPath(attempt.exam.id)}
+            variant="ghost"
+            className="h-10 text-sm text-slate-600"
+          >
+            <History />
+            Lịch sử làm đề này
+          </ButtonLink>
         </aside>
       </div>
     </div>

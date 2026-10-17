@@ -7,6 +7,12 @@ export const practiceExamPath = (id: string) => `${PRACTICE_PATH}/${id}`;
 /** Màn làm bài (chế độ tập trung, không có sidebar) */
 export const attemptPath = (id: string) => `/app/attempts/${id}`;
 export const attemptResultPath = (id: string) => `/app/attempts/${id}/result`;
+/** Xem lại đáp án từng câu của bài đã nộp (SPRINT-55) */
+export const attemptReviewPath = (id: string) => `/app/attempts/${id}/review`;
+/** Lịch sử làm bài: mục "Kết quả & xem lại" trên sidebar */
+export const RESULTS_PATH = '/app/results';
+export const resultsPath = (examId?: string) =>
+  examId ? `${RESULTS_PATH}?examId=${examId}` : RESULTS_PATH;
 
 /** Tên loại đề cho học viên (giáo viên dùng nhãn ngắn hơn ở EXAM_TYPE_META) */
 export const SCALE_META: Record<ScoringScale, { label: string; pill: string }> = {

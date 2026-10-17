@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   Res,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -21,19 +22,29 @@ import {
   ApiEnvelope,
   ApiListEnvelope,
   ApiNullEnvelope,
+  ApiPaginatedEnvelope,
 } from '../../common/swagger/api-envelope.decorator.js';
 import { ApiErrors } from '../../common/swagger/api-errors.decorator.js';
 import type { ApiErrorExample } from '../../common/swagger/api-errors.decorator.js';
+import type { WithMeta } from '../../common/types/api-response.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
+import { AttemptReviewService } from './attempt-review.service.js';
 import {
   AttemptDetail,
+  AttemptHistoryItem,
   AttemptResult,
+  AttemptReview,
   InProgressAttempt,
   SaveAnswerResult,
   SyncAnswersResult,
 } from './attempts.types.js';
 import { AttemptsService } from './attempts.service.js';
-import { SaveAnswerDto, StartAttemptDto, SyncAnswersDto } from './dto/attempt.dto.js';
+import {
+  AttemptHistoryQueryDto,
+  SaveAnswerDto,
+  StartAttemptDto,
+  SyncAnswersDto,
+} from './dto/attempt.dto.js';
 
 const attemptId = () => UuidParam(ErrorCode.ATTEMPT_NOT_FOUND);
 const ANSWER_RULE: ApiErrorExample = {
@@ -46,7 +57,10 @@ const ANSWER_RULE: ApiErrorExample = {
 @Roles(RoleCode.STUDENT)
 @Controller()
 export class AttemptsController {
-  constructor(private readonly attempts: AttemptsService) {}
+  constructor(
+    private readonly attempts: AttemptsService,
+    private readonly reviews: AttemptReviewService,
+  ) {}
 
   @Post('exams/:id/attempts')
   @ApiOperation({
@@ -89,6 +103,42 @@ export class AttemptsController {
   @ApiListEnvelope(InProgressAttempt)
   listInProgressAttempts(@CurrentUser() user: AuthUser): Promise<InProgressAttempt[]> {
     return this.attempts.listInProgress(user);
+  }
+
+  @Get('me/attempts')
+  @ApiOperation({
+    summary: 'Lịch sử làm bài của tôi (chỉ bài đã nộp)',
+    description:
+      'Mới nhất trước. Lọc theo đề (examId) và kiểu làm (FULL cả đề / PART luyện một Part). ' +
+      'Mỗi dòng có kết quả chấm, thời gian làm và cờ autoSubmitted (hệ thống tự nộp khi hết giờ).',
+  })
+  @ApiPaginatedEnvelope(AttemptHistoryItem)
+  listAttemptHistory(
+    @Query() query: AttemptHistoryQueryDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<WithMeta<AttemptHistoryItem[]>> {
+    return this.reviews.history(query, user);
+  }
+
+  @Get('attempts/:id/review')
+  @ApiOperation({
+    summary: 'Xem lại bài đã nộp: đáp án, giải thích từng câu',
+    description:
+      'Có ngay sau khi nộp. Mỗi câu có kết quả (CORRECT, WRONG, SKIPPED; PENDING: câu Speaking/' +
+      'Writing chờ AI chấm), lựa chọn hoặc bài viết của học viên, đáp án đúng (isCorrect), giải ' +
+      'thích, câu trả lời mẫu; nhóm Listening có lời thoại. Nội dung câu theo bản hiện tại trong ' +
+      'ngân hàng câu hỏi. Bài quá hạn chưa kịp tự nộp thì được nộp luôn.',
+  })
+  @ApiEnvelope(AttemptReview)
+  @ApiErrors(ErrorCode.ATTEMPT_NOT_FOUND, ErrorCode.ATTEMPT_NOT_SUBMITTED, {
+    code: ErrorCode.ATTEMPT_NOT_SUBMITTED,
+    message: 'Bài làm đã hủy, không có kết quả để xem lại',
+  })
+  getAttemptReview(
+    @Param('id', attemptId()) id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<AttemptReview> {
+    return this.reviews.review(id, user);
   }
 
   @Get('attempts/:id')

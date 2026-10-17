@@ -7,6 +7,7 @@ import {
   IsBoolean,
   IsDateString,
   IsEnum,
+  IsIn,
   IsOptional,
   IsString,
   IsUUID,
@@ -110,4 +111,25 @@ export class SyncAnswersDto {
   @ValidateNested({ each: true })
   @Type(() => SyncAnswerItemDto)
   answers: SyncAnswerItemDto[];
+}
+
+export const ATTEMPT_HISTORY_SORTS = ['submittedAt:desc', 'submittedAt:asc'] as const;
+export type AttemptHistorySort = (typeof ATTEMPT_HISTORY_SORTS)[number];
+
+/** GET /me/attempts: bài đã nộp của chính học viên */
+export class AttemptHistoryQueryDto extends PaginationQueryDto {
+  @ApiPropertyOptional({ format: 'uuid', description: 'Chỉ bài của đề này' })
+  @IsOptional()
+  @IsUUID('all', { message: 'examId không hợp lệ' })
+  examId?: string;
+
+  @ApiPropertyOptional({ enum: AttemptMode, enumName: 'AttemptMode' })
+  @IsOptional()
+  @IsEnum(AttemptMode, { message: 'mode phải là FULL hoặc PART' })
+  mode?: AttemptMode;
+
+  @ApiPropertyOptional({ enum: ATTEMPT_HISTORY_SORTS, default: 'submittedAt:desc' })
+  @IsOptional()
+  @IsIn(ATTEMPT_HISTORY_SORTS, { message: `sort thuộc: ${ATTEMPT_HISTORY_SORTS.join(', ')}` })
+  sort: AttemptHistorySort = 'submittedAt:desc';
 }

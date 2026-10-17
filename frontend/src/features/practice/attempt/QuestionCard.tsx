@@ -58,7 +58,13 @@ export function QuestionCard({
       </div>
 
       {(question.imageUrl || question.audioUrl) && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        // Có cả ảnh và audio thì chia 2 cột; chỉ một thứ (L2, S3, S4 chỉ có audio) thì dùng hết chiều rộng
+        <div
+          className={cn(
+            'mt-4 grid gap-3',
+            question.imageUrl && question.audioUrl && 'sm:grid-cols-2',
+          )}
+        >
           {question.imageUrl && <QuestionMedia kind="image" url={question.imageUrl} />}
           {question.audioUrl && <QuestionMedia kind="audio" url={question.audioUrl} />}
         </div>

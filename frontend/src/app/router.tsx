@@ -16,6 +16,8 @@ import { ExamsPage } from '@/features/exams/pages/ExamsPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
 import { AttemptPage } from '@/features/practice/pages/AttemptPage';
 import { AttemptResultPage } from '@/features/practice/pages/AttemptResultPage';
+import { AttemptReviewPage } from '@/features/practice/pages/AttemptReviewPage';
+import { AttemptHistoryPage } from '@/features/practice/pages/AttemptHistoryPage';
 import { PracticeExamDetailPage } from '@/features/practice/pages/PracticeExamDetailPage';
 import { PracticeExamsPage } from '@/features/practice/pages/PracticeExamsPage';
 import { QuestionBankPage } from '@/features/question-bank/pages/QuestionBankPage';
@@ -33,7 +35,6 @@ import { TeacherLayout } from './layouts/teacher/TeacherLayout';
 // TẠM: các mục menu học viên chưa làm, hiện trang "đang phát triển" trong layout
 const STUDENT_PLACEHOLDERS = [
   { path: 'courses', title: 'Khóa học của tôi' },
-  { path: 'results', title: 'Kết quả & xem lại' },
   { path: 'progress', title: 'Tiến độ học tập' },
   { path: 'ai-analysis', title: 'Phân tích AI' },
   { path: 'assistant', title: 'Trợ giảng AI' },
@@ -93,6 +94,8 @@ export const router = createBrowserRouter([
               { path: 'exams', element: <PracticeExamsPage /> },
               { path: 'exams/:id', element: <PracticeExamDetailPage /> },
               { path: 'attempts/:id/result', element: <AttemptResultPage /> },
+              { path: 'attempts/:id/review', element: <AttemptReviewPage /> },
+              { path: 'results', element: <AttemptHistoryPage /> },
               { path: 'profile', element: <ProfilePage /> },
               { path: 'profile/password', element: <ChangePasswordPage /> },
               ...STUDENT_PLACEHOLDERS.map(({ path, title }) => ({
