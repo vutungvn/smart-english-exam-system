@@ -17,6 +17,7 @@ import { QuestionsModule } from './modules/questions/questions.module.js';
 import { ExamsModule } from './modules/exams/exams.module.js';
 import { AttemptsModule } from './modules/attempts/attempts.module.js';
 import { QuestionImportModule } from './modules/question-import/question-import.module.js';
+import { ProgressModule } from './modules/progress/progress.module.js';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { QuestionImportModule } from './modules/question-import/question-import.
     QuestionImportModule,
     ExamsModule,
     AttemptsModule,
+    ProgressModule,
   ],
   controllers: [AppController],
   providers: [AppService],
