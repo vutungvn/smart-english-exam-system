@@ -83,7 +83,10 @@ export const enhancedApi = api.enhanceEndpoints({
     saveAnswer: { invalidatesTags: [] },
     syncAnswers: { invalidatesTags: [] },
     startAttempt: { invalidatesTags: ['Attempts', 'Exam Catalog'] },
-    submitAttempt: { invalidatesTags: ['Attempts', 'Exam Catalog'] },
+    // Nộp bài làm đổi điểm, tỉ lệ đúng ở trang Tiến độ và Trang chủ
+    submitAttempt: { invalidatesTags: ['Attempts', 'Exam Catalog', 'Progress'] },
+    // Đổi điểm mục tiêu thì đường mục tiêu trên biểu đồ điểm đổi theo
+    updateProfile: { invalidatesTags: ['Me', 'Progress'] },
     cancelAttempt: { invalidatesTags: ['Attempts', 'Exam Catalog'] },
 
     // Nhập câu hỏi từ tệp .zip

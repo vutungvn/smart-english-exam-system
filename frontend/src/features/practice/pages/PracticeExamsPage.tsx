@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { FileSearch } from 'lucide-react';
 import { toApiError } from '@/api/errors';
 import {
@@ -22,7 +23,11 @@ const PAGE_SIZES = [9, 18, 36] as const;
 
 /** Trang "Luyện đề thi": đề đã xuất bản, bài đang làm dở */
 export function PracticeExamsPage() {
-  const [skill, setSkill] = useState<Skill>();
+  // Mở từ nút "Luyện ngay" (?skill=READING) thì lọc sẵn theo kỹ năng
+  const [params] = useSearchParams();
+  const [skill, setSkill] = useState<Skill | undefined>(() =>
+    SKILLS.find((item) => item === params.get('skill')),
+  );
   const [scale, setScale] = useState<ScoringScale>();
   const [q, setQ] = useState<string>();
   const [page, setPage] = useState(1);

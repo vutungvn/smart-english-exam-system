@@ -1,5 +1,5 @@
 import { BookOpen, Headphones, Mic, PenLine } from 'lucide-react';
-import type { SkillKey } from './mock-data';
+import type { Skill } from '@/api/generated';
 
 interface SkillMeta {
   label: string;
@@ -11,7 +11,7 @@ interface SkillMeta {
 }
 
 // Màu nhận diện 4 kỹ năng lấy từ token skill-* trong index.css
-export const SKILL_META: Record<SkillKey, SkillMeta> = {
+export const SKILL_META: Record<Skill, SkillMeta> = {
   LISTENING: {
     label: 'Listening',
     icon: Headphones,
