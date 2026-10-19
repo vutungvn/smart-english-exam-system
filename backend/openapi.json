@@ -11469,6 +11469,331 @@
           "Attempts"
         ]
       }
+    },
+    "/api/v1/me/progress/score-trend": {
+      "get": {
+        "description": "Cũ nhất trước. Mỗi điểm có scaledScore (TOEIC 10–990 hoặc %, null khi còn câu chờ AI chấm), choicePercent (% câu trắc nghiệm đúng, luôn có) và điểm từng kỹ năng; kèm targetScore của học viên.",
+        "operationId": "getScoreTrend",
+        "parameters": [
+          {
+            "name": "range",
+            "required": false,
+            "in": "query",
+            "description": "30d, 90d, 1y: 30 ngày, 90 ngày, 1 năm gần nhất · all: toàn bộ",
+            "schema": {
+              "default": "90d",
+              "type": "string",
+              "enum": [
+                "30d",
+                "90d",
+                "1y",
+                "all"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ScoreTrend"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "range",
+                            "message": "range không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Điểm các bài đã nộp theo thời gian (biểu đồ)",
+        "tags": [
+          "Progress"
+        ]
+      }
+    },
+    "/api/v1/me/progress/skills": {
+      "get": {
+        "description": "Tính trên câu trắc nghiệm của các bài đã nộp (câu bỏ trống tính là sai). Chủ đề yếu: đã làm ≥ 5 câu và đúng dưới 80%, yếu nhất trước, tối đa 5 chủ đề.",
+        "operationId": "getProgressSkills",
+        "parameters": [
+          {
+            "name": "range",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "all",
+              "type": "string",
+              "enum": [
+                "30d",
+                "90d",
+                "1y",
+                "all"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ProgressSkills"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "range",
+                            "message": "range không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Năng lực theo kỹ năng, Part, chủ đề",
+        "tags": [
+          "Progress"
+        ]
+      }
     }
   },
   "info": {
@@ -15402,6 +15727,378 @@
         },
         "required": [
           "answers"
+        ]
+      },
+      "ScoreTrendPoint": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttemptMode"
+              }
+            ]
+          },
+          "exam": {
+            "$ref": "#/components/schemas/AttemptExamRef"
+          },
+          "section": {
+            "nullable": true,
+            "description": "Part đã luyện (mode PART)",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AttemptSectionRef"
+              }
+            ]
+          },
+          "scoring": {
+            "type": "string",
+            "enum": [
+              "TOEIC_990",
+              "PERCENT"
+            ],
+            "description": "TOEIC_990: làm cả đề TOEIC LR · PERCENT: đề luyện tập, lượt luyện theo Part"
+          },
+          "scaledScore": {
+            "type": "number",
+            "nullable": true,
+            "description": "Điểm theo thang (TOEIC 10–990 hoặc %); null khi còn câu Speaking/Writing chờ AI chấm"
+          },
+          "choicePercent": {
+            "type": "number",
+            "nullable": true,
+            "description": "% câu trắc nghiệm đúng, có cả khi bài còn câu chờ chấm; null khi bài không có câu trắc nghiệm"
+          },
+          "correctCount": {
+            "type": "integer"
+          },
+          "choiceTotal": {
+            "type": "integer",
+            "description": "Số câu trắc nghiệm của bài"
+          },
+          "skillScores": {
+            "description": "Điểm từng kỹ năng (TOEIC LR: 5–495)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillScoreItem"
+            }
+          }
+        },
+        "required": [
+          "attemptId",
+          "submittedAt",
+          "mode",
+          "exam",
+          "section",
+          "scoring",
+          "scaledScore",
+          "choicePercent",
+          "correctCount",
+          "choiceTotal",
+          "skillScores"
+        ]
+      },
+      "ScoreTrend": {
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string",
+            "enum": [
+              "30d",
+              "90d",
+              "1y",
+              "all"
+            ]
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "null: toàn bộ"
+          },
+          "targetScore": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Điểm mục tiêu TOEIC của học viên"
+          },
+          "points": {
+            "description": "Bài đã nộp trong khoảng thời gian, cũ nhất trước (tối đa 200 bài gần nhất)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScoreTrendPoint"
+            }
+          }
+        },
+        "required": [
+          "range",
+          "from",
+          "targetScore",
+          "points"
+        ]
+      },
+      "ProgressOverview": {
+        "type": "object",
+        "properties": {
+          "submittedCount": {
+            "type": "integer",
+            "description": "Số bài đã nộp (cả đề + luyện Part)"
+          },
+          "fullCount": {
+            "type": "integer"
+          },
+          "partCount": {
+            "type": "integer"
+          },
+          "choiceTotal": {
+            "type": "integer",
+            "description": "Tổng lượt câu trắc nghiệm"
+          },
+          "choiceCorrect": {
+            "type": "integer"
+          },
+          "accuracy": {
+            "type": "number",
+            "nullable": true,
+            "description": "% đúng trên tổng câu trắc nghiệm (câu bỏ trống tính là sai); null khi chưa làm câu nào"
+          },
+          "lastSubmittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "bestToeicScore": {
+            "type": "number",
+            "nullable": true,
+            "description": "Điểm TOEIC LR cao nhất (chỉ bài làm cả đề TOEIC LR)"
+          },
+          "latestToeicScore": {
+            "type": "number",
+            "nullable": true,
+            "description": "Điểm TOEIC LR của bài gần nhất"
+          }
+        },
+        "required": [
+          "submittedCount",
+          "fullCount",
+          "partCount",
+          "choiceTotal",
+          "choiceCorrect",
+          "accuracy",
+          "lastSubmittedAt",
+          "bestToeicScore",
+          "latestToeicScore"
+        ]
+      },
+      "SkillProgress": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Số lượt câu trắc nghiệm (một câu làm ở 2 bài tính 2)"
+          },
+          "correct": {
+            "type": "integer"
+          },
+          "wrong": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer"
+          },
+          "accuracy": {
+            "type": "number",
+            "nullable": true,
+            "description": "% đúng trên tổng câu trắc nghiệm (câu bỏ trống tính là sai); null khi chưa làm câu nào"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          }
+        },
+        "required": [
+          "total",
+          "correct",
+          "wrong",
+          "skipped",
+          "accuracy",
+          "skill"
+        ]
+      },
+      "PartProgress": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Số lượt câu trắc nghiệm (một câu làm ở 2 bài tính 2)"
+          },
+          "correct": {
+            "type": "integer"
+          },
+          "wrong": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer"
+          },
+          "accuracy": {
+            "type": "number",
+            "nullable": true,
+            "description": "% đúng trên tổng câu trắc nghiệm (câu bỏ trống tính là sai); null khi chưa làm câu nào"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "example": "Incomplete Sentences"
+          }
+        },
+        "required": [
+          "total",
+          "correct",
+          "wrong",
+          "skipped",
+          "accuracy",
+          "skill",
+          "part",
+          "name"
+        ]
+      },
+      "TopicProgress": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Số lượt câu trắc nghiệm (một câu làm ở 2 bài tính 2)"
+          },
+          "correct": {
+            "type": "integer"
+          },
+          "wrong": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer"
+          },
+          "accuracy": {
+            "type": "number",
+            "nullable": true,
+            "description": "% đúng trên tổng câu trắc nghiệm (câu bỏ trống tính là sai); null khi chưa làm câu nào"
+          },
+          "topicId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "example": "P5/P6 – Từ loại"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "parts": {
+            "description": "Part dùng chủ đề này",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "correct",
+          "wrong",
+          "skipped",
+          "accuracy",
+          "topicId",
+          "name",
+          "skill",
+          "parts"
+        ]
+      },
+      "ProgressSkills": {
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string",
+            "enum": [
+              "30d",
+              "90d",
+              "1y",
+              "all"
+            ]
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "null: toàn bộ"
+          },
+          "overview": {
+            "$ref": "#/components/schemas/ProgressOverview"
+          },
+          "skills": {
+            "description": "Chỉ kỹ năng đã làm câu trắc nghiệm",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillProgress"
+            }
+          },
+          "parts": {
+            "description": "Theo thứ tự Part trong đề (L1…L4, R5…R7)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartProgress"
+            }
+          },
+          "weakTopics": {
+            "description": "Chủ đề cần luyện thêm: đã làm ≥ minTopicQuestions câu và tỉ lệ đúng < weakAccuracy; yếu nhất trước, tối đa 5",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopicProgress"
+            }
+          },
+          "minTopicQuestions": {
+            "type": "integer",
+            "example": 5
+          },
+          "weakAccuracy": {
+            "type": "number",
+            "example": 80
+          }
+        },
+        "required": [
+          "range",
+          "from",
+          "overview",
+          "skills",
+          "parts",
+          "weakTopics",
+          "minTopicQuestions",
+          "weakAccuracy"
         ]
       }
     }

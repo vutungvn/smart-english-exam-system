@@ -1,25 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router';
-import { ArrowRight, Clock3 } from 'lucide-react';
-import { IN_PROGRESS_EXAM } from '../mock-data';
+import { ArrowRight, Clock3, FilePlus2 } from 'lucide-react';
+import { useListInProgressAttemptsQuery, type InProgressAttempt } from '@/api/generated';
+import { useCountdown } from '@/features/practice/attempt/use-countdown';
+import { attemptPath, formatClock, PRACTICE_PATH } from '@/features/practice/practice-meta';
 
-function formatRemaining(totalSeconds: number): string {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+/** Bài làm dở gần nhất (cả đề có đồng hồ theo giờ server; luyện Part không đếm giờ) */
+export function InProgressExamCard() {
+  const { data, isLoading } = useListInProgressAttemptsQuery();
+  const attempt = data?.data[0];
+
+  if (isLoading) {
+    return (
+      <div aria-busy className="h-64 animate-pulse rounded-3xl border border-border bg-white" />
+    );
+  }
+  if (!attempt) return <NoAttemptCard />;
+  return <AttemptCard key={`${attempt.id}-${data?.data.length}`} attempt={attempt} />;
 }
 
-// TẠM: dữ liệu mẫu. Khi nối API: không có bài làm dở thì hiện gợi ý "Bắt đầu bài thi thử đầu tiên";
-// đồng hồ đếm theo expires_at của server, link "Làm tiếp" mở đúng bài làm
-export function InProgressExamCard() {
-  const { title, meta, answered, total, remainingSeconds } = IN_PROGRESS_EXAM;
-  const [remaining, setRemaining] = useState(remainingSeconds);
-  const percent = Math.round((answered / total) * 100);
-
-  useEffect(() => {
-    const timer = setInterval(() => setRemaining((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(timer);
-  }, []);
+function AttemptCard({ attempt }: { attempt: InProgressAttempt }) {
+  // Mốc hết giờ theo đồng hồ máy, quy từ số giây còn lại server trả về (không lệch giờ máy)
+  const [deadline] = useState(() =>
+    attempt.remainingSeconds === null ? null : Date.now() + attempt.remainingSeconds * 1000,
+  );
+  const remaining = useCountdown(deadline);
+  const percent = attempt.totalQuestions
+    ? Math.round((attempt.answeredCount / attempt.totalQuestions) * 100)
+    : 0;
 
   return (
     <section className="flex flex-col rounded-3xl border border-l-4 border-border border-l-skill-writing bg-white p-6 shadow-sm">
@@ -28,19 +36,25 @@ export function InProgressExamCard() {
           <span className="size-1.5 rounded-full bg-skill-writing" />
           Đang làm dở
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-sm font-bold text-amber-700 tabular-nums">
-          <Clock3 className="size-4" />
-          Còn {formatRemaining(remaining)}
-        </span>
+        {remaining !== null && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-sm font-bold text-amber-700 tabular-nums">
+            <Clock3 className="size-4" />
+            Còn {formatClock(remaining)}
+          </span>
+        )}
       </div>
 
-      <h2 className="mt-4 text-lg font-bold text-foreground">{title}</h2>
-      <p className="mt-1 text-sm text-muted-foreground">{meta}</p>
+      <h2 className="mt-4 text-lg font-bold text-foreground">{attempt.exam.title}</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {attempt.section
+          ? `Luyện Part ${attempt.section.part} · ${attempt.section.name} · không tính giờ`
+          : `Làm cả đề · ${attempt.exam.durationMinutes} phút`}
+      </p>
 
       <div className="mt-5 flex items-center justify-between gap-3 text-sm">
         <span className="text-muted-foreground">Tiến độ</span>
         <span className="font-semibold text-foreground">
-          {answered}/{total} câu · {percent}%
+          {attempt.answeredCount}/{attempt.totalQuestions} câu · {percent}%
         </span>
       </div>
       <div className="mt-2 mb-6 h-2 overflow-hidden rounded-full bg-slate-100">
@@ -48,10 +62,31 @@ export function InProgressExamCard() {
       </div>
 
       <Link
-        to="/app/exams"
+        to={attemptPath(attempt.id)}
         className="mt-auto inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-primary to-brand font-semibold text-white shadow-md shadow-primary/30 transition hover:brightness-95"
       >
         Làm tiếp
+        <ArrowRight className="size-4" />
+      </Link>
+    </section>
+  );
+}
+
+function NoAttemptCard() {
+  return (
+    <section className="flex flex-col rounded-3xl border border-border bg-white p-6 shadow-sm">
+      <span className="flex size-11 items-center justify-center rounded-xl bg-accent text-primary">
+        <FilePlus2 className="size-5" />
+      </span>
+      <h2 className="mt-4 text-lg font-bold text-foreground">Không có bài làm dở</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Chọn một đề để làm cả đề có tính giờ, hoặc luyện riêng từng Part không tính giờ.
+      </p>
+      <Link
+        to={PRACTICE_PATH}
+        className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-primary to-brand font-semibold text-white shadow-md shadow-primary/30 transition hover:brightness-95 xl:mt-auto"
+      >
+        Chọn đề luyện
         <ArrowRight className="size-4" />
       </Link>
     </section>

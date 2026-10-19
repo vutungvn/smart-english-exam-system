@@ -9,6 +9,7 @@ export const addTagTypes = [
   'Exams',
   'Exam Catalog',
   'Attempts',
+  'Progress',
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -473,6 +474,24 @@ const injectedRtkApi = api
       cancelAttempt: build.mutation<CancelAttemptApiResponse, CancelAttemptApiArg>({
         query: (queryArg) => ({ url: `/api/v1/attempts/${queryArg}/cancel`, method: 'POST' }),
         invalidatesTags: ['Attempts'],
+      }),
+      getScoreTrend: build.query<GetScoreTrendApiResponse, GetScoreTrendApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/me/progress/score-trend`,
+          params: {
+            range: queryArg,
+          },
+        }),
+        providesTags: ['Progress'],
+      }),
+      getProgressSkills: build.query<GetProgressSkillsApiResponse, GetProgressSkillsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/me/progress/skills`,
+          params: {
+            range: queryArg,
+          },
+        }),
+        providesTags: ['Progress'],
       }),
     }),
     overrideExisting: false,
@@ -985,6 +1004,22 @@ export type CancelAttemptApiResponse = /** status 200 Thành công */ {
   data: object | null;
 };
 export type CancelAttemptApiArg = string;
+export type GetScoreTrendApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ScoreTrend;
+};
+export type GetScoreTrendApiArg =
+  | /** 30d, 90d, 1y: 30 ngày, 90 ngày, 1 năm gần nhất · all: toàn bộ */ (
+      '30d' | '90d' | '1y' | 'all'
+    )
+  | undefined;
+export type GetProgressSkillsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ProgressSkills;
+};
+export type GetProgressSkillsApiArg = ('30d' | '90d' | '1y' | 'all') | undefined;
 export type UserStatus = 'PENDING_VERIFICATION' | 'PENDING_APPROVAL' | 'ACTIVE' | 'LOCKED';
 export type RegisterResult = {
   id: string;
@@ -1940,6 +1975,100 @@ export type SyncAnswerItemDto = {
 export type SyncAnswersDto = {
   answers: SyncAnswerItemDto[];
 };
+export type ScoreTrendPoint = {
+  attemptId: string;
+  submittedAt: string;
+  mode: AttemptMode;
+  exam: AttemptExamRef;
+  /** Part đã luyện (mode PART) */
+  section: AttemptSectionRef | null;
+  /** TOEIC_990: làm cả đề TOEIC LR · PERCENT: đề luyện tập, lượt luyện theo Part */
+  scoring: 'TOEIC_990' | 'PERCENT';
+  /** Điểm theo thang (TOEIC 10–990 hoặc %); null khi còn câu Speaking/Writing chờ AI chấm */
+  scaledScore: number | null;
+  /** % câu trắc nghiệm đúng, có cả khi bài còn câu chờ chấm; null khi bài không có câu trắc nghiệm */
+  choicePercent: number | null;
+  correctCount: number;
+  /** Số câu trắc nghiệm của bài */
+  choiceTotal: number;
+  /** Điểm từng kỹ năng (TOEIC LR: 5–495) */
+  skillScores: SkillScoreItem[];
+};
+export type ScoreTrend = {
+  range: '30d' | '90d' | '1y' | 'all';
+  /** null: toàn bộ */
+  from: string | null;
+  /** Điểm mục tiêu TOEIC của học viên */
+  targetScore: number | null;
+  /** Bài đã nộp trong khoảng thời gian, cũ nhất trước (tối đa 200 bài gần nhất) */
+  points: ScoreTrendPoint[];
+};
+export type ProgressOverview = {
+  /** Số bài đã nộp (cả đề + luyện Part) */
+  submittedCount: number;
+  fullCount: number;
+  partCount: number;
+  /** Tổng lượt câu trắc nghiệm */
+  choiceTotal: number;
+  choiceCorrect: number;
+  /** % đúng trên tổng câu trắc nghiệm (câu bỏ trống tính là sai); null khi chưa làm câu nào */
+  accuracy: number | null;
+  lastSubmittedAt: string | null;
+  /** Điểm TOEIC LR cao nhất (chỉ bài làm cả đề TOEIC LR) */
+  bestToeicScore: number | null;
+  /** Điểm TOEIC LR của bài gần nhất */
+  latestToeicScore: number | null;
+};
+export type SkillProgress = {
+  /** Số lượt câu trắc nghiệm (một câu làm ở 2 bài tính 2) */
+  total: number;
+  correct: number;
+  wrong: number;
+  skipped: number;
+  /** % đúng trên tổng câu trắc nghiệm (câu bỏ trống tính là sai); null khi chưa làm câu nào */
+  accuracy: number | null;
+  skill: Skill;
+};
+export type PartProgress = {
+  /** Số lượt câu trắc nghiệm (một câu làm ở 2 bài tính 2) */
+  total: number;
+  correct: number;
+  wrong: number;
+  skipped: number;
+  /** % đúng trên tổng câu trắc nghiệm (câu bỏ trống tính là sai); null khi chưa làm câu nào */
+  accuracy: number | null;
+  skill: Skill;
+  part: number;
+  name: string;
+};
+export type TopicProgress = {
+  /** Số lượt câu trắc nghiệm (một câu làm ở 2 bài tính 2) */
+  total: number;
+  correct: number;
+  wrong: number;
+  skipped: number;
+  /** % đúng trên tổng câu trắc nghiệm (câu bỏ trống tính là sai); null khi chưa làm câu nào */
+  accuracy: number | null;
+  topicId: string;
+  name: string;
+  skill: Skill;
+  /** Part dùng chủ đề này */
+  parts: number[];
+};
+export type ProgressSkills = {
+  range: '30d' | '90d' | '1y' | 'all';
+  /** null: toàn bộ */
+  from: string | null;
+  overview: ProgressOverview;
+  /** Chỉ kỹ năng đã làm câu trắc nghiệm */
+  skills: SkillProgress[];
+  /** Theo thứ tự Part trong đề (L1…L4, R5…R7) */
+  parts: PartProgress[];
+  /** Chủ đề cần luyện thêm: đã làm ≥ minTopicQuestions câu và tỉ lệ đúng < weakAccuracy; yếu nhất trước, tối đa 5 */
+  weakTopics: TopicProgress[];
+  minTopicQuestions: number;
+  weakAccuracy: number;
+};
 export const {
   useRegisterMutation,
   useVerifyEmailMutation,
@@ -2003,4 +2132,6 @@ export const {
   useSyncAnswersMutation,
   useSubmitAttemptMutation,
   useCancelAttemptMutation,
+  useGetScoreTrendQuery,
+  useGetProgressSkillsQuery,
 } = injectedRtkApi;
