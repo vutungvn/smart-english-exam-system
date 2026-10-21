@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { ReviewQuestionCard } from './ReviewQuestionCard';
 
 interface ReviewBlockViewProps {
+  attemptId: string;
   block: ReviewBlock;
   /** Câu còn hiện sau khi lọc (nhóm vẫn giữ nội dung dùng chung) */
   questions: ReviewQuestion[];
@@ -15,9 +16,9 @@ interface ReviewBlockViewProps {
  * Giống bố cục lúc làm bài: nhóm câu có nội dung dùng chung bên trái (dính khi cuộn), các câu bên
  * phải. Màn xem lại có thêm lời thoại Listening (lúc làm bài bị ẩn).
  */
-export function ReviewBlockView({ block, questions }: ReviewBlockViewProps) {
+export function ReviewBlockView({ attemptId, block, questions }: ReviewBlockViewProps) {
   const cards = questions.map((question) => (
-    <ReviewQuestionCard key={question.examQuestionId} question={question} />
+    <ReviewQuestionCard key={question.examQuestionId} attemptId={attemptId} question={question} />
   ));
   const group = block.group;
   if (!group) return <div className="space-y-4">{cards}</div>;
