@@ -11794,6 +11794,412 @@
           "Progress"
         ]
       }
+    },
+    "/api/v1/attempts/{id}/questions/{examQuestionId}/ai-explanation": {
+      "get": {
+        "description": "Chỉ câu trắc nghiệm (Listening, Reading) của bài đã nộp, của chính học viên. Lời giải thích dùng chung mọi học viên: đã có (cached = true) thì trả ngay, không tính lượt; chưa có hoặc giáo viên đã sửa câu thì gọi AI, tính 1 lượt (mặc định 20 lượt/ngày). Kèm số lượt còn lại.",
+        "operationId": "getAiExplanation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "examQuestionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AiExplanation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: ATTEMPT_NOT_FOUND, ATTEMPT_QUESTION_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ATTEMPT_NOT_FOUND": {
+                    "summary": "ATTEMPT_NOT_FOUND: Không tìm thấy bài làm",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "ATTEMPT_NOT_FOUND",
+                        "message": "Không tìm thấy bài làm"
+                      }
+                    }
+                  },
+                  "ATTEMPT_QUESTION_NOT_FOUND": {
+                    "summary": "ATTEMPT_QUESTION_NOT_FOUND: Câu hỏi không thuộc bài làm này",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "ATTEMPT_QUESTION_NOT_FOUND",
+                        "message": "Câu hỏi không thuộc bài làm này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: ATTEMPT_NOT_SUBMITTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ATTEMPT_NOT_SUBMITTED": {
+                    "summary": "ATTEMPT_NOT_SUBMITTED: Bài làm chưa nộp nên chưa xem được đáp án",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "ATTEMPT_NOT_SUBMITTED",
+                        "message": "Bài làm chưa nộp nên chưa xem được đáp án"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Lỗi, error.code thuộc: AI_EXPLANATION_NOT_SUPPORTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AI_EXPLANATION_NOT_SUPPORTED": {
+                    "summary": "AI_EXPLANATION_NOT_SUPPORTED: Chỉ giải thích bằng AI được câu trắc nghiệm (Listening, Reading)",
+                    "value": {
+                      "success": false,
+                      "status": 422,
+                      "error": {
+                        "code": "AI_EXPLANATION_NOT_SUPPORTED",
+                        "message": "Chỉ giải thích bằng AI được câu trắc nghiệm (Listening, Reading)"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Lỗi, error.code thuộc: AI_QUOTA_EXCEEDED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AI_QUOTA_EXCEEDED": {
+                    "summary": "AI_QUOTA_EXCEEDED: Bạn đã dùng hết lượt AI hôm nay",
+                    "value": {
+                      "success": false,
+                      "status": 429,
+                      "error": {
+                        "code": "AI_QUOTA_EXCEEDED",
+                        "message": "Bạn đã dùng hết lượt AI hôm nay"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Lỗi, error.code thuộc: AI_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AI_UNAVAILABLE": {
+                    "summary": "AI_UNAVAILABLE: Trợ lý AI đang bận hoặc tạm hết lượt, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 503,
+                      "error": {
+                        "code": "AI_UNAVAILABLE",
+                        "message": "Trợ lý AI đang bận hoặc tạm hết lượt, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Giải thích đáp án bằng AI",
+        "tags": [
+          "AI Explanations"
+        ]
+      }
+    },
+    "/api/v1/me/ai-quotas": {
+      "get": {
+        "description": "Ngày tính theo giờ Thái Bình Dương như hạn mức của Gemini (resetAt).",
+        "operationId": "getMyAiQuotas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AiQuotas"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lượt dùng AI hôm nay của học viên",
+        "tags": [
+          "AI Explanations"
+        ]
+      }
     }
   },
   "info": {
@@ -11879,7 +12285,10 @@
           "ATTEMPT_NOT_IN_PROGRESS",
           "ATTEMPT_EXPIRED",
           "ATTEMPT_QUESTION_NOT_FOUND",
-          "ATTEMPT_NOT_SUBMITTED"
+          "ATTEMPT_NOT_SUBMITTED",
+          "AI_QUOTA_EXCEEDED",
+          "AI_UNAVAILABLE",
+          "AI_EXPLANATION_NOT_SUPPORTED"
         ]
       },
       "FieldErrorDto": {
@@ -16099,6 +16508,143 @@
           "weakTopics",
           "minTopicQuestions",
           "weakAccuracy"
+        ]
+      },
+      "ExplanationOption": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "example": "A"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Vì sao phương án này đúng hoặc sai"
+          }
+        },
+        "required": [
+          "label",
+          "reason"
+        ]
+      },
+      "ExplanationKeyPoint": {
+        "type": "object",
+        "properties": {
+          "term": {
+            "type": "string",
+            "example": "attend (v)",
+            "description": "Từ, cụm từ hoặc điểm ngữ pháp"
+          },
+          "note": {
+            "type": "string",
+            "description": "Nghĩa và cách dùng"
+          }
+        },
+        "required": [
+          "term",
+          "note"
+        ]
+      },
+      "AiQuota": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Số lượt mỗi ngày"
+          },
+          "used": {
+            "type": "number",
+            "description": "Đã dùng hôm nay (lấy từ cache không tính)"
+          },
+          "remaining": {
+            "type": "number"
+          },
+          "resetAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Lúc có lượt mới: 0h giờ Thái Bình Dương (14h hoặc 15h giờ Việt Nam)"
+          }
+        },
+        "required": [
+          "limit",
+          "used",
+          "remaining",
+          "resetAt"
+        ]
+      },
+      "AiExplanation": {
+        "type": "object",
+        "properties": {
+          "examQuestionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Vì sao đáp án đúng là đúng"
+          },
+          "options": {
+            "description": "Mỗi phương án một mục",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExplanationOption"
+            }
+          },
+          "keyPoints": {
+            "description": "Từ vựng, ngữ pháp cần nhớ (≤ 5)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExplanationKeyPoint"
+            }
+          },
+          "tip": {
+            "type": "string",
+            "description": "Mẹo làm dạng câu này"
+          },
+          "model": {
+            "type": "string",
+            "example": "gemini-3.5-flash-lite",
+            "description": "\"fake\" khi chưa có API key"
+          },
+          "generatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Lúc AI sinh lời giải thích"
+          },
+          "cached": {
+            "type": "boolean",
+            "description": "true: lấy từ cache, không tính lượt"
+          },
+          "quota": {
+            "$ref": "#/components/schemas/AiQuota"
+          }
+        },
+        "required": [
+          "examQuestionId",
+          "summary",
+          "options",
+          "keyPoints",
+          "tip",
+          "model",
+          "generatedAt",
+          "cached",
+          "quota"
+        ]
+      },
+      "AiQuotas": {
+        "type": "object",
+        "properties": {
+          "explanation": {
+            "description": "Giải thích đáp án bằng AI",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AiQuota"
+              }
+            ]
+          }
+        },
+        "required": [
+          "explanation"
         ]
       }
     }

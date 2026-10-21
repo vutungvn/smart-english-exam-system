@@ -4,10 +4,19 @@ import type { ReviewQuestion } from '@/api/generated';
 import { QuestionMedia } from '@/components/QuestionMedia';
 import { cn } from '@/lib/utils';
 import { countWords } from '../practice-meta';
+import { AiExplanationPanel } from './AiExplanationPanel';
 import { OUTCOME_META } from './review-meta';
 
-/** Một câu ở màn xem lại: kết quả, lựa chọn của học viên so với đáp án đúng, giải thích, bài mẫu */
-export function ReviewQuestionCard({ question }: { question: ReviewQuestion }) {
+interface ReviewQuestionCardProps {
+  attemptId: string;
+  question: ReviewQuestion;
+}
+
+/**
+ * Một câu ở màn xem lại: kết quả, lựa chọn của học viên so với đáp án đúng, giải thích, bài mẫu;
+ * câu trắc nghiệm có thêm "Giải thích bằng AI"
+ */
+export function ReviewQuestionCard({ attemptId, question }: ReviewQuestionCardProps) {
   const meta = OUTCOME_META[question.outcome];
   const choice = question.type === 'SINGLE_CHOICE';
 
@@ -91,6 +100,8 @@ export function ReviewQuestionCard({ question }: { question: ReviewQuestion }) {
           </p>
         </details>
       )}
+
+      {choice && <AiExplanationPanel attemptId={attemptId} question={question} />}
     </article>
   );
 }

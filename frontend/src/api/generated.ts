@@ -10,6 +10,7 @@ export const addTagTypes = [
   'Exam Catalog',
   'Attempts',
   'Progress',
+  'AI Explanations',
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -492,6 +493,16 @@ const injectedRtkApi = api
           },
         }),
         providesTags: ['Progress'],
+      }),
+      getAiExplanation: build.query<GetAiExplanationApiResponse, GetAiExplanationApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/attempts/${queryArg.id}/questions/${queryArg.examQuestionId}/ai-explanation`,
+        }),
+        providesTags: ['AI Explanations'],
+      }),
+      getMyAiQuotas: build.query<GetMyAiQuotasApiResponse, GetMyAiQuotasApiArg>({
+        query: () => ({ url: `/api/v1/me/ai-quotas` }),
+        providesTags: ['AI Explanations'],
       }),
     }),
     overrideExisting: false,
@@ -1020,6 +1031,21 @@ export type GetProgressSkillsApiResponse = /** status 200 Thành công */ {
   data: ProgressSkills;
 };
 export type GetProgressSkillsApiArg = ('30d' | '90d' | '1y' | 'all') | undefined;
+export type GetAiExplanationApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AiExplanation;
+};
+export type GetAiExplanationApiArg = {
+  id: string;
+  examQuestionId: string;
+};
+export type GetMyAiQuotasApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AiQuotas;
+};
+export type GetMyAiQuotasApiArg = void;
 export type UserStatus = 'PENDING_VERIFICATION' | 'PENDING_APPROVAL' | 'ACTIVE' | 'LOCKED';
 export type RegisterResult = {
   id: string;
@@ -1085,7 +1111,10 @@ export type ErrorCode =
   | 'ATTEMPT_NOT_IN_PROGRESS'
   | 'ATTEMPT_EXPIRED'
   | 'ATTEMPT_QUESTION_NOT_FOUND'
-  | 'ATTEMPT_NOT_SUBMITTED';
+  | 'ATTEMPT_NOT_SUBMITTED'
+  | 'AI_QUOTA_EXCEEDED'
+  | 'AI_UNAVAILABLE'
+  | 'AI_EXPLANATION_NOT_SUPPORTED';
 export type FieldErrorDto = {
   /** Trường lỗi, trường lồng nhau dạng address.city */
   field: string;
@@ -2069,6 +2098,48 @@ export type ProgressSkills = {
   minTopicQuestions: number;
   weakAccuracy: number;
 };
+export type ExplanationOption = {
+  label: string;
+  /** Vì sao phương án này đúng hoặc sai */
+  reason: string;
+};
+export type ExplanationKeyPoint = {
+  /** Từ, cụm từ hoặc điểm ngữ pháp */
+  term: string;
+  /** Nghĩa và cách dùng */
+  note: string;
+};
+export type AiQuota = {
+  /** Số lượt mỗi ngày */
+  limit: number;
+  /** Đã dùng hôm nay (lấy từ cache không tính) */
+  used: number;
+  remaining: number;
+  /** Lúc có lượt mới: 0h giờ Thái Bình Dương (14h hoặc 15h giờ Việt Nam) */
+  resetAt: string;
+};
+export type AiExplanation = {
+  examQuestionId: string;
+  /** Vì sao đáp án đúng là đúng */
+  summary: string;
+  /** Mỗi phương án một mục */
+  options: ExplanationOption[];
+  /** Từ vựng, ngữ pháp cần nhớ (≤ 5) */
+  keyPoints: ExplanationKeyPoint[];
+  /** Mẹo làm dạng câu này */
+  tip: string;
+  /** "fake" khi chưa có API key */
+  model: string;
+  /** Lúc AI sinh lời giải thích */
+  generatedAt: string;
+  /** true: lấy từ cache, không tính lượt */
+  cached: boolean;
+  quota: AiQuota;
+};
+export type AiQuotas = {
+  /** Giải thích đáp án bằng AI */
+  explanation: AiQuota;
+};
 export const {
   useRegisterMutation,
   useVerifyEmailMutation,
@@ -2134,4 +2205,6 @@ export const {
   useCancelAttemptMutation,
   useGetScoreTrendQuery,
   useGetProgressSkillsQuery,
+  useGetAiExplanationQuery,
+  useGetMyAiQuotasQuery,
 } = injectedRtkApi;

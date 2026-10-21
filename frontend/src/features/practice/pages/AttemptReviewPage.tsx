@@ -253,6 +253,7 @@ function ReviewContent({ review }: { review: AttemptReview }) {
                 {blocks.map(({ block, questions }, index) => (
                   <ReviewBlockView
                     key={block.group?.id ?? block.questions[0]?.examQuestionId ?? index}
+                    attemptId={review.id}
                     block={block}
                     questions={questions}
                   />

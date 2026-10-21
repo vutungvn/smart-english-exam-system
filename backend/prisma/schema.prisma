@@ -130,6 +130,24 @@ enum AttemptStatus {
   @@map("attempt_status")
 }
 
+/// Tính năng gọi AI (Mục 7.4); tính năng mới (SW_GRADING, ANALYSIS, CHAT…) thêm giá trị khi làm tới
+enum AiFeature {
+  EXPLANATION
+
+  @@map("ai_feature")
+}
+
+/// SUCCESS: kết quả đúng cấu trúc · FAILED: Google báo lỗi, hết lượt hoặc quá thời gian chờ ·
+/// INVALID_OUTPUT: model trả về nhưng sai cấu trúc (Zod)
+enum AiCallStatus {
+  SUCCESS
+  FAILED
+  INVALID_OUTPUT
+
+  @@map("ai_call_status")
+}
+
+
 // ================================================================
 // Nhóm Người dùng và phân quyền
 // ================================================================
@@ -201,6 +219,7 @@ model User {
   teacher        Teacher?
   admin          Admin?
   loginHistories LoginHistory[]
+  aiUsageLogs    AiUsageLog[]
 
   @@index([roleId], map: "ix_users_role_id")
   @@index([status], map: "ix_users_status")
@@ -367,6 +386,7 @@ model Question {
   group         QuestionGroup?   @relation(fields: [groupId], references: [id], onDelete: Restrict, map: "fk_questions_group_id")
   options       QuestionOption[]
   examQuestions ExamQuestion[]
+  aiExplanation AiExplanation?
 
   @@index([topicId], map: "ix_questions_topic_id")
   @@index([authorId], map: "ix_questions_author_id")
@@ -527,3 +547,49 @@ model AttemptAnswer {
   @@index([examQuestionId], map: "ix_attempt_answers_exam_question_id")
   @@map("attempt_answers")
 }
+
+// ================================================================
+// Nhóm AI
+// ================================================================
+
+/// Mỗi lượt gọi model (kể cả lần thử lại): chỉ lưu số liệu, không lưu nội dung gửi và nhận
+model AiUsageLog {
+  id           String       @id(map: "pk_ai_usage_logs") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// null: hệ thống tự gọi (job) hoặc tài khoản đã xóa
+  userId       String?      @map("user_id") @db.Uuid
+  feature      AiFeature
+  model        String       @db.VarChar(100)
+  status       AiCallStatus
+  inputTokens  Int          @default(0) @map("input_tokens")
+  /// Gồm cả token "suy nghĩ" (tính tiền như đầu ra)
+  outputTokens Int          @default(0) @map("output_tokens")
+  latencyMs    Int          @map("latency_ms")
+  /// Mã HTTP Google trả về (429, 503…) hoặc TIMEOUT
+  errorCode    String?      @map("error_code") @db.VarChar(50)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull, map: "fk_ai_usage_logs_user_id")
+
+  @@index([userId, createdAt(sort: Desc)], map: "ix_ai_usage_logs_user_created")
+  @@index([createdAt], map: "ix_ai_usage_logs_created_at")
+  @@map("ai_usage_logs")
+}
+
+/// Giải thích đáp án bằng AI, dùng chung cho mọi học viên. content_hash khác nội dung câu hiện tại
+/// (giáo viên sửa câu, đổi đáp án) thì sinh lại
+model AiExplanation {
+  id          String   @id(map: "pk_ai_explanations") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId  String   @unique(map: "uq_ai_explanations_question_id") @map("question_id") @db.Uuid
+  /// SHA-256 của nội dung câu (và phiên bản prompt) lúc sinh
+  contentHash String   @map("content_hash") @db.Char(64)
+  /// { summary, options: [{ label, reason }], keyPoints: [{ term, note }], tip }
+  content     Json
+  model       String   @db.VarChar(100)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade, map: "fk_ai_explanations_question_id")
+
+  @@map("ai_explanations")
+}
+

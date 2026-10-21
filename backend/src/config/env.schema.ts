@@ -42,6 +42,16 @@ export const envSchema = z
       .default('smart-english-exam'),
     // true cho RustFS/MinIO (endpoint/bucket/key); false cho AWS S3 (bucket.endpoint/key)
     S3_FORCE_PATH_STYLE: z.stringbool().default(true),
+
+    // AI (D28, Mục 7.4): để trống GEMINI_API_KEY thì dùng FakeAiProvider (dữ liệu mẫu, không gọi Google)
+    GEMINI_API_KEY: z.string().optional(),
+    GEMINI_MODEL: z.string().min(1).default('gemini-3.5-flash-lite'),
+    // Model chính báo hết lượt (429) thì chuyển sang model này; để trống thì không dùng model dự phòng
+    GEMINI_FALLBACK_MODEL: z.string().default('gemini-3.1-flash-lite'),
+    // Tổng lượt gọi AI mỗi ngày của cả hệ thống (gói Free: 500 lượt × 2 model Flash-Lite)
+    AI_DAILY_BUDGET: z.coerce.number().int().positive().default(1000),
+    // Lượt giải thích đáp án mỗi học viên mỗi ngày; lấy từ cache không tính
+    AI_EXPLAIN_DAILY_LIMIT: z.coerce.number().int().positive().default(20),
   })
   .refine((env) => env.JWT_ACCESS_SECRET !== env.JWT_REFRESH_SECRET, {
     message: 'JWT_ACCESS_SECRET và JWT_REFRESH_SECRET phải khác nhau',

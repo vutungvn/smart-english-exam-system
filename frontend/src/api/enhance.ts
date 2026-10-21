@@ -89,6 +89,30 @@ export const enhancedApi = api.enhanceEndpoints({
     updateProfile: { invalidatesTags: ['Me', 'Progress'] },
     cancelAttempt: { invalidatesTags: ['Attempts', 'Exam Catalog'] },
 
+    // Giải thích bằng AI: phản hồi có sẵn số lượt còn lại, ghi luôn vào getMyAiQuotas để dòng
+    // "Còn x/20 lượt" của các câu khác trên trang đổi theo; lỗi (hết lượt…) thì tải lại số lượt
+    getAiExplanation: {
+      onQueryStarted: async (_arg, { dispatch, queryFulfilled }) => {
+        const { data } = await queryFulfilled.catch(() => ({ data: null }));
+        if (data) {
+          dispatch(
+            api.util.upsertQueryData('getMyAiQuotas', undefined, {
+              success: true,
+              status: 200,
+              data: { explanation: data.data.quota },
+            }),
+          );
+        } else {
+          void dispatch(
+            api.endpoints.getMyAiQuotas.initiate(undefined, {
+              forceRefetch: true,
+              subscribe: false,
+            }),
+          );
+        }
+      },
+    },
+
     // Nhập câu hỏi từ tệp .zip
     previewQuestionImport: {
       query: ({ file }) => {

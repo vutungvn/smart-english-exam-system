@@ -18,6 +18,8 @@ import { ExamsModule } from './modules/exams/exams.module.js';
 import { AttemptsModule } from './modules/attempts/attempts.module.js';
 import { QuestionImportModule } from './modules/question-import/question-import.module.js';
 import { ProgressModule } from './modules/progress/progress.module.js';
+import { AiModule } from './infra/ai/ai.module.js';
+import { AiExplanationsModule } from './modules/ai-explanations/ai-explanations.module.js';
 
 @Module({
   imports: [
@@ -32,6 +34,7 @@ import { ProgressModule } from './modules/progress/progress.module.js';
     RedisModule,
     MailModule,
     StorageModule,
+    AiModule,
     CommonModule,
     AuthModule,
     MeModule,
@@ -42,6 +45,7 @@ import { ProgressModule } from './modules/progress/progress.module.js';
     ExamsModule,
     AttemptsModule,
     ProgressModule,
+    AiExplanationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
