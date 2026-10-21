@@ -77,6 +77,11 @@ export const ErrorCode = {
   ATTEMPT_EXPIRED: 'ATTEMPT_EXPIRED',
   ATTEMPT_QUESTION_NOT_FOUND: 'ATTEMPT_QUESTION_NOT_FOUND',
   ATTEMPT_NOT_SUBMITTED: 'ATTEMPT_NOT_SUBMITTED',
+
+  // AI
+  AI_QUOTA_EXCEEDED: 'AI_QUOTA_EXCEEDED',
+  AI_UNAVAILABLE: 'AI_UNAVAILABLE',
+  AI_EXPLANATION_NOT_SUPPORTED: 'AI_EXPLANATION_NOT_SUPPORTED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -318,6 +323,20 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.ATTEMPT_NOT_SUBMITTED]: {
     status: HttpStatus.CONFLICT,
     message: 'Bài làm chưa nộp nên chưa xem được đáp án',
+  },
+
+  // AI
+  [ErrorCode.AI_QUOTA_EXCEEDED]: {
+    status: HttpStatus.TOO_MANY_REQUESTS,
+    message: 'Bạn đã dùng hết lượt AI hôm nay',
+  },
+  [ErrorCode.AI_UNAVAILABLE]: {
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    message: 'Trợ lý AI đang bận hoặc tạm hết lượt, vui lòng thử lại sau',
+  },
+  [ErrorCode.AI_EXPLANATION_NOT_SUPPORTED]: {
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    message: 'Chỉ giải thích bằng AI được câu trắc nghiệm (Listening, Reading)',
   },
 };
 
