@@ -3090,7 +3090,7 @@
         ]
       },
       "patch": {
-        "description": "Trường không gửi thì giữ nguyên; gửi options thì thay toàn bộ phương án.",
+        "description": "Trường không gửi thì giữ nguyên; gửi options thì thay toàn bộ phương án. Câu đang được làm bài (detail.lock khác null) không đổi được nội dung, phương án, đáp án đúng, loại câu, Part, nhóm, thời gian Speaking (409); giải thích, bài mẫu, chủ đề, độ khó, trạng thái vẫn sửa được.",
         "operationId": "updateQuestion",
         "parameters": [
           {
@@ -3253,7 +3253,7 @@
             }
           },
           "409": {
-            "description": "Lỗi, error.code thuộc: VERSION_CONFLICT, QUESTION_GROUP_ORDER_TAKEN",
+            "description": "Lỗi, error.code thuộc: VERSION_CONFLICT, QUESTION_GROUP_ORDER_TAKEN, QUESTION_IN_PUBLISHED_EXAM, QUESTION_IN_ACTIVE_ATTEMPT",
             "content": {
               "application/json": {
                 "schema": {
@@ -3279,6 +3279,28 @@
                       "error": {
                         "code": "QUESTION_GROUP_ORDER_TAKEN",
                         "message": "Vị trí này trong nhóm đã có câu hỏi khác"
+                      }
+                    }
+                  },
+                  "QUESTION_IN_PUBLISHED_EXAM": {
+                    "summary": "QUESTION_IN_PUBLISHED_EXAM: Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_PUBLISHED_EXAM",
+                        "message": "Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa"
+                      }
+                    }
+                  },
+                  "QUESTION_IN_ACTIVE_ATTEMPT": {
+                    "summary": "QUESTION_IN_ACTIVE_ATTEMPT: Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_ACTIVE_ATTEMPT",
+                        "message": "Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa"
                       }
                     }
                   }
@@ -4237,6 +4259,7 @@
         ]
       },
       "patch": {
+        "description": "Nhóm đang được làm bài (detail.lock khác null) không đổi được đoạn văn (409); lời thoại, chủ đề, trạng thái vẫn sửa được.",
         "operationId": "updateQuestionGroup",
         "parameters": [
           {
@@ -4399,7 +4422,7 @@
             }
           },
           "409": {
-            "description": "Lỗi, error.code thuộc: VERSION_CONFLICT",
+            "description": "Lỗi, error.code thuộc: VERSION_CONFLICT, QUESTION_IN_PUBLISHED_EXAM, QUESTION_IN_ACTIVE_ATTEMPT",
             "content": {
               "application/json": {
                 "schema": {
@@ -4414,6 +4437,28 @@
                       "error": {
                         "code": "VERSION_CONFLICT",
                         "message": "Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại"
+                      }
+                    }
+                  },
+                  "QUESTION_IN_PUBLISHED_EXAM": {
+                    "summary": "QUESTION_IN_PUBLISHED_EXAM: Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_PUBLISHED_EXAM",
+                        "message": "Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa"
+                      }
+                    }
+                  },
+                  "QUESTION_IN_ACTIVE_ATTEMPT": {
+                    "summary": "QUESTION_IN_ACTIVE_ATTEMPT: Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_ACTIVE_ATTEMPT",
+                        "message": "Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa"
                       }
                     }
                   }
@@ -5032,6 +5077,40 @@
               }
             }
           },
+          "409": {
+            "description": "Lỗi, error.code thuộc: QUESTION_IN_PUBLISHED_EXAM, QUESTION_IN_ACTIVE_ATTEMPT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "QUESTION_IN_PUBLISHED_EXAM": {
+                    "summary": "QUESTION_IN_PUBLISHED_EXAM: Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_PUBLISHED_EXAM",
+                        "message": "Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa"
+                      }
+                    }
+                  },
+                  "QUESTION_IN_ACTIVE_ATTEMPT": {
+                    "summary": "QUESTION_IN_ACTIVE_ATTEMPT: Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_ACTIVE_ATTEMPT",
+                        "message": "Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "413": {
             "description": "Lỗi, error.code thuộc: PAYLOAD_TOO_LARGE",
             "content": {
@@ -5266,6 +5345,40 @@
               }
             }
           },
+          "409": {
+            "description": "Lỗi, error.code thuộc: QUESTION_IN_PUBLISHED_EXAM, QUESTION_IN_ACTIVE_ATTEMPT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "QUESTION_IN_PUBLISHED_EXAM": {
+                    "summary": "QUESTION_IN_PUBLISHED_EXAM: Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_PUBLISHED_EXAM",
+                        "message": "Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa"
+                      }
+                    }
+                  },
+                  "QUESTION_IN_ACTIVE_ATTEMPT": {
+                    "summary": "QUESTION_IN_ACTIVE_ATTEMPT: Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_ACTIVE_ATTEMPT",
+                        "message": "Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
             "content": {
@@ -5481,6 +5594,40 @@
                       "error": {
                         "code": "QUESTION_GROUP_NOT_FOUND",
                         "message": "Không tìm thấy nhóm câu hỏi"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: QUESTION_IN_PUBLISHED_EXAM, QUESTION_IN_ACTIVE_ATTEMPT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "QUESTION_IN_PUBLISHED_EXAM": {
+                    "summary": "QUESTION_IN_PUBLISHED_EXAM: Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_PUBLISHED_EXAM",
+                        "message": "Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa"
+                      }
+                    }
+                  },
+                  "QUESTION_IN_ACTIVE_ATTEMPT": {
+                    "summary": "QUESTION_IN_ACTIVE_ATTEMPT: Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_ACTIVE_ATTEMPT",
+                        "message": "Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa"
                       }
                     }
                   }
@@ -5715,6 +5862,40 @@
                       "error": {
                         "code": "QUESTION_GROUP_NOT_FOUND",
                         "message": "Không tìm thấy nhóm câu hỏi"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: QUESTION_IN_PUBLISHED_EXAM, QUESTION_IN_ACTIVE_ATTEMPT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "QUESTION_IN_PUBLISHED_EXAM": {
+                    "summary": "QUESTION_IN_PUBLISHED_EXAM: Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_PUBLISHED_EXAM",
+                        "message": "Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa"
+                      }
+                    }
+                  },
+                  "QUESTION_IN_ACTIVE_ATTEMPT": {
+                    "summary": "QUESTION_IN_ACTIVE_ATTEMPT: Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "QUESTION_IN_ACTIVE_ATTEMPT",
+                        "message": "Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa"
                       }
                     }
                   }
@@ -12266,6 +12447,7 @@
           "QUESTION_GROUP_ORDER_TAKEN",
           "QUESTION_CODE_TAKEN",
           "QUESTION_IN_PUBLISHED_EXAM",
+          "QUESTION_IN_ACTIVE_ATTEMPT",
           "QUESTION_OPTION_IN_USE",
           "QUESTION_IMPORT_INVALID_FILE",
           "QUESTION_IMPORT_NOT_FOUND",
@@ -13047,6 +13229,55 @@
           "updatedAt"
         ]
       },
+      "ContentLockReason": {
+        "type": "string",
+        "enum": [
+          "PUBLISHED_EXAM",
+          "ACTIVE_ATTEMPT"
+        ],
+        "description": "PUBLISHED_EXAM: nằm trong đề đang xuất bản · ACTIVE_ATTEMPT: đề đã gỡ nhưng còn bài làm cả đề đang dở"
+      },
+      "LockedExamRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "example": "Đề thi thử TOEIC số 1"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ]
+      },
+      "ContentLock": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "description": "PUBLISHED_EXAM: nằm trong đề đang xuất bản · ACTIVE_ATTEMPT: đề đã gỡ nhưng còn bài làm cả đề đang dở",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentLockReason"
+              }
+            ]
+          },
+          "exams": {
+            "description": "Các đề đang khóa câu",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LockedExamRef"
+            }
+          }
+        },
+        "required": [
+          "reason",
+          "exams"
+        ]
+      },
       "QuestionOptionItem": {
         "type": "object",
         "properties": {
@@ -13145,6 +13376,16 @@
             "format": "date-time",
             "description": "Gửi lại nguyên giá trị này khi PATCH để kiểm tra xung đột (khóa lạc quan)"
           },
+          "lock": {
+            "nullable": true,
+            "description": "Khác null: không sửa được nội dung, phương án, đáp án đúng, loại câu, Part, nhóm, thời gian Speaking, âm thanh, hình ảnh; vẫn sửa được giải thích, bài mẫu, chủ đề, độ khó, trạng thái",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentLock"
+              }
+            ]
+          },
           "explanation": {
             "type": "string",
             "nullable": true
@@ -13204,6 +13445,7 @@
           "content",
           "createdAt",
           "updatedAt",
+          "lock",
           "explanation",
           "sampleAnswer",
           "prepSeconds",
@@ -13681,6 +13923,16 @@
             "items": {
               "$ref": "#/components/schemas/QuestionSummary"
             }
+          },
+          "lock": {
+            "nullable": true,
+            "description": "Khác null: không sửa được đoạn văn, âm thanh, hình ảnh của nhóm; vẫn sửa được lời thoại, chủ đề, trạng thái",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentLock"
+              }
+            ]
           }
         },
         "required": [
@@ -13699,7 +13951,8 @@
           "questionCount",
           "createdAt",
           "updatedAt",
-          "questions"
+          "questions",
+          "lock"
         ]
       },
       "CreateQuestionGroupDto": {

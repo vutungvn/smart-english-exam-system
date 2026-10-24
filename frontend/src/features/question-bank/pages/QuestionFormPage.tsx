@@ -25,12 +25,14 @@ import { useAppSelector } from '@/hooks/hooks';
 import { applyFieldErrors } from '@/lib/form-errors';
 import { describeMediaError } from '@/lib/media-file';
 import { selectCurrentUser } from '@/store/slice/auth-slice';
+import { ContentLockNotice } from '../components/ContentLockNotice';
 import { DeleteQuestionDialog } from '../components/DeleteQuestionDialog';
 import { EmptyState, ErrorState } from '../components/ListStates';
 import { AnswerFields } from '../form/AnswerFields';
 import { ClassificationFields } from '../form/ClassificationFields';
 import { ExplanationField, GroupFields } from '../form/ExtraFields';
 import { FormSection } from '../form/FormSection';
+import { LockedArea } from '../form/LockedArea';
 import { MediaFields } from '../form/MediaFields';
 import {
   emptyFormValues,
@@ -137,6 +139,7 @@ function EditQuestion({ id }: { id: string }) {
       question={data.data}
       defaultValues={toFormValues(data.data)}
       reload={async () => toFormValues((await refetch().unwrap()).data)}
+      refresh={() => void refetch()}
       notice={
         mediaError &&
         `Đã tạo câu hỏi nhưng chưa tải được tệp (${mediaError}). Hãy tải lại ở mục "Âm thanh & hình ảnh".`
@@ -152,6 +155,8 @@ interface QuestionEditorProps {
   question?: QuestionDetail;
   /** Tải lại bản mới nhất từ server (sau khi gặp 409) */
   reload?: () => Promise<QuestionFormValues>;
+  /** Tải lại thông tin câu (khóa nội dung) mà không đụng tới giá trị đang sửa trong form */
+  refresh?: () => void;
   /** Trang quay về khi Hủy, sau khi tạo/xóa (mặc định: câu thuộc nhóm thì về nhóm, không thì về danh sách) */
   backPath?: string;
   /** Thông báo đầu trang (câu vừa tạo nhưng tải tệp lỗi) */
@@ -163,6 +168,7 @@ function QuestionEditor({
   defaultValues,
   question,
   reload,
+  refresh,
   backPath,
   notice,
   onDismissNotice,
@@ -183,6 +189,9 @@ function QuestionEditor({
   const returnPath =
     backPath ?? (question?.groupId ? groupPath(question.groupId) : QUESTION_LIST_PATH);
   const readOnly = editing && question.author.id !== user?.id;
+  // Câu đang được làm bài (D29): khóa phần học viên thấy khi làm bài và phần dùng để chấm
+  const lock = readOnly ? null : (question?.lock ?? null);
+  const locked = !!lock;
 
   const form = useForm({
     resolver: zodResolver(questionFormSchema),
@@ -206,6 +215,13 @@ function QuestionEditor({
   const handleServerError = (err: unknown) => {
     const apiError = toApiError(err);
     if (apiError.code === 'VERSION_CONFLICT') return setConflict(true);
+    // Câu vừa vào đề xuất bản hoặc có học viên vừa bắt đầu làm: tải lại để hiện các ô bị khóa
+    if (
+      apiError.code === 'QUESTION_IN_PUBLISHED_EXAM' ||
+      apiError.code === 'QUESTION_IN_ACTIVE_ATTEMPT'
+    ) {
+      refresh?.();
+    }
     if (apiError.code === 'QUESTION_GROUP_ORDER_TAKEN') {
       return setError(
         'orderInGroup',
@@ -363,6 +379,8 @@ function QuestionEditor({
           </p>
         )}
 
+        {lock && <ContentLockNotice lock={lock} target="question" />}
+
         {notice && <FormAlert message={notice} onClose={() => onDismissNotice?.()} />}
 
         {conflict && (
@@ -395,11 +413,11 @@ function QuestionEditor({
               title="Phân loại"
               description="Kỹ năng, Part quyết định dạng câu và các trường cần nhập."
             >
-              <ClassificationFields />
+              <ClassificationFields locked={locked} />
             </FormSection>
 
             <FormSection step={2} title="Nội dung & đáp án">
-              <AnswerFields rule={rule} />
+              <AnswerFields rule={rule} locked={locked} />
             </FormSection>
 
             {rule?.group === 'required' && (
@@ -408,7 +426,9 @@ function QuestionEditor({
                 title="Nhóm câu"
                 description={`Part ${rule.part} gồm nhiều câu dùng chung ${rule.groupContent === 'transcript' ? 'một đoạn hội thoại/bài nói' : 'một đoạn văn'}.`}
               >
-                <GroupFields rule={rule} editing={editing} questionId={question?.id} />
+                <LockedArea locked={locked}>
+                  <GroupFields rule={rule} editing={editing} questionId={question?.id} />
+                </LockedArea>
               </FormSection>
             )}
 
@@ -425,7 +445,7 @@ function QuestionEditor({
                 <MediaFields
                   rule={rule}
                   question={question}
-                  readOnly={readOnly}
+                  readOnly={readOnly || locked}
                   disabled={isSubmitting}
                   pending={pendingMedia.pending}
                   onPendingChange={pendingMedia.setFile}

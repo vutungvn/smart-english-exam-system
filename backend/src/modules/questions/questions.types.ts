@@ -91,8 +91,43 @@ export class QuestionSummary {
   updatedAt: Date;
 }
 
+export class LockedExamRef {
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty({ example: 'Đề thi thử TOEIC số 1' })
+  title: string;
+}
+
+export const CONTENT_LOCK_REASONS = ['PUBLISHED_EXAM', 'ACTIVE_ATTEMPT'] as const;
+export type ContentLockReason = (typeof CONTENT_LOCK_REASONS)[number];
+
+/** Câu đang được làm bài (D29): khóa phần học viên thấy khi làm bài và phần dùng để chấm */
+export class ContentLock {
+  @ApiProperty({
+    enum: CONTENT_LOCK_REASONS,
+    enumName: 'ContentLockReason',
+    description:
+      'PUBLISHED_EXAM: nằm trong đề đang xuất bản · ACTIVE_ATTEMPT: đề đã gỡ nhưng còn bài làm cả ' +
+      'đề đang dở',
+  })
+  reason: ContentLockReason;
+
+  @ApiProperty({ type: [LockedExamRef], description: 'Các đề đang khóa câu' })
+  exams: LockedExamRef[];
+}
+
 /** Đầy đủ một câu hỏi: màn sửa câu hỏi, xem chi tiết */
 export class QuestionDetail extends QuestionSummary {
+  @ApiProperty({
+    type: ContentLock,
+    nullable: true,
+    description:
+      'Khác null: không sửa được nội dung, phương án, đáp án đúng, loại câu, Part, nhóm, thời gian ' +
+      'Speaking, âm thanh, hình ảnh; vẫn sửa được giải thích, bài mẫu, chủ đề, độ khó, trạng thái',
+  })
+  lock: ContentLock | null;
+
   @ApiProperty({ type: String, nullable: true })
   explanation: string | null;
 
@@ -179,6 +214,15 @@ export class QuestionGroupSummary {
 export class QuestionGroupDetail extends QuestionGroupSummary {
   @ApiProperty({ type: [QuestionSummary], description: 'Các câu trong nhóm, theo thứ tự' })
   questions: QuestionSummary[];
+
+  @ApiProperty({
+    type: ContentLock,
+    nullable: true,
+    description:
+      'Khác null: không sửa được đoạn văn, âm thanh, hình ảnh của nhóm; vẫn sửa được lời thoại, ' +
+      'chủ đề, trạng thái',
+  })
+  lock: ContentLock | null;
 }
 
 export class GroupBulkDeleteResult extends BulkDeleteResult {

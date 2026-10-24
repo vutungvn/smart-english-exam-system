@@ -2,6 +2,7 @@ import { VersioningType } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { OpenAPIObject } from '@nestjs/swagger';
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { REFRESH_COOKIE_NAME } from './modules/auth/auth.constants.js';
 import { addCommonErrorResponses } from './common/swagger/common-error-responses.js';
@@ -14,6 +15,10 @@ export function configureApp(app: INestApplication): void {
     type: VersioningType.URI,
     defaultVersion: '1',
   });
+
+  // Nén gzip phản hồi JSON (đề 200 câu khoảng 200 KB còn vài chục KB). Bộ lọc mặc định bỏ qua
+  // audio mp3, ảnh (đã nén sẵn) và phản hồi dưới 1 KB
+  app.use(compression());
 
   // Đọc cookie refresh token vào req.cookies
   app.use(cookieParser());

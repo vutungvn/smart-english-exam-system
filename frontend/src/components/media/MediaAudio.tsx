@@ -2,27 +2,7 @@ import { useEffect, useState } from 'react';
 import { AudioLines, LoaderCircle, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AudioPlayer } from './AudioPlayer';
-
-/**
- * Tệp đã tải, dùng lại khi quay lại câu cũ (giới hạn số tệp để không giữ quá nhiều trong bộ nhớ).
- * Lưu Promise để nhiều trình phát cùng một tệp chỉ tải một lần.
- */
-const CACHE_LIMIT = 40;
-const cache = new Map<string, Promise<Blob>>();
-
-function loadBlob(url: string): Promise<Blob> {
-  const cached = cache.get(url);
-  if (cached) return cached;
-  const promise = fetch(url).then((response) => {
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return response.blob();
-  });
-  // Lỗi thì bỏ khỏi cache để bấm "Thử lại" tải lại thật
-  promise.catch(() => cache.delete(url));
-  cache.set(url, promise);
-  if (cache.size > CACHE_LIMIT) cache.delete(cache.keys().next().value as string);
-  return promise;
-}
+import { loadBlob } from './audio-cache';
 
 interface Loaded {
   url: string;

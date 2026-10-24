@@ -95,7 +95,10 @@ export class QuestionsController {
   @Patch(':id')
   @ApiOperation({
     summary: 'Sửa câu hỏi (chỉ người tạo)',
-    description: 'Trường không gửi thì giữ nguyên; gửi options thì thay toàn bộ phương án.',
+    description:
+      'Trường không gửi thì giữ nguyên; gửi options thì thay toàn bộ phương án. Câu đang được làm ' +
+      'bài (detail.lock khác null) không đổi được nội dung, phương án, đáp án đúng, loại câu, Part, ' +
+      'nhóm, thời gian Speaking (409); giải thích, bài mẫu, chủ đề, độ khó, trạng thái vẫn sửa được.',
   })
   @ApiEnvelope(QuestionDetail)
   @ApiErrors(
@@ -105,6 +108,8 @@ export class QuestionsController {
     ErrorCode.QUESTION_NOT_FOUND,
     ErrorCode.VERSION_CONFLICT,
     ErrorCode.QUESTION_GROUP_ORDER_TAKEN,
+    ErrorCode.QUESTION_IN_PUBLISHED_EXAM,
+    ErrorCode.QUESTION_IN_ACTIVE_ATTEMPT,
   )
   updateQuestion(
     @Param('id', UuidParam(ErrorCode.QUESTION_NOT_FOUND)) id: string,

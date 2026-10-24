@@ -89,8 +89,9 @@ export class MediaController {
     if (!object) throw new AppException(ErrorCode.NOT_FOUND);
 
     res.setHeader('Accept-Ranges', 'bytes');
-    // private: proxy dùng chung không được giữ tệp; tệp không đổi nội dung (tên UUID) nên giữ 1 giờ
-    res.setHeader('Cache-Control', 'private, max-age=3600');
+    // private: proxy dùng chung không được giữ tệp. Tệp không bao giờ đổi nội dung (tên UUID, thay
+    // tệp là key mới) nên trình duyệt giữ suốt hạn URL (4 giờ) và không hỏi lại server (immutable)
+    res.setHeader('Cache-Control', 'private, max-age=14400, immutable');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     if (object.contentRange) {
       res.status(HttpStatus.PARTIAL_CONTENT);

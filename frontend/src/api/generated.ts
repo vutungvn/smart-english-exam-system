@@ -1092,6 +1092,7 @@ export type ErrorCode =
   | 'QUESTION_GROUP_ORDER_TAKEN'
   | 'QUESTION_CODE_TAKEN'
   | 'QUESTION_IN_PUBLISHED_EXAM'
+  | 'QUESTION_IN_ACTIVE_ATTEMPT'
   | 'QUESTION_OPTION_IN_USE'
   | 'QUESTION_IMPORT_INVALID_FILE'
   | 'QUESTION_IMPORT_NOT_FOUND'
@@ -1274,6 +1275,17 @@ export type QuestionSummary = {
   /** Gửi lại nguyên giá trị này khi PATCH để kiểm tra xung đột (khóa lạc quan) */
   updatedAt: string;
 };
+export type ContentLockReason = 'PUBLISHED_EXAM' | 'ACTIVE_ATTEMPT';
+export type LockedExamRef = {
+  id: string;
+  title: string;
+};
+export type ContentLock = {
+  /** PUBLISHED_EXAM: nằm trong đề đang xuất bản · ACTIVE_ATTEMPT: đề đã gỡ nhưng còn bài làm cả đề đang dở */
+  reason: ContentLockReason;
+  /** Các đề đang khóa câu */
+  exams: LockedExamRef[];
+};
 export type QuestionOptionItem = {
   id: string;
   label: string;
@@ -1297,6 +1309,8 @@ export type QuestionDetail = {
   createdAt: string;
   /** Gửi lại nguyên giá trị này khi PATCH để kiểm tra xung đột (khóa lạc quan) */
   updatedAt: string;
+  /** Khác null: không sửa được nội dung, phương án, đáp án đúng, loại câu, Part, nhóm, thời gian Speaking, âm thanh, hình ảnh; vẫn sửa được giải thích, bài mẫu, chủ đề, độ khó, trạng thái */
+  lock: ContentLock | null;
   explanation: string | null;
   sampleAnswer: string | null;
   prepSeconds: number | null;
@@ -1421,6 +1435,8 @@ export type QuestionGroupDetail = {
   updatedAt: string;
   /** Các câu trong nhóm, theo thứ tự */
   questions: QuestionSummary[];
+  /** Khác null: không sửa được đoạn văn, âm thanh, hình ảnh của nhóm; vẫn sửa được lời thoại, chủ đề, trạng thái */
+  lock: ContentLock | null;
 };
 export type CreateQuestionGroupDto = {
   topicId: string;

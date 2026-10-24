@@ -11,7 +11,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
   constructor(config: ConfigService<Env, true>) {
     super({
-      adapter: new PrismaPg({ connectionString: config.get('DATABASE_URL', { infer: true }) }),
+      adapter: new PrismaPg({
+        connectionString: config.get('DATABASE_URL', { infer: true }),
+        // Mặc định của pg là 10 kết nối: lúc nhiều học viên cùng làm bài request phải xếp hàng chờ
+        max: config.get('DATABASE_POOL_MAX', { infer: true }),
+      }),
     });
   }
 

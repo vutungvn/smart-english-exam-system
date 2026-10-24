@@ -29,6 +29,7 @@ import { formatDateTime } from '@/features/profile/format';
 import { useAppSelector } from '@/hooks/hooks';
 import { cn } from '@/lib/utils';
 import { selectCurrentUser } from '@/store/slice/auth-slice';
+import { ContentLockNotice } from '../components/ContentLockNotice';
 import { DeleteGroupDialog } from '../components/DeleteGroupDialog';
 import { DeleteQuestionDialog } from '../components/DeleteQuestionDialog';
 import { PassageView, TranscriptView } from '../components/GroupContent';
@@ -158,6 +159,14 @@ function GroupDetail({ group }: { group: QuestionGroupDetail }) {
         </p>
       )}
 
+      {mine && group.lock && (
+        <ContentLockNotice
+          lock={group.lock}
+          target="group"
+          transcript={group.skill === 'LISTENING'}
+        />
+      )}
+
       {flash && <SuccessBanner message={flash} onClose={() => setFlash(undefined)} />}
       {mediaError && (
         <FormAlert
@@ -167,7 +176,8 @@ function GroupDetail({ group }: { group: QuestionGroupDetail }) {
       )}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <SharedContentCard group={group} size={size} editable={mine} />
+        {/* Nhóm đang được làm bài (D29): không tải, gỡ âm thanh/hình ảnh ngay tại đây */}
+        <SharedContentCard group={group} size={size} editable={mine && !group.lock} />
 
         <section className="rounded-3xl border border-border bg-white p-5 shadow-2xs sm:p-6">
           <div className="flex flex-wrap items-center gap-3">

@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import { fieldError } from '../../common/errors/field-error.js';
-import { ExamStatus } from '../../generated/prisma/enums.js';
+import { AttemptMode, AttemptStatus, ExamStatus } from '../../generated/prisma/enums.js';
 import type { Skill } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
+import { describeLockedFields, type LockedField } from './content-lock.js';
+import type { ContentLock } from './questions.types.js';
 
 // Các kiểm tra cần đọc DB, dùng chung cho câu hỏi và nhóm câu
 
@@ -53,6 +55,63 @@ export class QuestionReferencesService {
       distinct: ['questionId'],
     });
     return new Set(rows.map((row) => row.questionId));
+  }
+
+  /**
+   * Các câu (trong danh sách) đang được làm bài (D29): nằm trong đề đang xuất bản, hoặc trong đề đã
+   * gỡ nhưng còn bài làm cả đề đang dở. Bài luyện theo Part không đếm giờ nên không tính (có thể để
+   * dở mãi). null khi không bị khóa
+   */
+  async contentLock(questionIds: string[]): Promise<ContentLock | null> {
+    if (questionIds.length === 0) return null;
+    const exams = await this.prisma.exam.findMany({
+      where: {
+        deletedAt: null,
+        sections: { some: { questions: { some: { questionId: { in: questionIds } } } } },
+        OR: [
+          { status: ExamStatus.PUBLISHED },
+          { attempts: { some: { status: AttemptStatus.IN_PROGRESS, mode: AttemptMode.FULL } } },
+        ],
+      },
+      orderBy: { title: 'asc' },
+      select: { id: true, title: true, status: true },
+    });
+    if (exams.length === 0) return null;
+    const published = exams.filter((exam) => exam.status === ExamStatus.PUBLISHED);
+    return published.length > 0
+      ? { reason: 'PUBLISHED_EXAM', exams: published.map(({ id, title }) => ({ id, title })) }
+      : { reason: 'ACTIVE_ATTEMPT', exams: exams.map(({ id, title }) => ({ id, title })) };
+  }
+
+  /**
+   * Sửa trường bị khóa của câu, nhóm đang được làm bài: 409 kèm đề đang khóa và các trường đã đổi.
+   * questionIds: câu đang sửa, hoặc các câu của nhóm đang sửa
+   */
+  async assertContentUnlocked(
+    questionIds: string[],
+    fields: LockedField[],
+    target: 'question' | 'group' = 'question',
+  ): Promise<void> {
+    if (fields.length === 0) return;
+    const lock = await this.contentLock(questionIds);
+    if (!lock) return;
+    const exams = lock.exams.map((exam) => `«${exam.title}»`).join(', ');
+    const what = describeLockedFields(fields);
+    const details = { fields, exams: lock.exams };
+    if (lock.reason === 'PUBLISHED_EXAM') {
+      throw new AppException(
+        ErrorCode.QUESTION_IN_PUBLISHED_EXAM,
+        `${target === 'question' ? 'Câu' : 'Nhóm câu'} đang nằm trong đề đã xuất bản ${exams} ` +
+          `nên không sửa được ${what}. Hãy gỡ xuất bản đề trước khi sửa`,
+        details,
+      );
+    }
+    throw new AppException(
+      ErrorCode.QUESTION_IN_ACTIVE_ATTEMPT,
+      `Đang có học viên làm đề ${exams} có ${target === 'question' ? 'câu' : 'nhóm'} này ` +
+        `nên chưa sửa được ${what}. Hãy chờ các bài làm nộp xong`,
+      details,
+    );
   }
 
   /** Câu muốn vào nhóm: nhóm còn hiệu lực, do chính giáo viên này tạo, cùng kỹ năng và Part */
