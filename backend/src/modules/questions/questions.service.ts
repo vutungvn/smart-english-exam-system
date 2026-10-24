@@ -16,6 +16,7 @@ import { MediaUrlService } from '../media/media-url.service.js';
 import type { CreateQuestionDto, QuestionOptionDto } from './dto/create-question.dto.js';
 import type { QuestionQueryDto } from './dto/question-query.dto.js';
 import type { UpdateQuestionDto } from './dto/update-question.dto.js';
+import { lockedQuestionChanges } from './content-lock.js';
 import { assertOwner, QuestionReferencesService } from './question-references.service.js';
 import { assertQuestionRules, type QuestionDraft } from './question-rules.js';
 import {
@@ -113,7 +114,7 @@ export class QuestionsService {
       select: questionDetailSelect,
     });
     if (!row) throw new AppException(ErrorCode.QUESTION_NOT_FOUND);
-    return toQuestionDetail(row, this.media);
+    return toQuestionDetail(row, this.media, await this.refs.contentLock([id]));
   }
 
   async create(dto: CreateQuestionDto, user: AuthUser): Promise<QuestionDetail> {
@@ -160,7 +161,8 @@ export class QuestionsService {
       }),
     );
 
-    return toQuestionDetail(row, this.media);
+    // Câu mới chưa nằm trong đề nào
+    return toQuestionDetail(row, this.media, null);
   }
 
   async update(id: string, dto: UpdateQuestionDto, user: AuthUser): Promise<QuestionDetail> {
@@ -188,6 +190,15 @@ export class QuestionsService {
     };
 
     assertQuestionRules(draft);
+    // Câu đang được làm bài: chặn sửa phần học viên thấy khi làm bài và phần dùng để chấm (D29)
+    await this.refs.assertContentUnlocked(
+      [id],
+      lockedQuestionChanges(existing, {
+        ...draft,
+        content: dto.content ?? undefined,
+        options: dto.options,
+      }),
+    );
     await this.refs.assertTopic(topicId, draft.skill, draft.part);
     if (draft.groupId) {
       await this.refs.assertGroupForQuestion(draft.groupId, user.id, draft.skill, draft.part);

@@ -1,6 +1,7 @@
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { MediaUrlService } from '../media/media-url.service.js';
 import type {
+  ContentLock,
   QuestionDetail,
   QuestionGroupDetail,
   QuestionGroupSummary,
@@ -84,8 +85,9 @@ export function toQuestionSummary({ author, ...row }: QuestionSummaryRow): Quest
 export function toQuestionDetail(
   { author, ...row }: QuestionDetailRow,
   media: MediaUrlService,
+  lock: ContentLock | null,
 ): QuestionDetail {
-  return media.withUrls({ ...row, author: author.user });
+  return media.withUrls({ ...row, author: author.user, lock });
 }
 
 export function toGroupSummary(
@@ -98,6 +100,7 @@ export function toGroupSummary(
 export function toGroupDetail(
   { questions, ...row }: GroupDetailRow,
   media: MediaUrlService,
+  lock: ContentLock | null,
 ): QuestionGroupDetail {
-  return { ...toGroupSummary(row, media), questions: questions.map(toQuestionSummary) };
+  return { ...toGroupSummary(row, media), questions: questions.map(toQuestionSummary), lock };
 }

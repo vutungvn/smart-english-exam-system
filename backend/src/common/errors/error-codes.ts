@@ -51,6 +51,7 @@ export const ErrorCode = {
   QUESTION_GROUP_ORDER_TAKEN: 'QUESTION_GROUP_ORDER_TAKEN',
   QUESTION_CODE_TAKEN: 'QUESTION_CODE_TAKEN',
   QUESTION_IN_PUBLISHED_EXAM: 'QUESTION_IN_PUBLISHED_EXAM',
+  QUESTION_IN_ACTIVE_ATTEMPT: 'QUESTION_IN_ACTIVE_ATTEMPT',
   QUESTION_OPTION_IN_USE: 'QUESTION_OPTION_IN_USE',
 
   // Nhập câu hỏi từ tệp .zip
@@ -244,6 +245,10 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.QUESTION_IN_PUBLISHED_EXAM]: {
     status: HttpStatus.CONFLICT,
     message: 'Câu hỏi đang nằm trong đề đã xuất bản, hãy gỡ xuất bản đề trước khi xóa',
+  },
+  [ErrorCode.QUESTION_IN_ACTIVE_ATTEMPT]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Đang có học viên làm bài có câu này, hãy chờ các bài làm nộp xong rồi sửa',
   },
   // Nhập câu hỏi từ tệp .zip
   [ErrorCode.QUESTION_IMPORT_INVALID_FILE]: {

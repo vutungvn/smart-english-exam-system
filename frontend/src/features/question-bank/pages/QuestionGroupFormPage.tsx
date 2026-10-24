@@ -27,11 +27,13 @@ import { applyFieldErrors } from '@/lib/form-errors';
 import { describeMediaError } from '@/lib/media-file';
 import { cn } from '@/lib/utils';
 import { selectCurrentUser } from '@/store/slice/auth-slice';
+import { ContentLockNotice } from '../components/ContentLockNotice';
 import { PassageView, TranscriptView } from '../components/GroupContent';
 import { EmptyState, ErrorState } from '../components/ListStates';
 import { Counter } from '../form/AnswerFields';
 import { FormSection } from '../form/FormSection';
 import { GroupMediaFields } from '../form/GroupMediaFields';
+import { LockedArea } from '../form/LockedArea';
 import {
   emptyGroupValues,
   GROUP_CONTENT_MAX,
@@ -103,6 +105,7 @@ function EditGroup({ id }: { id: string }) {
       group={data.data}
       defaultValues={toGroupValues(data.data)}
       reload={async () => toGroupValues((await refetch().unwrap()).data)}
+      refresh={() => void refetch()}
     />
   );
 }
@@ -111,9 +114,11 @@ interface GroupEditorProps {
   defaultValues: GroupFormValues;
   group?: QuestionGroupDetail;
   reload?: () => Promise<GroupFormValues>;
+  /** Tải lại thông tin nhóm (khóa nội dung) mà không đụng tới giá trị đang sửa trong form */
+  refresh?: () => void;
 }
 
-function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
+function GroupEditor({ defaultValues, group, reload, refresh }: GroupEditorProps) {
   const navigate = useNavigate();
   const [createGroup] = useCreateQuestionGroupMutation();
   const [updateGroup] = useUpdateQuestionGroupMutation();
@@ -143,6 +148,8 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
   const rule = skill ? findPartRule(skill, part) : undefined;
   const formError = errors.root?.server?.message;
   const cancelPath = group ? groupPath(group.id) : GROUP_LIST_PATH;
+  // Nhóm đang được làm bài (D29): khóa đoạn văn, âm thanh, hình ảnh; lời thoại vẫn sửa được
+  const lock = group?.lock ?? null;
 
   /** Nhóm vừa tạo: tải các tệp đã chọn; trả về lỗi của từng tệp không tải được */
   const uploadPending = async (id: string, currentRule: PartRule): Promise<string[]> => {
@@ -193,6 +200,13 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
     } catch (err) {
       const apiError = toApiError(err);
       if (apiError.code === 'VERSION_CONFLICT') return setConflict(true);
+      // Nhóm vừa vào đề xuất bản hoặc có học viên vừa bắt đầu làm: tải lại để hiện các ô bị khóa
+      if (
+        apiError.code === 'QUESTION_IN_PUBLISHED_EXAM' ||
+        apiError.code === 'QUESTION_IN_ACTIVE_ATTEMPT'
+      ) {
+        refresh?.();
+      }
       // passage/transcript của backend đều là ô "nội dung" trên form
       const fieldErrors = apiError.fieldErrors.map((item) =>
         item.field === 'passage' || item.field === 'transcript'
@@ -259,6 +273,14 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
           }
         />
 
+        {lock && (
+          <ContentLockNotice
+            lock={lock}
+            target="group"
+            transcript={rule?.groupContent === 'transcript'}
+          />
+        )}
+
         {conflict && (
           <div
             role="alert"
@@ -306,7 +328,10 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
                     : 'Đoạn văn'
               }
             >
-              <GroupContentField rule={rule} />
+              {/* Lời thoại chỉ hiện ở màn xem lại nên vẫn sửa được; đoạn văn học viên đọc khi làm bài thì khóa */}
+              <LockedArea locked={!!lock && rule?.groupContent !== 'transcript'}>
+                <GroupContentField rule={rule} />
+              </LockedArea>
             </FormSection>
 
             {rule && (
@@ -315,6 +340,7 @@ function GroupEditor({ defaultValues, group, reload }: GroupEditorProps) {
                   rule={rule}
                   group={group}
                   disabled={isSubmitting}
+                  readOnly={!!lock}
                   pending={pendingMedia.pending}
                   onPendingChange={pendingMedia.setFile}
                   onSaved={mediaSaved}

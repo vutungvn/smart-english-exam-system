@@ -111,3 +111,23 @@ export function mergeAnswer(existing: AnswerValues | null, input: AnswerInput): 
     isFlagged: input.isFlagged ?? existing?.isFlagged ?? false,
   };
 }
+
+/**
+ * Ghi câu trả lời bằng một câu SQL INSERT … ON CONFLICT (SPRINT-101): giá trị khi chưa có bản lưu,
+ * và trường nào được ghi đè khi đã có. Cho cùng kết quả với mergeAnswer mà không cần đọc bản cũ trước
+ */
+export interface AnswerWrite {
+  values: AnswerValues;
+  overwrite: Record<keyof AnswerValues, boolean>;
+}
+
+export function answerWrite(input: AnswerInput): AnswerWrite {
+  return {
+    values: mergeAnswer(null, input),
+    overwrite: {
+      selectedOptionId: input.selectedOptionId !== undefined,
+      textAnswer: input.textAnswer !== undefined,
+      isFlagged: input.isFlagged !== undefined,
+    },
+  };
+}

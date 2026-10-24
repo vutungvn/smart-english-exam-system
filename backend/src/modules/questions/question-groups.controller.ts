@@ -96,7 +96,12 @@ export class QuestionGroupsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Sửa nhóm câu (chỉ người tạo; không đổi được kỹ năng, Part)' })
+  @ApiOperation({
+    summary: 'Sửa nhóm câu (chỉ người tạo; không đổi được kỹ năng, Part)',
+    description:
+      'Nhóm đang được làm bài (detail.lock khác null) không đổi được đoạn văn (409); lời thoại, ' +
+      'chủ đề, trạng thái vẫn sửa được.',
+  })
   @ApiEnvelope(QuestionGroupDetail)
   @ApiErrors(
     RULE_ERROR,
@@ -104,6 +109,8 @@ export class QuestionGroupsController {
     NOT_OWNER,
     ErrorCode.QUESTION_GROUP_NOT_FOUND,
     ErrorCode.VERSION_CONFLICT,
+    ErrorCode.QUESTION_IN_PUBLISHED_EXAM,
+    ErrorCode.QUESTION_IN_ACTIVE_ATTEMPT,
   )
   updateQuestionGroup(
     @Param('id', UuidParam(ErrorCode.QUESTION_GROUP_NOT_FOUND)) id: string,

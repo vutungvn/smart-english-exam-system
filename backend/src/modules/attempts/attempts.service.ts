@@ -6,21 +6,21 @@ import type { AuthUser } from '../../common/types/auth-user.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AttemptMode, AttemptStatus, ExamKind, ExamStatus } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
-import { examPaperSelect, toExamPaper } from '../exams/exams.mapper.js';
+import { toExamPaper, type ExamPaperRow } from '../exams/exams.mapper.js';
+import { PaperCacheService, type PaperTarget } from '../exams/paper-cache.service.js';
 import { MediaUrlService } from '../media/media-url.service.js';
 import { AttemptSubmissionService, resultSelect, toResult } from './attempt-submission.service.js';
 import { findPartRule } from '../questions/toeic-parts.js';
 import {
   ANSWER_GRACE_SECONDS,
   answerProblem,
+  answerWrite,
   clampAnsweredAt,
   expiresAtFor,
-  mergeAnswer,
   remainingSeconds,
   SYNC_GRACE_SECONDS,
   withinDeadline,
   type AnswerInput,
-  type AnswerTarget,
 } from './attempt-rules.js';
 import type {
   AttemptAnswerItem,
@@ -57,6 +57,27 @@ const answerSelect = {
 export type AttemptRow = Prisma.ExamAttemptGetPayload<{ select: typeof attemptSelect }>;
 type Db = Prisma.TransactionClient | PrismaService;
 
+/** Khôi phục bài: thông tin bài làm và kết quả trong một lần đọc */
+const detailSelect = {
+  ...attemptSelect,
+  ...resultSelect,
+  exam: { select: { ...attemptSelect.exam.select, ...resultSelect.exam.select } },
+} satisfies Prisma.ExamAttemptSelect;
+
+type DetailRow = Prisma.ExamAttemptGetPayload<{ select: typeof detailSelect }>;
+
+/** Tự động lưu chỉ cần các cột này: một truy vấn, không nạp đề, Part */
+const answerAttemptSelect = {
+  id: true,
+  examId: true,
+  sectionId: true,
+  status: true,
+  startedAt: true,
+  expiresAt: true,
+} satisfies Prisma.ExamAttemptSelect;
+
+type AnswerAttempt = Prisma.ExamAttemptGetPayload<{ select: typeof answerAttemptSelect }>;
+
 export function toSummary(row: AttemptRow, now: Date): AttemptSummary {
   const { section } = row;
   return {
@@ -90,6 +111,7 @@ export class AttemptsService {
     private readonly prisma: PrismaService,
     private readonly media: MediaUrlService,
     private readonly submission: AttemptSubmissionService,
+    private readonly papers: PaperCacheService,
   ) {}
 
   /** Nộp bài: chấm phần trắc nghiệm; gọi lại sau khi đã nộp thì trả kết quả cũ */
@@ -113,22 +135,24 @@ export class AttemptsService {
   }
 
   async start(examId: string, dto: StartAttemptDto, user: AuthUser): Promise<AttemptDetail> {
-    const exam = await this.prisma.exam.findFirst({
-      where: { id: examId, status: ExamStatus.PUBLISHED, deletedAt: null, kind: ExamKind.STANDARD },
-      select: {
-        durationMinutes: true,
-        maxAttempts: true,
-        allowPartPractice: true,
-        sections: { select: { id: true } },
-      },
-    });
-    if (!exam) throw new AppException(ErrorCode.EXAM_NOT_FOUND);
+    // Đề lấy từ cache (giáo viên gỡ, sửa đề thì cache bị xóa ngay): 200 học viên bấm "Bắt đầu"
+    // cùng lúc chỉ đọc đề một lần
+    const cached = await this.papers.get(examId);
+    if (
+      !cached ||
+      cached.exam.status !== ExamStatus.PUBLISHED ||
+      cached.exam.deletedAt !== null ||
+      cached.exam.kind !== ExamKind.STANDARD
+    ) {
+      throw new AppException(ErrorCode.EXAM_NOT_FOUND);
+    }
+    const { exam, paper } = cached;
 
     let sectionId: string | null = null;
     if (dto.mode === AttemptMode.PART) {
       if (!exam.allowPartPractice) throw new AppException(ErrorCode.ATTEMPT_PART_PRACTICE_DISABLED);
       if (!dto.sectionId) throw fieldError('sectionId', 'Chọn Part muốn luyện');
-      if (!exam.sections.some((section) => section.id === dto.sectionId)) {
+      if (!paper.sections.some((section) => section.id === dto.sectionId)) {
         throw new AppException(ErrorCode.EXAM_SECTION_NOT_FOUND);
       }
       sectionId = dto.sectionId;
@@ -174,11 +198,12 @@ export class AttemptsService {
           mode: dto.mode,
           sectionId,
           startedAt: now,
-          expiresAt: expiresAtFor(dto.mode, exam.durationMinutes, now),
+          expiresAt: expiresAtFor(dto.mode, paper.durationMinutes, now),
         },
-        select: { id: true },
+        select: detailSelect,
       });
-      return await this.detail(created.id, user, false);
+      // Bài mới chưa có câu trả lời: trả luôn, không đọc lại bài vừa tạo
+      return this.toDetail(created, paper, [], false);
     } catch (error) {
       // Bấm "Bắt đầu" hai lần cùng lúc: uq_attempts_one_in_progress chặn lượt thứ hai → trả lượt đầu
       if (!isUniqueViolation(error)) throw error;
@@ -193,24 +218,36 @@ export class AttemptsService {
 
   /** Khôi phục bài: đề (không đáp án) + câu đã trả lời + thời gian còn lại */
   async detail(id: string, user: AuthUser, resumed = false): Promise<AttemptDetail> {
-    let row = await this.loadOwned(id, user);
-    if (await this.submitIfOverdue(row, new Date())) row = await this.loadOwned(id, user);
-    const result = toResult(
-      await this.prisma.examAttempt.findUniqueOrThrow({ where: { id }, select: resultSelect }),
-    );
-    const paper = await this.prisma.exam.findUniqueOrThrow({
-      where: { id: row.examId },
-      select: examPaperSelect,
-    });
-    const answers = await this.prisma.attemptAnswer.findMany({
-      where: { attemptId: id },
-      select: answerSelect,
-    });
+    const load = async () => {
+      const found = await this.prisma.examAttempt.findFirst({
+        where: { id, studentId: user.id },
+        select: detailSelect,
+      });
+      if (!found) throw new AppException(ErrorCode.ATTEMPT_NOT_FOUND);
+      return found;
+    };
+    let row = await load();
+    if (await this.submitIfOverdue(row, new Date())) row = await load();
 
+    // Đề lấy từ cache: mọi học viên làm cùng đề dùng chung một lần đọc DB
+    const [cached, answers] = await Promise.all([
+      this.papers.get(row.examId),
+      this.prisma.attemptAnswer.findMany({ where: { attemptId: id }, select: answerSelect }),
+    ]);
+    if (!cached) throw new AppException(ErrorCode.EXAM_NOT_FOUND);
+    return this.toDetail(row, cached.paper, answers, resumed);
+  }
+
+  private toDetail(
+    row: DetailRow,
+    paper: ExamPaperRow,
+    answers: AttemptAnswerItem[],
+    resumed: boolean,
+  ): AttemptDetail {
     return {
       ...toSummary(row, new Date()),
       resumed,
-      result,
+      result: toResult(row),
       // Luyện theo Part: chỉ đưa Part đó, câu đánh số lại từ 1
       paper: toExamPaper(
         row.sectionId
@@ -267,7 +304,7 @@ export class AttemptsService {
     dto: SaveAnswerDto,
     user: AuthUser,
   ): Promise<SaveAnswerResult> {
-    const attempt = await this.loadOwned(id, user);
+    const attempt = await this.loadForAnswer(id, user);
     this.assertInProgress(attempt);
     const now = new Date();
     if (!withinDeadline(attempt.expiresAt, now, ANSWER_GRACE_SECONDS)) {
@@ -290,7 +327,7 @@ export class AttemptsService {
    * ghi theo thứ tự answeredAt tăng dần trong một transaction; câu trả lời sau hạn nộp bị bỏ qua
    */
   async syncAnswers(id: string, dto: SyncAnswersDto, user: AuthUser): Promise<SyncAnswersResult> {
-    const attempt = await this.loadOwned(id, user);
+    const attempt = await this.loadForAnswer(id, user);
     this.assertInProgress(attempt);
     const now = new Date();
     if (!withinDeadline(attempt.expiresAt, now, SYNC_GRACE_SECONDS)) {
@@ -358,42 +395,46 @@ export class AttemptsService {
     return row;
   }
 
-  private assertInProgress(attempt: AttemptRow): void {
+  /** Tự động lưu được gọi mỗi lần chọn đáp án: chỉ đọc các cột cần, không kèm đề, Part */
+  private async loadForAnswer(id: string, user: AuthUser): Promise<AnswerAttempt> {
+    const row = await this.prisma.examAttempt.findFirst({
+      where: { id, studentId: user.id },
+      select: answerAttemptSelect,
+    });
+    if (!row) throw new AppException(ErrorCode.ATTEMPT_NOT_FOUND);
+    return row;
+  }
+
+  private assertInProgress(attempt: Pick<AttemptRow, 'status'>): void {
     if (attempt.status !== AttemptStatus.IN_PROGRESS) {
       throw new AppException(ErrorCode.ATTEMPT_NOT_IN_PROGRESS);
     }
   }
 
-  /** Câu trong phạm vi bài làm (cả đề, hoặc chỉ Part đang luyện) kèm loại câu và id phương án */
+  /**
+   * Câu trong phạm vi bài làm (cả đề, hoặc chỉ Part đang luyện) kèm loại câu và id phương án; lấy
+   * từ cache đề nên tự động lưu không phải truy vấn câu hỏi
+   */
   private async targets(
-    attempt: AttemptRow,
+    attempt: AnswerAttempt,
     examQuestionIds: string[],
-  ): Promise<Map<string, AnswerTarget>> {
-    const rows = await this.prisma.examQuestion.findMany({
-      where: {
-        id: { in: [...new Set(examQuestionIds)] },
-        sectionId: attempt.sectionId ?? undefined,
-        section: { examId: attempt.examId },
-      },
-      select: {
-        id: true,
-        question: { select: { type: true, options: { select: { id: true } } } },
-      },
-    });
-    return new Map(
-      rows.map((row) => [
-        row.id,
-        {
-          type: row.question.type,
-          optionIds: new Set(row.question.options.map((option) => option.id)),
-        },
-      ]),
-    );
+  ): Promise<Map<string, PaperTarget>> {
+    const cached = await this.papers.get(attempt.examId);
+    const result = new Map<string, PaperTarget>();
+    for (const examQuestionId of examQuestionIds) {
+      const target = cached?.targets.get(examQuestionId);
+      if (target && (!attempt.sectionId || target.sectionId === attempt.sectionId)) {
+        result.set(examQuestionId, target);
+      }
+    }
+    return result;
   }
 
   /**
-   * Ghi đè câu trả lời nếu bản gửi lên mới hơn bản đã lưu (so answeredAt): gửi lại một yêu cầu cũ
-   * (mạng chập chờn, đồng bộ lô) không làm mất câu trả lời mới hơn
+   * Ghi câu trả lời bằng một câu SQL: chưa có thì thêm, đã có thì ghi đè các trường gửi lên, nhưng
+   * chỉ khi bản gửi lên mới hơn bản đã lưu (so answeredAt). Gửi lại một yêu cầu cũ (mạng chập chờn,
+   * đồng bộ lô) không làm mất câu trả lời mới hơn; hai yêu cầu đầu tiên của cùng một câu đến cùng lúc
+   * cũng an toàn nhờ ON CONFLICT (uq_attempt_answers_attempt_question)
    */
   private async upsertAnswer(
     db: Db,
@@ -401,27 +442,31 @@ export class AttemptsService {
     examQuestionId: string,
     input: AnswerInput,
     answeredAt: Date,
-    retry = true,
   ): Promise<{ answer: AttemptAnswerItem; applied: boolean }> {
-    const where = { attemptId_examQuestionId: { attemptId, examQuestionId } };
-    const existing = await db.attemptAnswer.findUnique({ where, select: answerSelect });
-    if (existing && existing.answeredAt > answeredAt) return { answer: existing, applied: false };
+    const { values, overwrite } = answerWrite(input);
+    const [answer] = await db.$queryRaw<AttemptAnswerItem[]>`
+      INSERT INTO attempt_answers AS a
+        (attempt_id, exam_question_id, selected_option_id, text_answer, is_flagged, answered_at, updated_at)
+      VALUES (${attemptId}::uuid, ${examQuestionId}::uuid, ${values.selectedOptionId}::uuid,
+        ${values.textAnswer}, ${values.isFlagged}, ${answeredAt}, now())
+      ON CONFLICT (attempt_id, exam_question_id) DO UPDATE SET
+        selected_option_id = CASE WHEN ${overwrite.selectedOptionId}
+          THEN EXCLUDED.selected_option_id ELSE a.selected_option_id END,
+        text_answer = CASE WHEN ${overwrite.textAnswer}
+          THEN EXCLUDED.text_answer ELSE a.text_answer END,
+        is_flagged = CASE WHEN ${overwrite.isFlagged} THEN EXCLUDED.is_flagged ELSE a.is_flagged END,
+        answered_at = EXCLUDED.answered_at,
+        updated_at = now()
+      WHERE a.answered_at <= EXCLUDED.answered_at
+      RETURNING exam_question_id AS "examQuestionId", selected_option_id AS "selectedOptionId",
+        text_answer AS "textAnswer", is_flagged AS "isFlagged", answered_at AS "answeredAt"`;
+    if (answer) return { answer, applied: true };
 
-    const values = { ...mergeAnswer(existing, input), answeredAt };
-    try {
-      const answer = await db.attemptAnswer.upsert({
-        where,
-        create: { attemptId, examQuestionId, ...values },
-        update: values,
-        select: answerSelect,
-      });
-      return { answer, applied: true };
-    } catch (error) {
-      // Hai yêu cầu đầu tiên của cùng một câu đến cùng lúc: yêu cầu sau thành cập nhật
-      if (retry && isUniqueViolation(error)) {
-        return this.upsertAnswer(db, attemptId, examQuestionId, input, answeredAt, false);
-      }
-      throw error;
-    }
+    // Bản đã lưu mới hơn: giữ nguyên và trả lại bản đó
+    const existing = await db.attemptAnswer.findUniqueOrThrow({
+      where: { attemptId_examQuestionId: { attemptId, examQuestionId } },
+      select: answerSelect,
+    });
+    return { answer: existing, applied: false };
   }
 }

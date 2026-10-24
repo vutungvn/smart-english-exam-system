@@ -6,6 +6,7 @@ import {
   type QuestionGroupDetail,
 } from '@/api/generated';
 import { MediaUploadSlot } from '@/components/media/MediaUploadSlot';
+import { QuestionMedia } from '@/components/QuestionMedia';
 import { IMPORT_PATH } from '@/features/question-import/import-meta';
 import type { MediaKind } from '@/lib/media-file';
 import { groupMediaKinds, groupMediaLabel, groupMediaOptional, type PartRule } from '../toeic';
@@ -16,6 +17,8 @@ interface GroupMediaFieldsProps {
   /** Có khi sửa nhóm đã lưu: tệp tải lên ngay. Không có (đang tạo): giữ tệp, tải lên khi tạo nhóm */
   group?: QuestionGroupDetail;
   disabled: boolean;
+  /** Nhóm đang được làm bài (D29): chỉ nghe, xem tệp, không tải lên hay gỡ được */
+  readOnly?: boolean;
   pending: PendingMedia;
   onPendingChange: (kind: MediaKind, file: File | null) => void;
   /** Tải/gỡ tệp xong: nhóm có updatedAt mới (form cần cập nhật mốc để lần Lưu sau không bị 409) */
@@ -27,6 +30,7 @@ export function GroupMediaFields({
   rule,
   group,
   disabled,
+  readOnly = false,
   pending,
   onPendingChange,
   onSaved,
@@ -53,6 +57,10 @@ export function GroupMediaFields({
       owner: 'nhóm câu',
       disabled,
     };
+    if (group && readOnly) {
+      const url = kind === 'audio' ? group.audioUrl : group.imageUrl;
+      return <QuestionMedia key={kind} kind={kind} url={url} label={common.label} />;
+    }
     if (group) {
       return (
         <MediaUploadSlot
@@ -94,16 +102,18 @@ export function GroupMediaFields({
         </p>
       )}
 
-      <p className="text-xs text-subtle">
-        {group
-          ? 'Tệp được lưu ngay khi tải lên, không cần bấm Lưu thay đổi. '
-          : 'Tệp được tải lên ngay sau khi tạo nhóm. '}
-        Soạn nhiều nhóm có tệp cùng lúc thì dùng{' '}
-        <Link to={IMPORT_PATH} className="font-semibold text-primary hover:text-brand">
-          nhập câu hỏi từ tệp .zip
-        </Link>
-        .
-      </p>
+      {!readOnly && (
+        <p className="text-xs text-subtle">
+          {group
+            ? 'Tệp được lưu ngay khi tải lên, không cần bấm Lưu thay đổi. '
+            : 'Tệp được tải lên ngay sau khi tạo nhóm. '}
+          Soạn nhiều nhóm có tệp cùng lúc thì dùng{' '}
+          <Link to={IMPORT_PATH} className="font-semibold text-primary hover:text-brand">
+            nhập câu hỏi từ tệp .zip
+          </Link>
+          .
+        </p>
+      )}
     </div>
   );
 }

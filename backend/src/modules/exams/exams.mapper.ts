@@ -134,7 +134,7 @@ export const examPaperSelect = {
 type ExamSummaryRow = Prisma.ExamGetPayload<{ select: typeof examSummarySelect }>;
 type ExamDetailRow = Prisma.ExamGetPayload<{ select: typeof examDetailSelect }>;
 export type ExamCheckRow = Prisma.ExamGetPayload<{ select: typeof examCheckSelect }>;
-type ExamPaperRow = Prisma.ExamGetPayload<{ select: typeof examPaperSelect }>;
+export type ExamPaperRow = Prisma.ExamGetPayload<{ select: typeof examPaperSelect }>;
 
 function partName(skill: Skill, part: number): string {
   return findPartRule(skill, part)?.name ?? `Part ${part}`;

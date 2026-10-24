@@ -75,6 +75,11 @@ const UPLOAD_ERRORS = [
   ErrorCode.STORAGE_UNAVAILABLE,
   NOT_OWNER,
 ] as const;
+/** Câu, nhóm đang được làm bài (D29): không đổi được âm thanh, hình ảnh */
+const LOCK_ERRORS = [
+  ErrorCode.QUESTION_IN_PUBLISHED_EXAM,
+  ErrorCode.QUESTION_IN_ACTIVE_ATTEMPT,
+] as const;
 
 /**
  * Tải audio/ảnh lên ngay trong form câu hỏi và trang nhóm câu (ngoài cách nhập tệp .zip).
@@ -100,7 +105,7 @@ export class QuestionMediaController {
       'Định dạng nhận theo nội dung tệp.',
   })
   @ApiEnvelope(QuestionDetail)
-  @ApiErrors(...UPLOAD_ERRORS, ErrorCode.QUESTION_NOT_FOUND)
+  @ApiErrors(...UPLOAD_ERRORS, ...LOCK_ERRORS, ErrorCode.QUESTION_NOT_FOUND)
   uploadQuestionMedia(
     @Param('id', UuidParam(ErrorCode.QUESTION_NOT_FOUND)) id: string,
     @Param('kind', new MediaKindPipe()) kind: MediaKind,
@@ -114,7 +119,7 @@ export class QuestionMediaController {
   @KIND_PARAM
   @ApiOperation({ summary: 'Gỡ audio hoặc ảnh khỏi câu hỏi' })
   @ApiEnvelope(QuestionDetail)
-  @ApiErrors(NOT_OWNER, ErrorCode.QUESTION_NOT_FOUND)
+  @ApiErrors(NOT_OWNER, ...LOCK_ERRORS, ErrorCode.QUESTION_NOT_FOUND)
   removeQuestionMedia(
     @Param('id', UuidParam(ErrorCode.QUESTION_NOT_FOUND)) id: string,
     @Param('kind', new MediaKindPipe()) kind: MediaKind,
@@ -142,7 +147,7 @@ export class QuestionGroupMediaController {
     description: 'Audio cho nhóm L3, L4; ảnh cho nhóm L3, L4, R6, R7, S4.',
   })
   @ApiEnvelope(QuestionGroupDetail)
-  @ApiErrors(...UPLOAD_ERRORS, ErrorCode.QUESTION_GROUP_NOT_FOUND)
+  @ApiErrors(...UPLOAD_ERRORS, ...LOCK_ERRORS, ErrorCode.QUESTION_GROUP_NOT_FOUND)
   uploadQuestionGroupMedia(
     @Param('id', UuidParam(ErrorCode.QUESTION_GROUP_NOT_FOUND)) id: string,
     @Param('kind', new MediaKindPipe()) kind: MediaKind,
@@ -156,7 +161,7 @@ export class QuestionGroupMediaController {
   @KIND_PARAM
   @ApiOperation({ summary: 'Gỡ audio hoặc ảnh khỏi nhóm câu' })
   @ApiEnvelope(QuestionGroupDetail)
-  @ApiErrors(NOT_OWNER, ErrorCode.QUESTION_GROUP_NOT_FOUND)
+  @ApiErrors(NOT_OWNER, ...LOCK_ERRORS, ErrorCode.QUESTION_GROUP_NOT_FOUND)
   removeQuestionGroupMedia(
     @Param('id', UuidParam(ErrorCode.QUESTION_GROUP_NOT_FOUND)) id: string,
     @Param('kind', new MediaKindPipe()) kind: MediaKind,

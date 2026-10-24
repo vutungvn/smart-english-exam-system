@@ -22,6 +22,7 @@ import {
   toGroupSummary,
 } from './questions.mapper.js';
 import type {
+  ContentLock,
   GroupBulkDeleteResult,
   QuestionGroupDetail,
   QuestionGroupSummary,
@@ -75,7 +76,21 @@ export class QuestionGroupsService {
       select: groupDetailSelect,
     });
     if (!row) throw new AppException(ErrorCode.QUESTION_GROUP_NOT_FOUND);
-    return toGroupDetail(row, this.media);
+    return toGroupDetail(row, this.media, await this.lockOf(id));
+  }
+
+  /** Nhóm bị khóa khi một câu của nhóm đang được làm bài (D29) */
+  async lockOf(id: string): Promise<ContentLock | null> {
+    return this.refs.contentLock(await this.questionIds(id));
+  }
+
+  /** Id các câu của nhóm, kể cả câu đã xóa mềm (đề cũ vẫn có thể trỏ tới) */
+  async questionIds(id: string): Promise<string[]> {
+    const rows = await this.prisma.question.findMany({
+      where: { groupId: id },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
   }
 
   async create(dto: CreateQuestionGroupDto, user: AuthUser): Promise<QuestionGroupDetail> {
@@ -97,7 +112,8 @@ export class QuestionGroupsService {
       },
       select: groupDetailSelect,
     });
-    return toGroupDetail(row, this.media);
+    // Nhóm mới chưa nằm trong đề nào
+    return toGroupDetail(row, this.media, null);
   }
 
   async update(
@@ -127,6 +143,11 @@ export class QuestionGroupsService {
     // skill, part của nhóm cố định (DTO không cho sửa) nên chỉ kiểm tra lại nội dung và chủ đề
     assertGroupRules({ skill: existing.skill, part: existing.part, passage, transcript });
     if (dto.topicId) await this.refs.assertTopic(topicId, existing.skill, existing.part);
+    // Đoạn văn học viên đọc khi làm bài: khóa khi nhóm đang được làm bài (lời thoại chỉ hiện ở màn
+    // xem lại nên vẫn sửa được)
+    if (passage !== existing.passage) {
+      await this.refs.assertContentUnlocked(await this.questionIds(id), ['passage'], 'group');
+    }
 
     const { count } = await this.prisma.questionGroup.updateMany({
       where: { id, deletedAt: null, updatedAt: new Date(dto.updatedAt) },

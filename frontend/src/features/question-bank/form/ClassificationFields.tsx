@@ -14,6 +14,7 @@ import {
   SKILLS,
   type PartRule,
 } from '../toeic';
+import { LockedArea } from './LockedArea';
 import type { QuestionFormValues } from './question-form';
 
 /** Mô tả ngắn dạng câu của Part, hiện trên thẻ chọn Part */
@@ -22,8 +23,9 @@ function partHint(rule: PartRule): string {
   return rule.type === 'SPOKEN_RESPONSE' ? 'Trả lời nói' : 'Trả lời viết';
 }
 
-// Khối 1: kỹ năng → Part → chủ đề → độ khó. Đổi kỹ năng/Part thì xóa các lựa chọn phụ thuộc
-export function ClassificationFields() {
+// Khối 1: kỹ năng → Part → chủ đề → độ khó. Đổi kỹ năng/Part thì xóa các lựa chọn phụ thuộc.
+// locked: câu đang được làm bài, không đổi được kỹ năng, Part (chủ đề, độ khó vẫn sửa được)
+export function ClassificationFields({ locked = false }: { locked?: boolean }) {
   const {
     register,
     setValue,
@@ -73,108 +75,113 @@ export function ClassificationFields() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <p className="text-xs font-semibold text-slate-700">
-          Kỹ năng <span className="text-rose-500">*</span>
-        </p>
-        <div
-          role="radiogroup"
-          aria-label="Kỹ năng"
-          className="grid grid-cols-2 gap-3 md:grid-cols-4"
-        >
-          {SKILLS.map((item) => {
-            const meta = SKILL_META[item];
-            const Icon = meta.icon;
-            const active = skill === item;
-            return (
-              <button
-                key={item}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => selectSkill(item)}
-                className={cn(
-                  'flex items-center gap-3 rounded-2xl border p-3 text-left transition-all outline-none focus-visible:ring-3 focus-visible:ring-primary/30 disabled:cursor-not-allowed',
-                  active
-                    ? 'border-primary bg-accent ring-1 ring-primary'
-                    : 'border-border hover:border-slate-300 hover:bg-slate-50',
-                )}
-              >
-                <span
-                  className={cn(
-                    'flex size-10 shrink-0 items-center justify-center rounded-xl',
-                    meta.tile,
-                  )}
-                >
-                  <Icon className="size-5" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block font-semibold text-foreground">{meta.label}</span>
-                  <span className="block text-xs text-subtle">{meta.subtitle}</span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <FieldError message={errors.skill?.message} />
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-xs font-semibold text-slate-700">
-          Part <span className="text-rose-500">*</span>
-        </p>
-        {skill ? (
+      <LockedArea locked={locked} className="space-y-6">
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-slate-700">
+            Kỹ năng <span className="text-rose-500">*</span>
+          </p>
           <div
             role="radiogroup"
-            aria-label="Part"
-            className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3"
+            aria-label="Kỹ năng"
+            className="grid grid-cols-2 gap-3 md:grid-cols-4"
           >
-            {partsOfSkill(skill).map((item) => {
-              const active = rule?.part === item.part;
-              const grouped = item.group === 'required';
+            {SKILLS.map((item) => {
+              const meta = SKILL_META[item];
+              const Icon = meta.icon;
+              const active = skill === item;
               return (
                 <button
-                  key={item.part}
+                  key={item}
                   type="button"
                   role="radio"
                   aria-checked={active}
-                  onClick={() => !active && selectPart(skill, item.part)}
+                  onClick={() => selectSkill(item)}
                   className={cn(
-                    'rounded-xl border px-3.5 py-3 text-left transition-all outline-none focus-visible:ring-3 focus-visible:ring-primary/30 disabled:cursor-not-allowed',
+                    'flex items-center gap-3 rounded-2xl border p-3 text-left transition-all outline-none focus-visible:ring-3 focus-visible:ring-primary/30 disabled:cursor-not-allowed',
                     active
                       ? 'border-primary bg-accent ring-1 ring-primary'
                       : 'border-border hover:border-slate-300 hover:bg-slate-50',
                   )}
                 >
-                  <span className="flex items-center justify-between gap-2">
-                    <span
-                      className={cn('text-sm font-bold', active ? 'text-brand' : 'text-foreground')}
-                    >
-                      Part {item.part}
-                    </span>
-                    <span
-                      className={cn(
-                        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                        grouped ? 'bg-violet-50 text-violet-700' : 'bg-slate-100 text-slate-600',
-                      )}
-                    >
-                      {grouped ? <Layers className="size-3" /> : <Square className="size-3" />}
-                      {grouped ? 'Nhóm câu' : 'Đơn lẻ'}
-                    </span>
+                  <span
+                    className={cn(
+                      'flex size-10 shrink-0 items-center justify-center rounded-xl',
+                      meta.tile,
+                    )}
+                  >
+                    <Icon className="size-5" />
                   </span>
-                  <span className="mt-1 block truncate text-sm text-slate-700">{item.name}</span>
-                  <span className="mt-0.5 block text-xs text-subtle">{partHint(item)}</span>
+                  <span className="min-w-0">
+                    <span className="block font-semibold text-foreground">{meta.label}</span>
+                    <span className="block text-xs text-subtle">{meta.subtitle}</span>
+                  </span>
                 </button>
               );
             })}
           </div>
-        ) : (
-          <p className="rounded-xl border border-dashed border-border px-4 py-3 text-sm text-subtle">
-            Chọn kỹ năng để xem các Part.
+          <FieldError message={errors.skill?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-slate-700">
+            Part <span className="text-rose-500">*</span>
           </p>
-        )}
-        <FieldError message={errors.part?.message} />
-      </div>
+          {skill ? (
+            <div
+              role="radiogroup"
+              aria-label="Part"
+              className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3"
+            >
+              {partsOfSkill(skill).map((item) => {
+                const active = rule?.part === item.part;
+                const grouped = item.group === 'required';
+                return (
+                  <button
+                    key={item.part}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => !active && selectPart(skill, item.part)}
+                    className={cn(
+                      'rounded-xl border px-3.5 py-3 text-left transition-all outline-none focus-visible:ring-3 focus-visible:ring-primary/30 disabled:cursor-not-allowed',
+                      active
+                        ? 'border-primary bg-accent ring-1 ring-primary'
+                        : 'border-border hover:border-slate-300 hover:bg-slate-50',
+                    )}
+                  >
+                    <span className="flex items-center justify-between gap-2">
+                      <span
+                        className={cn(
+                          'text-sm font-bold',
+                          active ? 'text-brand' : 'text-foreground',
+                        )}
+                      >
+                        Part {item.part}
+                      </span>
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                          grouped ? 'bg-violet-50 text-violet-700' : 'bg-slate-100 text-slate-600',
+                        )}
+                      >
+                        {grouped ? <Layers className="size-3" /> : <Square className="size-3" />}
+                        {grouped ? 'Nhóm câu' : 'Đơn lẻ'}
+                      </span>
+                    </span>
+                    <span className="mt-1 block truncate text-sm text-slate-700">{item.name}</span>
+                    <span className="mt-0.5 block text-xs text-subtle">{partHint(item)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="rounded-xl border border-dashed border-border px-4 py-3 text-sm text-subtle">
+              Chọn kỹ năng để xem các Part.
+            </p>
+          )}
+          <FieldError message={errors.part?.message} />
+        </div>
+      </LockedArea>
 
       <div className="grid gap-5 md:grid-cols-2">
         <FormField id="topicId" label="Chủ đề" required error={errors.topicId?.message}>

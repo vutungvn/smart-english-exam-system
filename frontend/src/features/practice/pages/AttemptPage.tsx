@@ -23,6 +23,7 @@ import {
 } from '@/api/generated';
 import { AppDialog } from '@/components/AppDialog';
 import { ButtonLink } from '@/components/ButtonLink';
+import { preloadAudio } from '@/components/media/audio-cache';
 import { FormAlert } from '@/components/form/FormAlert';
 import { Button } from '@/components/ui/button';
 import { ErrorState } from '@/features/question-bank/components/ListStates';
@@ -36,6 +37,8 @@ import { attemptResultPath, formatClock, PRACTICE_PATH, practiceExamPath } from 
 
 /** Dưới 5 phút: đồng hồ chuyển đỏ */
 const WARNING_SECONDS = 5 * 60;
+/** Mở Part được vài giây (audio của Part đó đã tải xong phần lớn) mới tải trước Part kế tiếp */
+const PRELOAD_DELAY_MS = 5000;
 
 export function AttemptPage() {
   const { id = '' } = useParams();
@@ -136,6 +139,21 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
   useEffect(() => {
     if (remaining === 0) void submitRef.current();
   }, [remaining]);
+
+  // Tải trước audio của Part kế tiếp sau khi Part hiện tại đã tải xong phần lớn (chờ vài giây)
+  useEffect(() => {
+    const next = sections[sectionIndex + 1];
+    if (!next) return;
+    const timer = window.setTimeout(() => {
+      for (const block of next.blocks) {
+        if (block.group?.audioUrl) preloadAudio(block.group.audioUrl);
+        for (const question of block.questions) {
+          if (question.audioUrl) preloadAudio(question.audioUrl);
+        }
+      }
+    }, PRELOAD_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [sections, sectionIndex]);
 
   // Bấm số câu ở bảng câu hỏi: sang đúng Part rồi cuộn tới câu đó
   useEffect(() => {

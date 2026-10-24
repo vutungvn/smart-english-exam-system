@@ -5,6 +5,7 @@ import { FieldError } from '@/components/form/FieldError';
 import { FormField } from '@/components/form/FormField';
 import { cn } from '@/lib/utils';
 import { defaultContent, isDefaultContent, OPTION_LABELS, type PartRule } from '../toeic';
+import { LockedArea } from './LockedArea';
 import { CONTENT_MAX, SAMPLE_ANSWER_MAX, type QuestionFormValues } from './question-form';
 import { inputClass, textareaClass } from './styles';
 
@@ -20,8 +21,9 @@ function contentPlaceholder(rule?: PartRule): string {
   return 'Nội dung câu hỏi…';
 }
 
-// Khối 2: nội dung câu hỏi + phần trả lời (phương án trắc nghiệm hoặc câu trả lời mẫu)
-export function AnswerFields({ rule }: { rule?: PartRule }) {
+// Khối 2: nội dung câu hỏi + phần trả lời (phương án trắc nghiệm hoặc câu trả lời mẫu).
+// locked: câu đang được làm bài, khóa nội dung, phương án, thời gian (câu trả lời mẫu vẫn sửa được)
+export function AnswerFields({ rule, locked = false }: { rule?: PartRule; locked?: boolean }) {
   const {
     register,
     getValues,
@@ -48,98 +50,102 @@ export function AnswerFields({ rule }: { rule?: PartRule }) {
 
   return (
     <div className="space-y-6">
-      <FormField
-        id="content"
-        label={
-          rule?.skill === 'SPEAKING' && rule.part === 1 ? 'Đoạn văn cần đọc' : 'Nội dung câu hỏi'
-        }
-        required
-        error={errors.content?.message}
-        hint={<Counter value={content.length} max={CONTENT_MAX} />}
-      >
-        <textarea
+      <LockedArea locked={locked} className="space-y-6">
+        <FormField
           id="content"
-          rows={4}
-          placeholder={contentPlaceholder(rule)}
-          aria-invalid={!!errors.content}
-          className={textareaClass}
-          {...register('content')}
-        />
-        {hasDefault && (
-          <p className="flex items-start gap-1.5 px-1 text-xs text-subtle">
-            <Info className="mt-0.5 size-3.5 shrink-0" />
-            <span>
-              Đề thật không in câu hỏi cho Part này; nội dung được điền sẵn làm nhãn để phân biệt
-              các câu, bạn sửa được.
-              {skill === 'READING' &&
-                ' Số trong [ ] tự đổi theo Thứ tự trong nhóm, khớp dấu [n] ___ trong đoạn văn của nhóm.'}
-            </span>
-          </p>
-        )}
-      </FormField>
+          label={
+            rule?.skill === 'SPEAKING' && rule.part === 1 ? 'Đoạn văn cần đọc' : 'Nội dung câu hỏi'
+          }
+          required
+          error={errors.content?.message}
+          hint={<Counter value={content.length} max={CONTENT_MAX} />}
+        >
+          <textarea
+            id="content"
+            rows={4}
+            placeholder={contentPlaceholder(rule)}
+            aria-invalid={!!errors.content}
+            className={textareaClass}
+            {...register('content')}
+          />
+          {hasDefault && (
+            <p className="flex items-start gap-1.5 px-1 text-xs text-subtle">
+              <Info className="mt-0.5 size-3.5 shrink-0" />
+              <span>
+                Đề thật không in câu hỏi cho Part này; nội dung được điền sẵn làm nhãn để phân biệt
+                các câu, bạn sửa được.
+                {skill === 'READING' &&
+                  ' Số trong [ ] tự đổi theo Thứ tự trong nhóm, khớp dấu [n] ___ trong đoạn văn của nhóm.'}
+              </span>
+            </p>
+          )}
+        </FormField>
 
-      {rule?.type === 'SINGLE_CHOICE' && (
-        <fieldset className="space-y-3">
-          <legend className="mb-2 flex w-full items-center justify-between gap-2 text-xs font-semibold text-slate-700">
-            <span>
-              Phương án <span className="text-rose-500">*</span>
-            </span>
-            <span className="font-normal text-subtle">Chọn ô tròn bên trái để đặt đáp án đúng</span>
-          </legend>
-          {OPTION_LABELS.slice(0, rule.optionCount).map((label, index) => {
-            const isCorrect = correct === label;
-            const error = errors.options?.[index]?.content?.message;
-            return (
-              <div key={label}>
-                <div
-                  className={cn(
-                    'flex items-center gap-3 rounded-xl border p-2 pr-3 transition-colors',
-                    isCorrect ? 'border-success/50 bg-success-soft/60' : 'border-border',
-                    error && 'border-destructive',
-                  )}
-                >
-                  <label
-                    className="flex shrink-0 cursor-pointer items-center gap-2"
-                    title={`Đặt ${label} là đáp án đúng`}
+        {rule?.type === 'SINGLE_CHOICE' && (
+          <fieldset className="space-y-3">
+            <legend className="mb-2 flex w-full items-center justify-between gap-2 text-xs font-semibold text-slate-700">
+              <span>
+                Phương án <span className="text-rose-500">*</span>
+              </span>
+              <span className="font-normal text-subtle">
+                Chọn ô tròn bên trái để đặt đáp án đúng
+              </span>
+            </legend>
+            {OPTION_LABELS.slice(0, rule.optionCount).map((label, index) => {
+              const isCorrect = correct === label;
+              const error = errors.options?.[index]?.content?.message;
+              return (
+                <div key={label}>
+                  <div
+                    className={cn(
+                      'flex items-center gap-3 rounded-xl border p-2 pr-3 transition-colors',
+                      isCorrect ? 'border-success/50 bg-success-soft/60' : 'border-border',
+                      error && 'border-destructive',
+                    )}
                   >
-                    <input
-                      type="radio"
-                      value={label}
-                      className="size-4 accent-success"
-                      aria-label={`Đáp án đúng là ${label}`}
-                      {...register('correct')}
-                    />
-                    <span
-                      className={cn(
-                        'flex size-8 items-center justify-center rounded-lg text-sm font-bold',
-                        isCorrect ? 'bg-success text-white' : 'bg-slate-100 text-slate-600',
-                      )}
+                    <label
+                      className="flex shrink-0 cursor-pointer items-center gap-2"
+                      title={`Đặt ${label} là đáp án đúng`}
                     >
-                      {label}
-                    </span>
-                  </label>
-                  <input
-                    id={`option-${label}`}
-                    placeholder={`Nội dung phương án ${label}`}
-                    aria-label={`Nội dung phương án ${label}`}
-                    aria-invalid={!!error}
-                    className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-subtle disabled:cursor-not-allowed"
-                    {...register(`options.${index}.content`)}
-                  />
-                  {isCorrect && (
-                    <span className="hidden shrink-0 items-center gap-1 text-xs font-semibold text-success sm:inline-flex">
-                      <CircleCheck className="size-4" />
-                      Đáp án đúng
-                    </span>
-                  )}
+                      <input
+                        type="radio"
+                        value={label}
+                        className="size-4 accent-success"
+                        aria-label={`Đáp án đúng là ${label}`}
+                        {...register('correct')}
+                      />
+                      <span
+                        className={cn(
+                          'flex size-8 items-center justify-center rounded-lg text-sm font-bold',
+                          isCorrect ? 'bg-success text-white' : 'bg-slate-100 text-slate-600',
+                        )}
+                      >
+                        {label}
+                      </span>
+                    </label>
+                    <input
+                      id={`option-${label}`}
+                      placeholder={`Nội dung phương án ${label}`}
+                      aria-label={`Nội dung phương án ${label}`}
+                      aria-invalid={!!error}
+                      className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-subtle disabled:cursor-not-allowed"
+                      {...register(`options.${index}.content`)}
+                    />
+                    {isCorrect && (
+                      <span className="hidden shrink-0 items-center gap-1 text-xs font-semibold text-success sm:inline-flex">
+                        <CircleCheck className="size-4" />
+                        Đáp án đúng
+                      </span>
+                    )}
+                  </div>
+                  <FieldError message={error} />
                 </div>
-                <FieldError message={error} />
-              </div>
-            );
-          })}
-          <FieldError message={errors.correct?.message ?? errors.options?.message} />
-        </fieldset>
-      )}
+              );
+            })}
+            <FieldError message={errors.correct?.message ?? errors.options?.message} />
+          </fieldset>
+        )}
+      </LockedArea>
 
       {rule && rule.type !== 'SINGLE_CHOICE' && (
         <>
@@ -161,7 +167,7 @@ export function AnswerFields({ rule }: { rule?: PartRule }) {
           </FormField>
 
           {rule.skill === 'SPEAKING' && (
-            <div className="grid gap-5 sm:grid-cols-2">
+            <LockedArea locked={locked} className="grid gap-5 sm:grid-cols-2">
               <FormField
                 id="prepSeconds"
                 label="Thời gian chuẩn bị (giây)"
@@ -200,7 +206,7 @@ export function AnswerFields({ rule }: { rule?: PartRule }) {
                 Đã điền sẵn theo chuẩn TOEIC của Part {rule.part} ({rule.defaultSeconds?.prep}s
                 chuẩn bị, {rule.defaultSeconds?.response}s trả lời).
               </p>
-            </div>
+            </LockedArea>
           )}
           {rule.skill === 'WRITING' && (
             <p className="text-xs text-subtle">

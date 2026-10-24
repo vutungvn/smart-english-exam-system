@@ -19,7 +19,7 @@ import {
   type MediaKind,
   type MediaRule,
 } from './question-media.js';
-import { assertOwner } from './question-references.service.js';
+import { assertOwner, QuestionReferencesService } from './question-references.service.js';
 import { QuestionsService } from './questions.service.js';
 import type { QuestionDetail, QuestionGroupDetail } from './questions.types.js';
 import { describePart, findPartRule } from './toeic-parts.js';
@@ -52,6 +52,7 @@ export class QuestionMediaService {
     private readonly storage: StorageService,
     private readonly questions: QuestionsService,
     private readonly groups: QuestionGroupsService,
+    private readonly refs: QuestionReferencesService,
   ) {}
 
   async uploadToQuestion(
@@ -61,12 +62,15 @@ export class QuestionMediaService {
     user: AuthUser,
   ): Promise<QuestionDetail> {
     const target = await this.loadQuestion(id, user);
+    // Âm thanh, hình ảnh học viên nghe/xem khi làm bài: khóa khi câu đang được làm bài (D29)
+    await this.refs.assertContentUnlocked([id], [kind]);
     await this.replace('question', id, target, kind, file, questionMediaRule);
     return this.questions.get(id);
   }
 
   async removeFromQuestion(id: string, kind: MediaKind, user: AuthUser): Promise<QuestionDetail> {
     const target = await this.loadQuestion(id, user);
+    if (target[keyColumn(kind)]) await this.refs.assertContentUnlocked([id], [kind]);
     await this.clear('question', id, target, kind);
     return this.questions.get(id);
   }
@@ -78,12 +82,16 @@ export class QuestionMediaService {
     user: AuthUser,
   ): Promise<QuestionGroupDetail> {
     const target = await this.loadGroup(id, user);
+    await this.refs.assertContentUnlocked(await this.groups.questionIds(id), [kind], 'group');
     await this.replace('group', id, target, kind, file, groupMediaRule);
     return this.groups.get(id);
   }
 
   async removeFromGroup(id: string, kind: MediaKind, user: AuthUser): Promise<QuestionGroupDetail> {
     const target = await this.loadGroup(id, user);
+    if (target[keyColumn(kind)]) {
+      await this.refs.assertContentUnlocked(await this.groups.questionIds(id), [kind], 'group');
+    }
     await this.clear('group', id, target, kind);
     return this.groups.get(id);
   }
