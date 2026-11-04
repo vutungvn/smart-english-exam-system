@@ -43,11 +43,22 @@ const PRELOAD_DELAY_MS = 5000;
 export function AttemptPage() {
   const { id = '' } = useParams();
   // Luôn tải bản mới nhất khi vào màn: thời gian còn lại, câu đã trả lời ở tab khác
-  const { data, error, isLoading, refetch } = useGetAttemptQuery(id, {
-    refetchOnMountOrArgChange: true,
-  });
+  const { data, error, isFetching, startedTimeStamp, fulfilledTimeStamp, refetch } =
+    useGetAttemptQuery(id, { refetchOnMountOrArgChange: true });
+  // Chỉ dựng màn làm bài từ dữ liệu tải sau lúc vào màn. Cache còn bản cũ (vào lại trong vòng 60
+  // giây sau khi thoát) thì thiếu các câu vừa lưu, vì lưu câu trả lời không làm mới getAttempt
+  // (enhance.ts), còn useAnswerSync chỉ đọc câu trả lời của server một lần lúc dựng màn
+  const [mountedAt] = useState(() => Date.now());
+  const fresh = fulfilledTimeStamp !== undefined && fulfilledTimeStamp >= mountedAt;
+  // Lỗi của lần tải sau lúc vào màn (lỗi cũ còn trong cache thì bỏ qua, chờ lần tải mới)
+  const failed =
+    !fresh &&
+    !!error &&
+    !isFetching &&
+    startedTimeStamp !== undefined &&
+    startedTimeStamp >= mountedAt;
 
-  if (isLoading) {
+  if (!fresh && !failed) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-background text-muted-foreground">
         <Loader2 className="mr-2 size-5 animate-spin" />
@@ -55,7 +66,7 @@ export function AttemptPage() {
       </div>
     );
   }
-  if (error && !data) {
+  if (failed) {
     const apiError = toApiError(error);
     return (
       <div className="mx-auto mt-16 max-w-lg rounded-3xl border border-border bg-white">
