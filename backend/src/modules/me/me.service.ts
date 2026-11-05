@@ -37,7 +37,14 @@ export class MeService {
         passwordHash: true,
         googleId: true,
         role: { select: { code: true } },
-        student: { select: { currentLevel: true, currentScore: true, targetScore: true } },
+        student: {
+          select: {
+            currentLevel: true,
+            currentScore: true,
+            targetScore: true,
+            voiceConsentAt: true,
+          },
+        },
       },
     });
 
@@ -103,6 +110,21 @@ export class MeService {
       },
     });
 
+    return this.getProfile(user.id);
+  }
+
+  /**
+   * Học viên đồng ý cho ghi âm và xử lý giọng nói (D19), bắt buộc trước lần làm Speaking đầu tiên.
+   * Gọi lại không đổi thời điểm đồng ý ban đầu
+   */
+  async giveVoiceConsent(user: AuthUser): Promise<MeProfile> {
+    if (user.role !== RoleCode.STUDENT) {
+      throw new AppException(ErrorCode.FORBIDDEN, 'Chỉ học viên mới làm bài Speaking');
+    }
+    await this.prisma.student.updateMany({
+      where: { userId: user.id, voiceConsentAt: null },
+      data: { voiceConsentAt: new Date() },
+    });
     return this.getProfile(user.id);
   }
 

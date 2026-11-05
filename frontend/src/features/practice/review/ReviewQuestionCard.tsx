@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { BookmarkCheck, Check, Lightbulb, Mic, NotebookPen, Sparkles, X } from 'lucide-react';
 import type { ReviewQuestion } from '@/api/generated';
 import { QuestionMedia } from '@/components/QuestionMedia';
+import { MediaAudio } from '@/components/media/MediaAudio';
 import { cn } from '@/lib/utils';
 import { countWords } from '../practice-meta';
 import { AiExplanationPanel } from './AiExplanationPanel';
@@ -192,15 +193,31 @@ function WritingReview({ question }: { question: ReviewQuestion }) {
 }
 
 function SpeakingReview({ question }: { question: ReviewQuestion }) {
+  if (!question.recordingUrl) {
+    return (
+      <p className="mt-4 flex items-start gap-2.5 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        <Mic className="mt-0.5 size-4 shrink-0" />
+        <span>
+          Câu này chưa có bài nói.
+          {question.responseSeconds !== null &&
+            ` Thi thật: chuẩn bị ${question.prepSeconds ?? 0} giây, trả lời ${question.responseSeconds} giây.`}
+        </span>
+      </p>
+    );
+  }
   return (
-    <p className="mt-4 flex items-start gap-2.5 rounded-2xl bg-violet-50 px-4 py-3 text-sm text-violet-800">
-      <Mic className="mt-0.5 size-4 shrink-0" />
-      <span>
-        Phần ghi âm Speaking sắp có nên câu này chưa có bài nói.
-        {question.responseSeconds !== null &&
-          ` Thi thật: chuẩn bị ${question.prepSeconds ?? 0} giây, trả lời ${question.responseSeconds} giây.`}
-      </span>
-    </p>
+    <section className="mt-4 space-y-3 rounded-2xl bg-violet-50 px-4 py-3 text-sm text-violet-900">
+      <h3 className="flex items-center gap-2 font-semibold">
+        <Mic className="size-4" />
+        Bài nói của bạn
+      </h3>
+      <MediaAudio url={question.recordingUrl} />
+      {question.outcome === 'PENDING' && (
+        <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+          Bài nói đang chờ AI chấm theo tiêu chí; điểm sẽ hiện ở đây khi chấm xong.
+        </p>
+      )}
+    </section>
   );
 }
 

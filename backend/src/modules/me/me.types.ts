@@ -12,6 +12,14 @@ export class StudentProfile {
 
   @ApiProperty({ type: 'integer', nullable: true, example: 750 })
   targetScore: number | null;
+
+  @ApiProperty({
+    type: String,
+    format: 'date-time',
+    nullable: true,
+    description: 'Lúc đồng ý cho ghi âm và xử lý giọng nói (D19); null: chưa làm được Speaking',
+  })
+  voiceConsentAt: Date | null;
 }
 
 // Hồ sơ trả về cho GET /me; không bao giờ chứa passwordHash

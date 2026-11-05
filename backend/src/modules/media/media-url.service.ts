@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Env } from '../../config/env.schema.js';
-import { QUESTION_MEDIA_KEY_PREFIX, QUESTION_MEDIA_URL_PREFIX } from './media.constants.js';
+import {
+  QUESTION_MEDIA_KEY_PREFIX,
+  QUESTION_MEDIA_URL_PREFIX,
+  RECORDING_KEY_PREFIX,
+  RECORDING_URL_PREFIX,
+} from './media.constants.js';
 
 // URL còn hạn ít nhất 4 giờ: đủ cho một bài thi LR 120 phút kể cả khi tải trang từ đầu giờ
 const URL_TTL_SECONDS = 4 * 60 * 60;
@@ -40,13 +45,21 @@ export class MediaUrlService {
   questionMediaUrl(key: string | null, now = Date.now()): string | null {
     if (!key?.startsWith(QUESTION_MEDIA_KEY_PREFIX)) return null;
     const file = key.slice(QUESTION_MEDIA_KEY_PREFIX.length);
-    const exp = (
-      Math.ceil(now / 1000 / ROUND_SECONDS) * ROUND_SECONDS +
-      URL_TTL_SECONDS
-    ).toString();
+    const exp = this.expiry(now);
     // Chữ ký tính trên tên tệp trong kho (<uuid>.<đuôi>); trên URL đổi dấu chấm để đường dẫn không có đuôi tệp
     const segment = file.replace('.', '_');
     return `${QUESTION_MEDIA_URL_PREFIX}${segment}?exp=${exp}&sig=${this.sign(file, exp)}`;
+  }
+
+  /**
+   * Bài nói của học viên. Chỉ API bài làm, xem lại bài của chính học viên đó gọi hàm này. Chữ ký
+   * tính trên cả key (có recordings/) nên URL ký của tệp câu hỏi không dùng được để tải bài nói
+   */
+  recordingUrl(key: string | null, now = Date.now()): string | null {
+    if (!key?.startsWith(RECORDING_KEY_PREFIX)) return null;
+    const exp = this.expiry(now);
+    const segment = key.slice(RECORDING_KEY_PREFIX.length).replace('.', '_');
+    return `${RECORDING_URL_PREFIX}${segment}?exp=${exp}&sig=${this.sign(key, exp)}`;
   }
 
   /** Thêm audioUrl, imageUrl cạnh audioKey, imageKey */
@@ -66,6 +79,10 @@ export class MediaUrlService {
     const actual = Buffer.from(sig);
     // So sánh thời gian hằng: không lộ chữ ký đúng qua thời gian phản hồi
     return expected.length === actual.length && timingSafeEqual(expected, actual);
+  }
+
+  private expiry(now: number): string {
+    return (Math.ceil(now / 1000 / ROUND_SECONDS) * ROUND_SECONDS + URL_TTL_SECONDS).toString();
   }
 
   private sign(file: string, exp: string): string {

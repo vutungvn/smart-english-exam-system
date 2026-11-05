@@ -89,6 +89,10 @@ const injectedRtkApi = api
         }),
         providesTags: ['Me'],
       }),
+      giveVoiceConsent: build.mutation<GiveVoiceConsentApiResponse, GiveVoiceConsentApiArg>({
+        query: () => ({ url: `/api/v1/me/voice-consent`, method: 'PUT' }),
+        invalidatesTags: ['Me'],
+      }),
       changePassword: build.mutation<ChangePasswordApiResponse, ChangePasswordApiArg>({
         query: (queryArg) => ({ url: `/api/v1/me/password`, method: 'PATCH', body: queryArg }),
         invalidatesTags: ['Me'],
@@ -460,6 +464,14 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ['Attempts'],
       }),
+      saveRecording: build.mutation<SaveRecordingApiResponse, SaveRecordingApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/attempts/${queryArg.id}/answers/${queryArg.examQuestionId}/audio`,
+          method: 'PUT',
+          body: queryArg.body,
+        }),
+        invalidatesTags: ['Attempts'],
+      }),
       syncAnswers: build.mutation<SyncAnswersApiResponse, SyncAnswersApiArg>({
         query: (queryArg) => ({
           url: `/api/v1/attempts/${queryArg.id}/answers`,
@@ -585,6 +597,12 @@ export type GetLoginHistoryApiArg = {
   page?: number;
   limit?: number;
 };
+export type GiveVoiceConsentApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: MeProfile;
+};
+export type GiveVoiceConsentApiArg = void;
 export type ChangePasswordApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
@@ -994,6 +1012,19 @@ export type SaveAnswerApiArg = {
   examQuestionId: string;
   saveAnswerDto: SaveAnswerDto;
 };
+export type SaveRecordingApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: SaveRecordingResult;
+};
+export type SaveRecordingApiArg = {
+  id: string;
+  examQuestionId: string;
+  body: {
+    /** Bài nói đã ghi âm */
+    file: Blob;
+  };
+};
 export type SyncAnswersApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
@@ -1113,6 +1144,9 @@ export type ErrorCode =
   | 'ATTEMPT_EXPIRED'
   | 'ATTEMPT_QUESTION_NOT_FOUND'
   | 'ATTEMPT_NOT_SUBMITTED'
+  | 'VOICE_CONSENT_REQUIRED'
+  | 'ATTEMPT_RECORDING_INVALID'
+  | 'ATTEMPT_RECORDING_TOO_LONG'
   | 'AI_QUOTA_EXCEEDED'
   | 'AI_UNAVAILABLE'
   | 'AI_EXPLANATION_NOT_SUPPORTED';
@@ -1182,6 +1216,8 @@ export type StudentProfile = {
   currentLevel: Level | null;
   currentScore: number | null;
   targetScore: number | null;
+  /** Lúc đồng ý cho ghi âm và xử lý giọng nói (D19); null: chưa làm được Speaking */
+  voiceConsentAt: string | null;
 };
 export type MeProfile = {
   id: string;
@@ -1837,6 +1873,8 @@ export type AttemptAnswerItem = {
   textAnswer: string | null;
   isFlagged: boolean;
   answeredAt: string;
+  /** Câu Speaking đã có bài nói tải lên */
+  hasRecording: boolean;
 };
 export type AttemptDetail = {
   id: string;
@@ -1946,6 +1984,8 @@ export type ReviewQuestion = {
   selectedOptionId: string | null;
   /** Bài viết (Writing) */
   textAnswer: string | null;
+  /** URL ký để nghe lại bài nói (Speaking); null khi chưa ghi âm */
+  recordingUrl: string | null;
   isFlagged: boolean;
   /** Giải thích đáp án (trắc nghiệm) hoặc gợi ý cách làm (câu trả lời mở) */
   explanation: string | null;
@@ -1998,6 +2038,13 @@ export type SaveAnswerDto = {
   isFlagged?: boolean;
   /** Lúc học viên trả lời (mặc định: lúc server nhận); bản mới hơn được giữ */
   answeredAt?: string;
+};
+export type SaveRecordingResult = {
+  examQuestionId: string;
+  /** Độ dài bài nói sau khi chuẩn hóa (giây) */
+  seconds: number;
+  /** Số giây còn lại; null khi không đếm giờ */
+  remainingSeconds: number | null;
 };
 export type SyncAnswersResult = {
   /** Số câu trả lời đã ghi */
@@ -2169,6 +2216,7 @@ export const {
   useGetProfileQuery,
   useUpdateProfileMutation,
   useGetLoginHistoryQuery,
+  useGiveVoiceConsentMutation,
   useChangePasswordMutation,
   useUploadAvatarMutation,
   useRemoveAvatarMutation,
@@ -2216,6 +2264,7 @@ export const {
   useGetAttemptReviewQuery,
   useGetAttemptQuery,
   useSaveAnswerMutation,
+  useSaveRecordingMutation,
   useSyncAnswersMutation,
   useSubmitAttemptMutation,
   useCancelAttemptMutation,

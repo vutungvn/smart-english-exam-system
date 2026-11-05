@@ -26,6 +26,8 @@ export interface PaperTarget {
   sectionId: string;
   type: QuestionType;
   optionIds: ReadonlySet<string>;
+  /** Speaking: thời gian trả lời tối đa, dùng kiểm tra độ dài bài nói tải lên */
+  responseSeconds: number | null;
 }
 
 export interface CachedPaper {
@@ -56,6 +58,7 @@ function toCached({
         sectionId: section.id,
         type: item.question.type,
         optionIds: new Set(item.question.options.map((option) => option.id)),
+        responseSeconds: item.question.responseSeconds,
       });
     }
   }

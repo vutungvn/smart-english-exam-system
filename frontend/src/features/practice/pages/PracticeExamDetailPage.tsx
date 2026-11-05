@@ -30,6 +30,7 @@ import { EmptyState, ErrorState } from '@/features/question-bank/components/List
 import { SkillPill } from '@/features/question-bank/components/Pills';
 import { cn } from '@/lib/utils';
 import { attemptPath, formatClock, PRACTICE_PATH, resultsPath, SCALE_META } from '../practice-meta';
+import { VoiceConsentDialog } from '../speaking/VoiceConsentDialog';
 
 const NOTES = [
   'Câu trả lời tự lưu sau mỗi lần chọn hoặc ngừng gõ.',
@@ -74,6 +75,8 @@ function ExamDetail({ exam }: { exam: ExamCatalogDetail }) {
   const [cancelAttempt, { isLoading: cancelling }] = useCancelAttemptMutation();
   const [error, setError] = useState<string>();
   const [confirmCancel, setConfirmCancel] = useState(false);
+  // Đề có Speaking mà chưa đồng ý ghi âm: hỏi rồi bắt đầu lại đúng lựa chọn vừa bấm
+  const [needConsent, setNeedConsent] = useState<StartAttemptDto | null>(null);
 
   const inProgress = exam.inProgress;
   const inProgressSection = exam.sections.find((section) => section.id === inProgress?.sectionId);
@@ -92,8 +95,13 @@ function ExamDetail({ exam }: { exam: ExamCatalogDetail }) {
       const result = await startAttempt({ id: exam.id, startAttemptDto: dto }).unwrap();
       void navigate(attemptPath(result.data.id));
     } catch (cause) {
+      const apiError = toApiError(cause);
+      if (apiError.code === 'VOICE_CONSENT_REQUIRED') {
+        setNeedConsent(dto);
+        return;
+      }
       // Đang có bài dở khác kiểu, hết lượt, đề vừa bị gỡ…: hiện thông báo của server
-      setError(toApiError(cause).message);
+      setError(apiError.message);
     }
   };
 
@@ -386,6 +394,16 @@ function ExamDetail({ exam }: { exam: ExamCatalogDetail }) {
             : `Bài luyện Part ${inProgressSection?.part ?? ''} · ${inProgressSection?.name ?? ''}`}
         </p>
       </AppDialog>
+
+      <VoiceConsentDialog
+        open={needConsent !== null}
+        onClose={() => setNeedConsent(null)}
+        onAgreed={() => {
+          const dto = needConsent;
+          setNeedConsent(null);
+          if (dto) void start(dto);
+        }}
+      />
     </div>
   );
 }

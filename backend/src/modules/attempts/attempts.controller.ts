@@ -10,8 +10,11 @@ import {
   Put,
   Query,
   Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { RoleCode } from '../../common/constants/roles.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
@@ -28,6 +31,7 @@ import { ApiErrors } from '../../common/swagger/api-errors.decorator.js';
 import type { ApiErrorExample } from '../../common/swagger/api-errors.decorator.js';
 import type { WithMeta } from '../../common/types/api-response.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
+import type { InMemoryFile } from '../../common/types/in-memory-file.js';
 import { AttemptReviewService } from './attempt-review.service.js';
 import {
   AttemptDetail,
@@ -36,6 +40,7 @@ import {
   AttemptReview,
   InProgressAttempt,
   SaveAnswerResult,
+  SaveRecordingResult,
   SyncAnswersResult,
 } from './attempts.types.js';
 import { AttemptsService } from './attempts.service.js';
@@ -45,6 +50,7 @@ import {
   StartAttemptDto,
   SyncAnswersDto,
 } from './dto/attempt.dto.js';
+import { RECORDING_MAX_BYTES } from './recording-rules.js';
 
 const attemptId = () => UuidParam(ErrorCode.ATTEMPT_NOT_FOUND);
 const ANSWER_RULE: ApiErrorExample = {
@@ -77,6 +83,7 @@ export class AttemptsController {
     ErrorCode.EXAM_SECTION_NOT_FOUND,
     ErrorCode.ATTEMPT_PART_PRACTICE_DISABLED,
     ErrorCode.ATTEMPT_LIMIT_REACHED,
+    ErrorCode.VOICE_CONSENT_REQUIRED,
     {
       code: ErrorCode.ATTEMPT_IN_PROGRESS,
       details: { attemptId: '7d3c…', mode: 'PART', sectionId: '1a2b…' },
@@ -179,6 +186,49 @@ export class AttemptsController {
     @CurrentUser() user: AuthUser,
   ): Promise<SaveAnswerResult> {
     return this.attempts.saveAnswer(id, examQuestionId, dto, user);
+  }
+
+  @Put('attempts/:id/answers/:examQuestionId/audio')
+  @ApiOperation({
+    summary: 'Tải lên bài nói của một câu Speaking',
+    description:
+      'multipart, trường file: WebM/Opus, Ogg, MP4/AAC… do MediaRecorder ghi, tối đa 10 MB. Server ' +
+      'chuẩn hóa về MP3 mono 16 kHz; dài hơn thời gian trả lời của câu (cộng 3 giây) thì từ chối. ' +
+      'Gửi lại thì ghi đè bài cũ. Nhận tới 2 phút sau hạn nộp (tải lên lại sau khi mất mạng).',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: { file: { type: 'string', format: 'binary', description: 'Bài nói đã ghi âm' } },
+    },
+  })
+  // Giữ tệp trong bộ nhớ; quá 10 MB thì multer dừng đọc và trả 413
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: RECORDING_MAX_BYTES, files: 1 } }))
+  @ApiEnvelope(SaveRecordingResult)
+  @ApiErrors(
+    {
+      code: ErrorCode.VALIDATION_ERROR,
+      details: [{ field: 'file', message: 'Chưa có tệp bài nói' }],
+    },
+    ErrorCode.ATTEMPT_RECORDING_INVALID,
+    ErrorCode.ATTEMPT_RECORDING_TOO_LONG,
+    ErrorCode.PAYLOAD_TOO_LARGE,
+    ErrorCode.ATTEMPT_NOT_FOUND,
+    ErrorCode.ATTEMPT_QUESTION_NOT_FOUND,
+    ErrorCode.ATTEMPT_NOT_IN_PROGRESS,
+    ErrorCode.ATTEMPT_EXPIRED,
+    ErrorCode.STORAGE_UNAVAILABLE,
+  )
+  saveRecording(
+    @Param('id', attemptId()) id: string,
+    @Param('examQuestionId', UuidParam(ErrorCode.ATTEMPT_QUESTION_NOT_FOUND))
+    examQuestionId: string,
+    @UploadedFile() file: InMemoryFile | undefined,
+    @CurrentUser() user: AuthUser,
+  ): Promise<SaveRecordingResult> {
+    return this.attempts.saveRecording(id, examQuestionId, file, user);
   }
 
   @Patch('attempts/:id/answers')

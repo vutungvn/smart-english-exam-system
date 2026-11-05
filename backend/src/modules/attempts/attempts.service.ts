@@ -1,14 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import { Injectable, Logger } from '@nestjs/common';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import { fieldError } from '../../common/errors/field-error.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
+import type { InMemoryFile } from '../../common/types/in-memory-file.js';
 import { Prisma } from '../../generated/prisma/client.js';
-import { AttemptMode, AttemptStatus, ExamKind, ExamStatus } from '../../generated/prisma/enums.js';
+import {
+  AttemptMode,
+  AttemptStatus,
+  ExamKind,
+  ExamStatus,
+  QuestionType,
+  Skill,
+} from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
+import { StorageService } from '../../infra/storage/storage.service.js';
 import { toExamPaper, type ExamPaperRow } from '../exams/exams.mapper.js';
 import { PaperCacheService, type PaperTarget } from '../exams/paper-cache.service.js';
 import { MediaUrlService } from '../media/media-url.service.js';
+import { RECORDING_KEY_PREFIX } from '../media/media.constants.js';
 import { AttemptSubmissionService, resultSelect, toResult } from './attempt-submission.service.js';
 import { findPartRule } from '../questions/toeic-parts.js';
 import {
@@ -22,6 +33,8 @@ import {
   withinDeadline,
   type AnswerInput,
 } from './attempt-rules.js';
+import { recordingTooLong } from './recording-rules.js';
+import { RecordingService } from './recording.service.js';
 import type {
   AttemptAnswerItem,
   AttemptDetail,
@@ -29,6 +42,7 @@ import type {
   AttemptSummary,
   InProgressAttempt,
   SaveAnswerResult,
+  SaveRecordingResult,
   SyncAnswersResult,
 } from './attempts.types.js';
 import type { SaveAnswerDto, StartAttemptDto, SyncAnswersDto } from './dto/attempt.dto.js';
@@ -52,7 +66,15 @@ const answerSelect = {
   textAnswer: true,
   isFlagged: true,
   answeredAt: true,
+  audioKey: true,
 } satisfies Prisma.AttemptAnswerSelect;
+
+type AnswerRow = Prisma.AttemptAnswerGetPayload<{ select: typeof answerSelect }>;
+
+/** Không đưa key trong kho ra ngoài, chỉ báo câu Speaking đã có bài nói */
+function toAnswerItem({ audioKey, ...answer }: AnswerRow): AttemptAnswerItem {
+  return { ...answer, hasRecording: audioKey !== null };
+}
 
 export type AttemptRow = Prisma.ExamAttemptGetPayload<{ select: typeof attemptSelect }>;
 type Db = Prisma.TransactionClient | PrismaService;
@@ -112,7 +134,11 @@ export class AttemptsService {
     private readonly media: MediaUrlService,
     private readonly submission: AttemptSubmissionService,
     private readonly papers: PaperCacheService,
+    private readonly storage: StorageService,
+    private readonly recordings: RecordingService,
   ) {}
+
+  private readonly logger = new Logger(AttemptsService.name);
 
   /** Nộp bài: chấm phần trắc nghiệm; gọi lại sau khi đã nộp thì trả kết quả cũ */
   submit(id: string, user: AuthUser): Promise<AttemptResult> {
@@ -158,6 +184,19 @@ export class AttemptsService {
       sectionId = dto.sectionId;
     } else if (dto.sectionId) {
       throw fieldError('sectionId', 'Làm cả đề thì không chọn Part');
+    }
+
+    // Giọng nói là dữ liệu cá nhân (D19): phần làm bài có Speaking cần học viên đồng ý ghi âm trước
+    const hasSpeaking = paper.sections.some(
+      (section) =>
+        section.skill === Skill.SPEAKING && (sectionId === null || section.id === sectionId),
+    );
+    if (hasSpeaking) {
+      const student = await this.prisma.student.findUnique({
+        where: { userId: user.id },
+        select: { voiceConsentAt: true },
+      });
+      if (!student?.voiceConsentAt) throw new AppException(ErrorCode.VOICE_CONSENT_REQUIRED);
     }
 
     // Đang có bài dở: cùng kiểu (cả đề / cùng Part) thì làm tiếp, khác kiểu thì hỏi học viên
@@ -235,7 +274,7 @@ export class AttemptsService {
       this.prisma.attemptAnswer.findMany({ where: { attemptId: id }, select: answerSelect }),
     ]);
     if (!cached) throw new AppException(ErrorCode.EXAM_NOT_FOUND);
-    return this.toDetail(row, cached.paper, answers, resumed);
+    return this.toDetail(row, cached.paper, answers.map(toAnswerItem), resumed);
   }
 
   private toDetail(
@@ -271,11 +310,17 @@ export class AttemptsService {
             sections: { select: { id: true, _count: { select: { questions: true } } } },
           },
         },
-        // Câu "đã làm": đã chọn phương án hoặc đã viết (chỉ đánh dấu thì chưa tính)
+        // Câu "đã làm": đã chọn phương án, đã viết hoặc đã ghi âm (chỉ đánh dấu thì chưa tính)
         _count: {
           select: {
             answers: {
-              where: { OR: [{ selectedOptionId: { not: null } }, { textAnswer: { not: null } }] },
+              where: {
+                OR: [
+                  { selectedOptionId: { not: null } },
+                  { textAnswer: { not: null } },
+                  { audioKey: { not: null } },
+                ],
+              },
             },
           },
         },
@@ -375,6 +420,69 @@ export class AttemptsService {
     return { ...counts, remainingSeconds: remainingSeconds(attempt.expiresAt, now) };
   }
 
+  /**
+   * Tải lên bài nói của một câu Speaking (SPRINT-88). Chuẩn hóa về MP3 rồi lưu kho tệp, ghi
+   * audio_key; gửi lại (thử lại sau lỗi mạng, ghi âm lại) thì ghi đè và xóa tệp cũ. Nhận tới 2 phút
+   * sau hạn như đồng bộ lô: bài nói được giữ trong IndexedDB và tải lên lại khi có mạng
+   */
+  async saveRecording(
+    id: string,
+    examQuestionId: string,
+    file: InMemoryFile | undefined,
+    user: AuthUser,
+  ): Promise<SaveRecordingResult> {
+    if (!file) throw fieldError('file', 'Chưa có tệp bài nói');
+    const attempt = await this.loadForAnswer(id, user);
+    this.assertInProgress(attempt);
+    if (!withinDeadline(attempt.expiresAt, new Date(), SYNC_GRACE_SECONDS)) {
+      throw new AppException(ErrorCode.ATTEMPT_EXPIRED);
+    }
+
+    const target = (await this.targets(attempt, [examQuestionId])).get(examQuestionId);
+    if (!target) throw new AppException(ErrorCode.ATTEMPT_QUESTION_NOT_FOUND);
+    if (target.type !== QuestionType.SPOKEN_RESPONSE) {
+      throw fieldError('file', 'Chỉ câu Speaking mới tải lên bài nói');
+    }
+
+    const { data, seconds } = await this.recordings.normalize(file.buffer);
+    if (recordingTooLong(seconds, target.responseSeconds)) {
+      throw new AppException(ErrorCode.ATTEMPT_RECORDING_TOO_LONG);
+    }
+
+    const key = `${RECORDING_KEY_PREFIX}${randomUUID()}.mp3`;
+    await this.storage.save(key, data, { contentType: 'audio/mpeg' });
+
+    const where = { attemptId_examQuestionId: { attemptId: id, examQuestionId } };
+    const now = new Date();
+    try {
+      const previous = await this.prisma.attemptAnswer.findUnique({
+        where,
+        select: { audioKey: true },
+      });
+      await this.prisma.attemptAnswer.upsert({
+        where,
+        create: { attemptId: id, examQuestionId, audioKey: key, answeredAt: now },
+        update: { audioKey: key, answeredAt: now },
+      });
+      // Bài nói cũ không còn dùng: xóa sau khi đã ghi key mới; lỗi xóa thì để job dọn dẹp (đợt sau)
+      if (previous?.audioKey) {
+        await this.storage.delete(previous.audioKey).catch((error: unknown) => {
+          this.logger.warn(`Không xóa được bài nói cũ ${previous.audioKey}: ${String(error)}`);
+        });
+      }
+    } catch (error) {
+      // Ghi DB lỗi: bỏ tệp vừa lưu để không sót tệp mồ côi trong kho
+      await this.storage.delete(key).catch(() => undefined);
+      throw error;
+    }
+
+    return {
+      examQuestionId,
+      seconds: Math.round(seconds * 10) / 10,
+      remainingSeconds: remainingSeconds(attempt.expiresAt, now),
+    };
+  }
+
   /** Hủy bài đang làm để làm lại; lượt đã hủy không tính vào giới hạn số lượt */
   async cancel(id: string, user: AuthUser): Promise<void> {
     const { count } = await this.prisma.examAttempt.updateMany({
@@ -459,7 +567,8 @@ export class AttemptsService {
         updated_at = now()
       WHERE a.answered_at <= EXCLUDED.answered_at
       RETURNING exam_question_id AS "examQuestionId", selected_option_id AS "selectedOptionId",
-        text_answer AS "textAnswer", is_flagged AS "isFlagged", answered_at AS "answeredAt"`;
+        text_answer AS "textAnswer", is_flagged AS "isFlagged", answered_at AS "answeredAt",
+        audio_key IS NOT NULL AS "hasRecording"`;
     if (answer) return { answer, applied: true };
 
     // Bản đã lưu mới hơn: giữ nguyên và trả lại bản đó
@@ -467,6 +576,6 @@ export class AttemptsService {
       where: { attemptId_examQuestionId: { attemptId, examQuestionId } },
       select: answerSelect,
     });
-    return { answer: existing, applied: false };
+    return { answer: toAnswerItem(existing), applied: false };
   }
 }

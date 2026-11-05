@@ -6,12 +6,14 @@ export interface OutcomeAnswer {
   textAnswer: string | null;
   /** Kết quả ghi lúc nộp bài (null: bỏ trống, câu mở, hoặc bài nộp trước khi có cột này) */
   isCorrect: boolean | null;
+  /** Bài nói Speaking trong kho tệp */
+  audioKey?: string | null;
 }
 
 /**
  * Kết quả một câu ở màn xem lại. Câu trắc nghiệm theo kết quả đã chấm lúc nộp (khớp điểm số), chỉ
- * khi chưa có thì so với đáp án đúng hiện tại. Câu Speaking/Writing chưa có điểm AI: đã trả lời là
- * PENDING, chưa trả lời là SKIPPED (Speaking chưa ghi âm được nên hiện luôn là SKIPPED).
+ * khi chưa có thì so với đáp án đúng hiện tại. Câu Speaking/Writing chưa có điểm AI: đã trả lời
+ * (đã viết, đã có bài nói) là PENDING, chưa trả lời là SKIPPED.
  */
 export function reviewOutcome(
   type: QuestionType,
@@ -23,7 +25,9 @@ export function reviewOutcome(
     const correct = answer.isCorrect ?? answer.selectedOptionId === correctOptionId;
     return correct ? ReviewOutcome.CORRECT : ReviewOutcome.WRONG;
   }
-  return answer?.textAnswer?.trim() ? ReviewOutcome.PENDING : ReviewOutcome.SKIPPED;
+  return answer?.textAnswer?.trim() || answer?.audioKey
+    ? ReviewOutcome.PENDING
+    : ReviewOutcome.SKIPPED;
 }
 
 export function emptyCounts(): ReviewCounts {

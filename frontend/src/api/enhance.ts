@@ -82,6 +82,15 @@ export const enhancedApi = api.enhanceEndpoints({
     // bắt đầu, nộp, hủy bài làm đổi số lượt và nút "Làm tiếp" ở danh sách đề
     saveAnswer: { invalidatesTags: [] },
     syncAnswers: { invalidatesTags: [] },
+    // Bài nói Speaking: gửi multipart (field "file"); không tải lại đề sau mỗi câu như saveAnswer
+    saveRecording: {
+      query: ({ id, examQuestionId, body }) => ({
+        url: `/api/v1/attempts/${id}/answers/${examQuestionId}/audio`,
+        method: 'PUT',
+        body: toFormData(body.file),
+      }),
+      invalidatesTags: [],
+    },
     startAttempt: { invalidatesTags: ['Attempts', 'Exam Catalog'] },
     // Nộp bài làm đổi điểm, tỉ lệ đúng ở trang Tiến độ và Trang chủ
     submitAttempt: { invalidatesTags: ['Attempts', 'Exam Catalog', 'Progress'] },
