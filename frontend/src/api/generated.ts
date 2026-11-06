@@ -1593,6 +1593,8 @@ export type ExamSummary = {
   /** null: không giới hạn */
   maxAttempts: number | null;
   allowPartPractice: boolean;
+  /** Đảo thứ tự câu trong từng Part theo từng lượt làm bài */
+  shuffleQuestions: boolean;
   status: ExamStatus;
   publishedAt: string | null;
   sectionCount: number;
@@ -1627,6 +1629,8 @@ export type ExamDetail = {
   /** null: không giới hạn */
   maxAttempts: number | null;
   allowPartPractice: boolean;
+  /** Đảo thứ tự câu trong từng Part theo từng lượt làm bài */
+  shuffleQuestions: boolean;
   status: ExamStatus;
   publishedAt: string | null;
   sectionCount: number;
@@ -1649,6 +1653,8 @@ export type CreateExamDto = {
   maxAttempts?: number | null;
   /** Cho phép học viên làm riêng từng Part */
   allowPartPractice?: boolean;
+  /** Đảo thứ tự câu trong từng Part theo từng lượt làm bài (nhóm câu đi cùng nhau, Part giữ thứ tự). Đề đang xuất bản thì không đổi được */
+  shuffleQuestions?: boolean;
 };
 export type UpdateExamDto = {
   title?: string;
@@ -1660,6 +1666,8 @@ export type UpdateExamDto = {
   maxAttempts?: number | null;
   /** Cho phép học viên làm riêng từng Part */
   allowPartPractice?: boolean;
+  /** Đảo thứ tự câu trong từng Part theo từng lượt làm bài (nhóm câu đi cùng nhau, Part giữ thứ tự). Đề đang xuất bản thì không đổi được */
+  shuffleQuestions?: boolean;
   /** updatedAt lần đọc gần nhất */
   updatedAt: string;
 };
@@ -1781,6 +1789,8 @@ export type ExamCatalogItem = {
   /** null: không giới hạn */
   maxAttempts: number | null;
   allowPartPractice: boolean;
+  /** Mỗi lượt làm bài có thứ tự câu riêng */
+  shuffleQuestions: boolean;
   publishedAt: string | null;
   /** Theo thứ tự trong đề */
   skills: Skill[];
@@ -1811,6 +1821,8 @@ export type ExamCatalogDetail = {
   /** null: không giới hạn */
   maxAttempts: number | null;
   allowPartPractice: boolean;
+  /** Mỗi lượt làm bài có thứ tự câu riêng */
+  shuffleQuestions: boolean;
   publishedAt: string | null;
   /** Theo thứ tự trong đề */
   skills: Skill[];

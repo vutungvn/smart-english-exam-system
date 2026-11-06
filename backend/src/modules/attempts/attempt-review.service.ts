@@ -21,6 +21,7 @@ import type {
   ReviewSection,
 } from './attempts.types.js';
 import type { AttemptHistoryQueryDto } from './dto/attempt.dto.js';
+import { shuffleSections } from './paper-shuffle.js';
 import { addOutcome, durationOf, emptyCounts, reviewOutcome } from './review-outcome.js';
 
 /** Bài làm kèm các cột kết quả */
@@ -32,6 +33,7 @@ const reviewAttemptSelect = {
 
 /** Đề như lúc làm bài, thêm đáp án đúng, giải thích, câu trả lời mẫu, lời thoại */
 const reviewPaperSelect = {
+  shuffleQuestions: true,
   sections: {
     orderBy: { orderIndex: 'asc' },
     select: {
@@ -129,10 +131,12 @@ export class AttemptReviewService {
     ]);
     const answerOf = new Map(answers.map((answer) => [answer.examQuestionId, answer]));
 
-    // Luyện theo Part: chỉ Part đó, câu đánh số lại từ 1 (giống lúc làm bài)
-    const sections = row.sectionId
+    // Luyện theo Part: chỉ Part đó, câu đánh số lại từ 1; đề bật đảo câu thì đúng thứ tự lúc làm bài
+    // (cùng seed = id lượt làm bài, xem AttemptsService.toDetail)
+    const scoped = row.sectionId
       ? paper.sections.filter((section) => section.id === row.sectionId)
       : paper.sections;
+    const sections = paper.shuffleQuestions ? shuffleSections(scoped, id) : scoped;
     let number = 0;
 
     const reviewSections: ReviewSection[] = sections.map((section) => {

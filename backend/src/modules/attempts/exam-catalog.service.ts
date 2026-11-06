@@ -28,6 +28,7 @@ const catalogSelect = {
   durationMinutes: true,
   maxAttempts: true,
   allowPartPractice: true,
+  shuffleQuestions: true,
   publishedAt: true,
   sections: {
     orderBy: { orderIndex: 'asc' },

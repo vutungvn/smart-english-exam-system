@@ -65,6 +65,7 @@ function toFormValues(exam: ExamDetail): ExamFormValues {
     durationMinutes: exam.durationMinutes,
     maxAttempts: exam.maxAttempts,
     allowPartPractice: exam.allowPartPractice,
+    shuffleQuestions: exam.shuffleQuestions,
   };
 }
 
@@ -484,6 +485,7 @@ function Builder({ exam, reload }: { exam: ExamDetail; reload: () => Promise<Exa
           open
           onOpenChange={(open) => !open && setEditing(0)}
           lockScale={exam.sections.length > 0}
+          lockShuffle={exam.status === 'PUBLISHED'}
           initial={toFormValues(exam)}
           onSubmit={async (values) => {
             await updateExam({

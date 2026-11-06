@@ -229,6 +229,11 @@ function ExamDetail({ exam }: { exam: ExamCatalogDetail }) {
               Đề này chỉ cho làm cả đề, không luyện riêng từng Part.
             </p>
           )}
+          {exam.shuffleQuestions && (
+            <p className="border-t border-border px-5 py-3 text-xs text-subtle sm:px-6">
+              Thứ tự câu trong mỗi Part được xáo riêng cho từng lượt làm bài.
+            </p>
+          )}
         </section>
 
         <div className="space-y-6">

@@ -44,17 +44,20 @@ export function ToggleSwitch({
   label,
   checked,
   onChange,
+  disabled = false,
   className,
 }: {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
   className?: string;
 }) {
   return (
     <label
       className={cn(
         'flex h-10 cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-white px-3 text-sm font-medium whitespace-nowrap text-slate-700 transition-colors hover:border-slate-300',
+        disabled && 'cursor-not-allowed opacity-60 hover:border-border',
         className,
       )}
     >
@@ -63,6 +66,7 @@ export function ToggleSwitch({
         type="checkbox"
         role="switch"
         checked={checked}
+        disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
         className="peer sr-only"
       />

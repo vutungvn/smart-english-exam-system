@@ -432,6 +432,8 @@ model Exam {
   maxAttempts       Int?         @map("max_attempts")
   /// Cho phép học viên chọn làm riêng từng Part
   allowPartPractice Boolean      @default(true) @map("allow_part_practice")
+  /// Đảo thứ tự câu (câu đơn, khối nhóm) trong từng Part theo từng lượt làm bài, chống chép bài
+  shuffleQuestions  Boolean      @default(true) @map("shuffle_questions")
   status            ExamStatus   @default(DRAFT)
   publishedAt       DateTime?    @map("published_at") @db.Timestamptz(6)
   createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)

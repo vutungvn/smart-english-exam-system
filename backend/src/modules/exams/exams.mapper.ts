@@ -23,6 +23,7 @@ const examBaseSelect = {
   durationMinutes: true,
   maxAttempts: true,
   allowPartPractice: true,
+  shuffleQuestions: true,
   status: true,
   publishedAt: true,
   createdAt: true,
