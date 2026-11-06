@@ -45,6 +45,10 @@ export const envSchema = z
     // true cho RustFS/MinIO (endpoint/bucket/key); false cho AWS S3 (bucket.endpoint/key)
     S3_FORCE_PATH_STYLE: z.stringbool().default(true),
 
+    // ffmpeg chuẩn hóa bài nói Speaking (WebM/Opus, MP4/AAC → MP3 mono 16 kHz); để mặc định nếu
+    // ffmpeg đã có trong PATH, Windows có thể ghi đường dẫn đầy đủ (C:\ffmpeg\bin\ffmpeg.exe)
+    FFMPEG_PATH: z.string().min(1).default('ffmpeg'),
+
     // AI (D28, Mục 7.4): để trống GEMINI_API_KEY thì dùng FakeAiProvider (dữ liệu mẫu, không gọi Google)
     GEMINI_API_KEY: z.string().optional(),
     GEMINI_MODEL: z.string().min(1).default('gemini-3.5-flash-lite'),

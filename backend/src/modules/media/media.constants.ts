@@ -40,3 +40,10 @@ export const QUESTION_MEDIA_TYPES = {
 } as const;
 
 export type QuestionMediaExt = keyof typeof QUESTION_MEDIA_TYPES;
+
+// Bài nói Speaking của học viên (đã chuẩn hóa MP3): key recordings/<uuid>.mp3, phát qua
+// GET /api/v1/media/recordings/<uuid>_mp3?exp=…&sig=…; chỉ API bài làm của chính học viên phát URL này
+export const RECORDING_KEY_PREFIX = 'recordings/';
+export const RECORDING_URL_PREFIX = '/api/v1/media/recordings/';
+export const RECORDING_FILE_PATTERN =
+  /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})_mp3$/;

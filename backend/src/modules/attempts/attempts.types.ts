@@ -154,6 +154,24 @@ export class AttemptAnswerItem {
 
   @ApiProperty({ type: String, format: 'date-time' })
   answeredAt: Date;
+
+  @ApiProperty({ description: 'Câu Speaking đã có bài nói tải lên' })
+  hasRecording: boolean;
+}
+
+export class SaveRecordingResult {
+  @ApiProperty({ format: 'uuid' })
+  examQuestionId: string;
+
+  @ApiProperty({ description: 'Độ dài bài nói sau khi chuẩn hóa (giây)', example: 28.4 })
+  seconds: number;
+
+  @ApiProperty({
+    type: 'integer',
+    nullable: true,
+    description: 'Số giây còn lại; null khi không đếm giờ',
+  })
+  remainingSeconds: number | null;
 }
 
 export class AttemptSummary {
@@ -334,6 +352,13 @@ export class ReviewQuestion extends PaperQuestion {
 
   @ApiProperty({ type: String, nullable: true, description: 'Bài viết (Writing)' })
   textAnswer: string | null;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'URL ký để nghe lại bài nói (Speaking); null khi chưa ghi âm',
+  })
+  recordingUrl: string | null;
 
   @ApiProperty()
   isFlagged: boolean;

@@ -123,6 +123,7 @@ export class AttemptReviewService {
           textAnswer: true,
           isFlagged: true,
           isCorrect: true,
+          audioKey: true,
         },
       }),
     ]);
@@ -152,6 +153,7 @@ export class AttemptReviewService {
           outcome,
           selectedOptionId: answer?.selectedOptionId ?? null,
           textAnswer: answer?.textAnswer ?? null,
+          recordingUrl: this.media.recordingUrl(answer?.audioKey ?? null),
           isFlagged: answer?.isFlagged ?? false,
           explanation,
           sampleAnswer,

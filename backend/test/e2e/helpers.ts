@@ -79,6 +79,9 @@ export function api(app: INestApplication<App>, token?: string) {
     post: (url: string, body: object = {}) =>
       auth(request(server).post(`/api/v1${url}`)).send(body),
     put: (url: string, body: object) => auth(request(server).put(`/api/v1${url}`)).send(body),
+    /** PUT multipart, một tệp ở trường "file" */
+    upload: (url: string, file: Buffer, filename: string) =>
+      auth(request(server).put(`/api/v1${url}`)).attach('file', file, filename),
     patch: (url: string, body: object) => auth(request(server).patch(`/api/v1${url}`)).send(body),
   };
 }
@@ -190,5 +193,119 @@ export async function createExam(
       correctOptionId: question.options.find((option) => option.isCorrect)?.id ?? '',
       wrongOptionId: question.options.find((option) => !option.isCorrect)?.id ?? '',
     })),
+  };
+}
+
+export interface SpeakingExamFixture {
+  examId: string;
+  speakingSectionId: string;
+  /** Hai câu Speaking Part 3, trả lời tối đa 15 giây */
+  speakingIds: string[];
+  /** Một câu trắc nghiệm Part 5 cùng đề (để kiểm tra không tải bài nói lên câu không phải Speaking) */
+  choiceId: string;
+}
+
+/** Đề PERCENT đã xuất bản: Reading Part 5 (1 câu) + Speaking Part 3 (2 câu, 3 giây / 15 giây) */
+export async function createSpeakingExam(
+  prisma: PrismaService,
+  authorId: string,
+): Promise<SpeakingExamFixture> {
+  const subject = await prisma.subject.findUniqueOrThrow({
+    where: { code: 'TOEIC' },
+    select: { id: true, topics: { select: { id: true, name: true } } },
+  });
+  const topicId = (name: string) => subject.topics.find((topic) => topic.name === name)?.id ?? '';
+
+  const choice = await prisma.question.create({
+    data: {
+      topicId: topicId('P5/P6 – Từ loại'),
+      authorId,
+      type: QuestionType.SINGLE_CHOICE,
+      skill: Skill.READING,
+      part: 5,
+      difficulty: Difficulty.EASY,
+      status: QuestionStatus.ACTIVE,
+      content: 'E2E: The report ------- ready.',
+      explanation: 'E2E',
+      options: {
+        create: ['A', 'B', 'C', 'D'].map((label, index) => ({
+          label,
+          content: `Option ${label}`,
+          isCorrect: index === 0,
+          orderIndex: index,
+        })),
+      },
+    },
+    select: { id: true },
+  });
+  const spoken: string[] = [];
+  for (let i = 1; i <= 2; i++) {
+    const question = await prisma.question.create({
+      data: {
+        topicId: topicId('S3 – Trả lời câu hỏi'),
+        authorId,
+        type: QuestionType.SPOKEN_RESPONSE,
+        skill: Skill.SPEAKING,
+        part: 3,
+        difficulty: Difficulty.EASY,
+        status: QuestionStatus.ACTIVE,
+        content: `E2E speaking ${i}: How often do you visit a park?`,
+        sampleAnswer: 'I visit a park twice a week.',
+        explanation: 'E2E',
+        prepSeconds: 3,
+        responseSeconds: 15,
+      },
+      select: { id: true },
+    });
+    spoken.push(question.id);
+  }
+
+  const exam = await prisma.exam.create({
+    data: {
+      authorId,
+      subjectId: subject.id,
+      title: `E2E speaking ${randomUUID().slice(0, 8)}`,
+      scoringScale: ScoringScale.PERCENT,
+      durationMinutes: 20,
+      allowPartPractice: true,
+      status: ExamStatus.PUBLISHED,
+      publishedAt: new Date(),
+      sections: {
+        create: [
+          {
+            skill: Skill.READING,
+            part: 5,
+            orderIndex: partOrder(Skill.READING, 5),
+            questions: { create: [{ questionId: choice.id, orderIndex: 0 }] },
+          },
+          {
+            skill: Skill.SPEAKING,
+            part: 3,
+            orderIndex: partOrder(Skill.SPEAKING, 3),
+            questions: {
+              create: spoken.map((questionId, orderIndex) => ({ questionId, orderIndex })),
+            },
+          },
+        ],
+      },
+    },
+    select: {
+      id: true,
+      sections: {
+        orderBy: { orderIndex: 'asc' },
+        select: {
+          id: true,
+          questions: { orderBy: { orderIndex: 'asc' }, select: { id: true } },
+        },
+      },
+    },
+  });
+
+  const [reading, speaking] = exam.sections;
+  return {
+    examId: exam.id,
+    choiceId: reading.questions[0].id,
+    speakingSectionId: speaking.id,
+    speakingIds: speaking.questions.map((item) => item.id),
   };
 }

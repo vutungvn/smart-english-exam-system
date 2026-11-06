@@ -1717,6 +1717,146 @@
         ]
       }
     },
+    "/api/v1/me/voice-consent": {
+      "put": {
+        "description": "Bắt buộc trước lần làm Speaking đầu tiên (D19): bài nói được lưu tối đa 30 ngày và gửi AI chấm không kèm thông tin cá nhân. Gọi lại không đổi thời điểm đồng ý ban đầu.",
+        "operationId": "giveVoiceConsent",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MeProfile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Chỉ học viên mới làm bài Speaking",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Chỉ học viên mới làm bài Speaking"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "NOT_FOUND": {
+                    "summary": "NOT_FOUND: Tài khoản không còn tồn tại",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "NOT_FOUND",
+                        "message": "Tài khoản không còn tồn tại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Đồng ý cho ghi âm và xử lý giọng nói (học viên)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
     "/api/v1/me/password": {
       "patch": {
         "description": "Thành công thì đăng xuất mọi thiết bị; FE gọi lại POST /auth/login bằng mật khẩu mới.",
@@ -9928,21 +10068,21 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: VOICE_CONSENT_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorEnvelopeDto"
                 },
                 "examples": {
-                  "FORBIDDEN": {
-                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                  "VOICE_CONSENT_REQUIRED": {
+                    "summary": "VOICE_CONSENT_REQUIRED: Bạn cần đồng ý cho hệ thống ghi âm và xử lý giọng nói trước khi làm phần Speaking",
                     "value": {
                       "success": false,
                       "status": 403,
                       "error": {
-                        "code": "FORBIDDEN",
-                        "message": "Bạn không có quyền thực hiện thao tác này"
+                        "code": "VOICE_CONSENT_REQUIRED",
+                        "message": "Bạn cần đồng ý cho hệ thống ghi âm và xử lý giọng nói trước khi làm phần Speaking"
                       }
                     }
                   }
@@ -11020,6 +11160,325 @@
           }
         ],
         "summary": "Tự động lưu một câu trả lời (idempotent)",
+        "tags": [
+          "Attempts"
+        ]
+      }
+    },
+    "/api/v1/attempts/{id}/answers/{examQuestionId}/audio": {
+      "put": {
+        "description": "multipart, trường file: WebM/Opus, Ogg, MP4/AAC… do MediaRecorder ghi, tối đa 10 MB. Server chuẩn hóa về MP3 mono 16 kHz; dài hơn thời gian trả lời của câu (cộng 3 giây) thì từ chối. Gửi lại thì ghi đè bài cũ. Nhận tới 2 phút sau hạn nộp (tải lên lại sau khi mất mạng).",
+        "operationId": "saveRecording",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "examQuestionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Bài nói đã ghi âm"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SaveRecordingResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR, ATTEMPT_RECORDING_INVALID, ATTEMPT_RECORDING_TOO_LONG",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "file",
+                            "message": "Chưa có tệp bài nói"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "ATTEMPT_RECORDING_INVALID": {
+                    "summary": "ATTEMPT_RECORDING_INVALID: Không đọc được bài nói, vui lòng thử lại hoặc dùng trình duyệt khác",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "ATTEMPT_RECORDING_INVALID",
+                        "message": "Không đọc được bài nói, vui lòng thử lại hoặc dùng trình duyệt khác"
+                      }
+                    }
+                  },
+                  "ATTEMPT_RECORDING_TOO_LONG": {
+                    "summary": "ATTEMPT_RECORDING_TOO_LONG: Bài nói dài hơn thời gian trả lời cho phép",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "ATTEMPT_RECORDING_TOO_LONG",
+                        "message": "Bài nói dài hơn thời gian trả lời cho phép"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: ATTEMPT_NOT_FOUND, ATTEMPT_QUESTION_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ATTEMPT_NOT_FOUND": {
+                    "summary": "ATTEMPT_NOT_FOUND: Không tìm thấy bài làm",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "ATTEMPT_NOT_FOUND",
+                        "message": "Không tìm thấy bài làm"
+                      }
+                    }
+                  },
+                  "ATTEMPT_QUESTION_NOT_FOUND": {
+                    "summary": "ATTEMPT_QUESTION_NOT_FOUND: Câu hỏi không thuộc bài làm này",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "ATTEMPT_QUESTION_NOT_FOUND",
+                        "message": "Câu hỏi không thuộc bài làm này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: ATTEMPT_NOT_IN_PROGRESS, ATTEMPT_EXPIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ATTEMPT_NOT_IN_PROGRESS": {
+                    "summary": "ATTEMPT_NOT_IN_PROGRESS: Bài làm đã nộp hoặc đã hủy",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "ATTEMPT_NOT_IN_PROGRESS",
+                        "message": "Bài làm đã nộp hoặc đã hủy"
+                      }
+                    }
+                  },
+                  "ATTEMPT_EXPIRED": {
+                    "summary": "ATTEMPT_EXPIRED: Đã hết giờ làm bài",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "ATTEMPT_EXPIRED",
+                        "message": "Đã hết giờ làm bài"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Lỗi, error.code thuộc: PAYLOAD_TOO_LARGE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "PAYLOAD_TOO_LARGE": {
+                    "summary": "PAYLOAD_TOO_LARGE: Dữ liệu gửi lên quá lớn",
+                    "value": {
+                      "success": false,
+                      "status": 413,
+                      "error": {
+                        "code": "PAYLOAD_TOO_LARGE",
+                        "message": "Dữ liệu gửi lên quá lớn"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Lỗi, error.code thuộc: STORAGE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "STORAGE_UNAVAILABLE": {
+                    "summary": "STORAGE_UNAVAILABLE: Kho lưu trữ tệp tạm thời không khả dụng, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 503,
+                      "error": {
+                        "code": "STORAGE_UNAVAILABLE",
+                        "message": "Kho lưu trữ tệp tạm thời không khả dụng, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tải lên bài nói của một câu Speaking",
         "tags": [
           "Attempts"
         ]
@@ -12468,6 +12927,9 @@
           "ATTEMPT_EXPIRED",
           "ATTEMPT_QUESTION_NOT_FOUND",
           "ATTEMPT_NOT_SUBMITTED",
+          "VOICE_CONSENT_REQUIRED",
+          "ATTEMPT_RECORDING_INVALID",
+          "ATTEMPT_RECORDING_TOO_LONG",
           "AI_QUOTA_EXCEEDED",
           "AI_UNAVAILABLE",
           "AI_EXPLANATION_NOT_SUPPORTED"
@@ -12784,12 +13246,19 @@
             "type": "integer",
             "nullable": true,
             "example": 750
+          },
+          "voiceConsentAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Lúc đồng ý cho ghi âm và xử lý giọng nói (D19); null: chưa làm được Speaking"
           }
         },
         "required": [
           "currentLevel",
           "currentScore",
-          "targetScore"
+          "targetScore",
+          "voiceConsentAt"
         ]
       },
       "MeProfile": {
@@ -15635,6 +16104,10 @@
           "answeredAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "hasRecording": {
+            "type": "boolean",
+            "description": "Câu Speaking đã có bài nói tải lên"
           }
         },
         "required": [
@@ -15642,7 +16115,8 @@
           "selectedOptionId",
           "textAnswer",
           "isFlagged",
-          "answeredAt"
+          "answeredAt",
+          "hasRecording"
         ]
       },
       "AttemptDetail": {
@@ -16086,6 +16560,11 @@
             "nullable": true,
             "description": "Bài viết (Writing)"
           },
+          "recordingUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL ký để nghe lại bài nói (Speaking); null khi chưa ghi âm"
+          },
           "isFlagged": {
             "type": "boolean"
           },
@@ -16115,6 +16594,7 @@
           "outcome",
           "selectedOptionId",
           "textAnswer",
+          "recordingUrl",
           "isFlagged",
           "explanation",
           "sampleAnswer"
@@ -16318,6 +16798,30 @@
             "description": "Lúc học viên trả lời (mặc định: lúc server nhận); bản mới hơn được giữ"
           }
         }
+      },
+      "SaveRecordingResult": {
+        "type": "object",
+        "properties": {
+          "examQuestionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seconds": {
+            "type": "number",
+            "description": "Độ dài bài nói sau khi chuẩn hóa (giây)",
+            "example": 28.4
+          },
+          "remainingSeconds": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Số giây còn lại; null khi không đếm giờ"
+          }
+        },
+        "required": [
+          "examQuestionId",
+          "seconds",
+          "remainingSeconds"
+        ]
       },
       "SyncAnswersResult": {
         "type": "object",

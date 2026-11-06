@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import {
   CircleCheck,
@@ -33,6 +33,8 @@ import { BlockView } from '../attempt/BlockView';
 import { QuestionNavigator } from '../attempt/QuestionNavigator';
 import { clearAnswerQueue, useAnswerSync, type SyncStatus } from '../attempt/use-answer-sync';
 import { useCountdown } from '../attempt/use-countdown';
+import { SpeakingSection } from '../speaking/SpeakingSection';
+import { useRecordingUploads } from '../speaking/use-recording-uploads';
 import { attemptResultPath, formatClock, PRACTICE_PATH, practiceExamPath } from '../practice-meta';
 
 /** Dưới 5 phút: đồng hồ chuyển đỏ */
@@ -111,22 +113,35 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
   // onClosed của hook cần gọi submit, còn submit cần flush của hook: nối qua ref
   const submitRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
+  const onRemaining = (seconds: number | null) => {
+    if (seconds !== null) setDeadline(Date.now() + seconds * 1000);
+  };
+  // Server báo hết giờ hoặc bài đã đóng: nộp (nếu chưa) rồi sang trang kết quả
+  const onClosed = () => void submitRef.current();
   const { answers, status, change, flush } = useAnswerSync({
     attemptId: attempt.id,
     serverAnswers: attempt.answers,
-    onRemaining: (seconds) => {
-      if (seconds !== null) setDeadline(Date.now() + seconds * 1000);
-    },
-    // Server báo hết giờ hoặc bài đã đóng: nộp (nếu chưa) rồi sang trang kết quả
-    onClosed: () => void submitRef.current(),
+    onRemaining,
+    onClosed,
   });
+  // Bài nói Speaking: hàng đợi tải lên riêng (giữ trong IndexedDB tới khi tải xong)
+  const recordings = useRecordingUploads({
+    attemptId: attempt.id,
+    serverAnswers: attempt.answers,
+    onRemaining,
+    onClosed,
+  });
+  // Đã thử micro trong lần mở bài này; đang chạy phần Speaking thì khóa chuyển Part, nộp bài
+  const [micReady, setMicReady] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const onSpeakingChange = useCallback((running: boolean) => setSpeaking(running), []);
 
   const submit = async () => {
     if (submitStarted.current) return;
     submitStarted.current = true;
     setActionError(undefined);
-    // Gửi nốt câu trả lời còn trong hàng đợi trước khi nộp (lỗi mạng thì vẫn nộp phần đã lưu)
-    await flush();
+    // Gửi nốt câu trả lời, bài nói còn trong hàng đợi trước khi nộp (lỗi mạng thì vẫn nộp phần đã lưu)
+    await Promise.all([flush(), recordings.flush()]);
     try {
       await submitAttempt(attempt.id).unwrap();
     } catch (cause) {
@@ -175,12 +190,14 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
   }, [activeId, scrollTick]);
 
   const jump = (index: number, examQuestionId: string) => {
+    if (speaking) return;
     setSectionIndex(index);
     setActiveId(examQuestionId);
     setScrollTick((n) => n + 1);
     setDialog(null);
   };
   const goSection = (index: number) => {
+    if (speaking) return;
     setSectionIndex(index);
     setActiveId(undefined);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -203,7 +220,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
   };
 
   const section = sections[sectionIndex];
-  const progress = progressOf(sections, answers);
+  const progress = progressOf(sections, answers, recordings.recorded);
   const lastSection = sectionIndex === sections.length - 1;
   const timed = remaining !== null;
   const warning = timed && remaining <= WARNING_SECONDS;
@@ -248,6 +265,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
             type="button"
             variant="ghost"
             onClick={() => void exit()}
+            disabled={speaking}
             className="hidden h-10 rounded-xl px-3 text-slate-600 sm:inline-flex"
           >
             <LogOut />
@@ -256,7 +274,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
           <Button
             type="button"
             onClick={() => setDialog('submit')}
-            disabled={submitting}
+            disabled={submitting || speaking}
             className="h-10 shrink-0 rounded-xl bg-linear-to-r from-primary to-brand px-4 font-semibold shadow-md shadow-primary/30"
           >
             {submitting ? <Loader2 className="animate-spin" /> : <Send />}
@@ -273,6 +291,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
                 key={item.id}
                 type="button"
                 onClick={() => goSection(index)}
+                disabled={speaking && index !== sectionIndex}
                 aria-current={index === sectionIndex}
                 className={cn(
                   'shrink-0 rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors',
@@ -306,23 +325,38 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
           <h1 className="text-lg font-bold text-foreground">
             Part {section.part} · {section.name}
           </h1>
-          {section.blocks.map((block, index) => (
-            <BlockView
-              key={block.group?.id ?? block.questions[0]?.examQuestionId ?? index}
-              block={block}
-              skill={section.skill}
-              part={section.part}
-              answers={answers}
-              activeId={activeId}
-              onChange={change}
+          {recordings.error && (
+            <FormAlert message={recordings.error} onClose={recordings.clearError} />
+          )}
+          {section.skill === 'SPEAKING' ? (
+            <SpeakingSection
+              key={section.id}
+              section={section}
+              recorded={recordings.recorded}
+              micReady={micReady}
+              onMicReady={() => setMicReady(true)}
+              onRecorded={(examQuestionId, blob) => void recordings.enqueue(examQuestionId, blob)}
+              onRunningChange={onSpeakingChange}
             />
-          ))}
+          ) : (
+            section.blocks.map((block, index) => (
+              <BlockView
+                key={block.group?.id ?? block.questions[0]?.examQuestionId ?? index}
+                block={block}
+                skill={section.skill}
+                part={section.part}
+                answers={answers}
+                activeId={activeId}
+                onChange={change}
+              />
+            ))
+          )}
 
           <div className="flex items-center justify-between gap-3 pt-2">
             <Button
               type="button"
               variant="outline"
-              disabled={sectionIndex === 0}
+              disabled={sectionIndex === 0 || speaking}
               onClick={() => goSection(sectionIndex - 1)}
               className="h-10 rounded-xl bg-white px-4"
             >
@@ -333,6 +367,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
               <Button
                 type="button"
                 onClick={() => setDialog('submit')}
+                disabled={speaking}
                 className="h-10 rounded-xl bg-linear-to-r from-primary to-brand px-4 font-semibold"
               >
                 <Send />
@@ -342,6 +377,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
               <Button
                 type="button"
                 variant="outline"
+                disabled={speaking}
                 onClick={() => goSection(sectionIndex + 1)}
                 className="h-10 rounded-xl bg-white px-4"
               >
@@ -358,6 +394,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
           <QuestionNavigator
             sections={sections}
             answers={answers}
+            recorded={recordings.recorded}
             activeId={activeId}
             onJump={jump}
           />
@@ -374,7 +411,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
         Bảng câu hỏi · {progress.answered}/{progress.total}
       </button>
 
-      {status.state === 'offline' && (
+      {(status.state === 'offline' || recordings.offline) && (
         <div
           role="status"
           className="fixed bottom-20 left-4 z-20 flex max-w-xs items-start gap-3 rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-lg lg:bottom-4"
@@ -383,8 +420,8 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
           <div>
             <p className="font-semibold">Mất kết nối tạm thời</p>
             <p className="text-xs">
-              {status.pending} câu trả lời đang chờ, có mạng lại sẽ tự đồng bộ. Cứ làm tiếp bình
-              thường.
+              {status.pending + recordings.pending} câu trả lời, bài nói đang chờ, có mạng lại sẽ tự
+              đồng bộ. Cứ làm tiếp bình thường.
             </p>
           </div>
         </div>
@@ -402,6 +439,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
           <QuestionNavigator
             sections={sections}
             answers={answers}
+            recorded={recordings.recorded}
             activeId={activeId}
             onJump={jump}
           />
@@ -444,8 +482,10 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
         </dl>
         <div className="mt-3 space-y-1 text-sm text-muted-foreground">
           {timed && <p>Còn {formatClock(remaining)} làm bài.</p>}
-          {progress.speaking > 0 && (
-            <p>{progress.speaking} câu Speaking chưa hỗ trợ ghi âm, không tính vào điểm.</p>
+          {recordings.pending > 0 && (
+            <p className="text-amber-700">
+              Còn {recordings.pending} bài nói chưa tải lên, hệ thống sẽ gửi trước khi nộp.
+            </p>
           )}
           {status.pending > 0 && (
             <p className="text-amber-700">

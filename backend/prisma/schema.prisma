@@ -147,7 +147,6 @@ enum AiCallStatus {
   @@map("ai_call_status")
 }
 
-
 // ================================================================
 // Nhóm Người dùng và phân quyền
 // ================================================================
@@ -227,10 +226,12 @@ model User {
 }
 
 model Student {
-  userId       String @id(map: "pk_students") @map("user_id") @db.Uuid
-  currentLevel Level? @map("current_level")
-  currentScore Int?   @map("current_score")
-  targetScore  Int?   @map("target_score")
+  userId         String    @id(map: "pk_students") @map("user_id") @db.Uuid
+  currentLevel   Level?    @map("current_level")
+  currentScore   Int?      @map("current_score")
+  targetScore    Int?      @map("target_score")
+  /// Lúc đồng ý cho hệ thống ghi âm và xử lý giọng nói (D19); null: chưa đồng ý, chưa làm được Speaking
+  voiceConsentAt DateTime? @map("voice_consent_at") @db.Timestamptz(6)
 
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_students_user_id")
   attempts ExamAttempt[]
@@ -535,6 +536,8 @@ model AttemptAnswer {
   isFlagged        Boolean  @default(false) @map("is_flagged")
   /// Câu trắc nghiệm: đúng/sai khi nộp bài; NULL khi bỏ trống hoặc câu Speaking/Writing
   isCorrect        Boolean? @map("is_correct")
+  /// Bài nói Speaking đã chuẩn hóa (MP3 mono 16 kHz) trong kho tệp: recordings/<uuid>.mp3
+  audioKey         String?  @map("audio_key") @db.VarChar(500)
   /// Thời điểm học viên trả lời (đồng bộ sau mất mạng: bản có answered_at mới hơn được giữ)
   answeredAt       DateTime @map("answered_at") @db.Timestamptz(6)
   updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -592,4 +595,3 @@ model AiExplanation {
 
   @@map("ai_explanations")
 }
-

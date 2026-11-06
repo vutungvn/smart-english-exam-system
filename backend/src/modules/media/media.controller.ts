@@ -18,6 +18,8 @@ import {
   QUESTION_MEDIA_FILE_PATTERN,
   QUESTION_MEDIA_KEY_PREFIX,
   QUESTION_MEDIA_TYPES,
+  RECORDING_FILE_PATTERN,
+  RECORDING_KEY_PREFIX,
   type QuestionMediaExt,
 } from './media.constants.js';
 import { MediaUrlService } from './media-url.service.js';
@@ -103,5 +105,43 @@ export class MediaController {
       type: QUESTION_MEDIA_TYPES[match[2] as QuestionMediaExt],
       length: object.contentLength,
     });
+  }
+
+  /**
+   * Bài nói Speaking của học viên (MP3). Như media câu hỏi: quyền kiểm tra lúc phát URL ký (chỉ
+   * API bài làm của chính học viên), ở đây chỉ kiểm tra chữ ký và hạn dùng; hỗ trợ HTTP Range
+   */
+  @Get('recordings/:file')
+  @IsPublic()
+  @ApiExcludeEndpoint()
+  async getRecording(
+    @Param('file') fileParam: string,
+    @Query('exp') exp: unknown,
+    @Query('sig') sig: unknown,
+    @Headers('range') range: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const match = RECORDING_FILE_PATTERN.exec(fileParam);
+    if (!match) throw new AppException(ErrorCode.NOT_FOUND);
+    const key = `${RECORDING_KEY_PREFIX}${match[1]}.mp3`;
+    if (!this.mediaUrls.verify(key, exp, sig)) {
+      throw new AppException(ErrorCode.MEDIA_LINK_INVALID);
+    }
+
+    const object = await this.storage.get(key, {
+      range: range && SINGLE_RANGE.test(range) ? range : undefined,
+    });
+    if (!object) throw new AppException(ErrorCode.NOT_FOUND);
+
+    res.setHeader('Accept-Ranges', 'bytes');
+    // Ghi âm lại là key mới nên tệp không đổi nội dung; private: proxy dùng chung không được giữ
+    res.setHeader('Cache-Control', 'private, max-age=14400, immutable');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    if (object.contentRange) {
+      res.status(HttpStatus.PARTIAL_CONTENT);
+      res.setHeader('Content-Range', object.contentRange);
+    }
+
+    return new StreamableFile(object.body, { type: 'audio/mpeg', length: object.contentLength });
   }
 }

@@ -6,12 +6,20 @@ import type { LocalAnswer } from './use-answer-sync';
 interface QuestionNavigatorProps {
   sections: PaperSection[];
   answers: Record<string, LocalAnswer>;
+  /** Câu Speaking đã ghi âm */
+  recorded?: ReadonlySet<string>;
   activeId?: string;
   onJump: (sectionIndex: number, examQuestionId: string) => void;
 }
 
 /** Bảng số câu theo Part: đã làm (xanh), đánh dấu (viền cam), câu đang xem (vòng sáng) */
-export function QuestionNavigator({ sections, answers, activeId, onJump }: QuestionNavigatorProps) {
+export function QuestionNavigator({
+  sections,
+  answers,
+  recorded,
+  activeId,
+  onJump,
+}: QuestionNavigatorProps) {
   return (
     <div className="space-y-4">
       {sections.map((section, sectionIndex) => (
@@ -23,7 +31,7 @@ export function QuestionNavigator({ sections, answers, activeId, onJump }: Quest
             {section.blocks.flatMap((block) =>
               block.questions.map((question) => {
                 const answer = answers[question.examQuestionId];
-                const done = isAnswered(answer);
+                const done = isAnswered(question, answer, recorded);
                 const flagged = answer?.isFlagged ?? false;
                 return (
                   <button

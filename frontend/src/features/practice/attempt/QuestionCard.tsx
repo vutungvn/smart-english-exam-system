@@ -15,7 +15,7 @@ interface QuestionCardProps {
   active: boolean;
 }
 
-/** Một câu trong đề: trắc nghiệm, bài viết (Writing) hoặc Speaking (ghi âm làm sau) */
+/** Một câu trong đề: trắc nghiệm hoặc bài viết (Writing); Speaking làm ở SpeakingSection */
 export function QuestionCard({
   question,
   skill,
@@ -82,7 +82,7 @@ export function QuestionCard({
       ) : question.type === 'SPOKEN_RESPONSE' ? (
         <p className="mt-4 flex items-start gap-2.5 rounded-2xl bg-violet-50 px-4 py-3 text-sm text-violet-800">
           <Mic className="mt-0.5 size-4 shrink-0" />
-          Phần ghi âm Speaking sắp có. Câu này chưa trả lời được và không tính vào điểm trắc nghiệm.
+          Câu Speaking làm ở phần ghi âm của Part Speaking.
         </p>
       ) : (
         <div

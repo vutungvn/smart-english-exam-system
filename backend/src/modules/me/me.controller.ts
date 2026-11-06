@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Patch,
   Post,
+  Put,
   Query,
   UploadedFile,
   UseInterceptors,
@@ -77,6 +78,22 @@ export class MeController {
   )
   updateProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateProfileDto): Promise<MeProfile> {
     return this.meService.updateProfile(user, dto);
+  }
+
+  @Put('voice-consent')
+  @ApiOperation({
+    summary: 'Đồng ý cho ghi âm và xử lý giọng nói (học viên)',
+    description:
+      'Bắt buộc trước lần làm Speaking đầu tiên (D19): bài nói được lưu tối đa 30 ngày và gửi AI ' +
+      'chấm không kèm thông tin cá nhân. Gọi lại không đổi thời điểm đồng ý ban đầu.',
+  })
+  @ApiEnvelope(MeProfile)
+  @ApiErrors(
+    { code: ErrorCode.FORBIDDEN, message: 'Chỉ học viên mới làm bài Speaking' },
+    USER_NOT_FOUND,
+  )
+  giveVoiceConsent(@CurrentUser() user: AuthUser): Promise<MeProfile> {
+    return this.meService.giveVoiceConsent(user);
   }
 
   @Patch('password')

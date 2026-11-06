@@ -78,6 +78,9 @@ export const ErrorCode = {
   ATTEMPT_EXPIRED: 'ATTEMPT_EXPIRED',
   ATTEMPT_QUESTION_NOT_FOUND: 'ATTEMPT_QUESTION_NOT_FOUND',
   ATTEMPT_NOT_SUBMITTED: 'ATTEMPT_NOT_SUBMITTED',
+  VOICE_CONSENT_REQUIRED: 'VOICE_CONSENT_REQUIRED',
+  ATTEMPT_RECORDING_INVALID: 'ATTEMPT_RECORDING_INVALID',
+  ATTEMPT_RECORDING_TOO_LONG: 'ATTEMPT_RECORDING_TOO_LONG',
 
   // AI
   AI_QUOTA_EXCEEDED: 'AI_QUOTA_EXCEEDED',
@@ -328,6 +331,18 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.ATTEMPT_NOT_SUBMITTED]: {
     status: HttpStatus.CONFLICT,
     message: 'Bài làm chưa nộp nên chưa xem được đáp án',
+  },
+  [ErrorCode.VOICE_CONSENT_REQUIRED]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'Bạn cần đồng ý cho hệ thống ghi âm và xử lý giọng nói trước khi làm phần Speaking',
+  },
+  [ErrorCode.ATTEMPT_RECORDING_INVALID]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: 'Không đọc được bài nói, vui lòng thử lại hoặc dùng trình duyệt khác',
+  },
+  [ErrorCode.ATTEMPT_RECORDING_TOO_LONG]: {
+    status: HttpStatus.BAD_REQUEST,
+    message: 'Bài nói dài hơn thời gian trả lời cho phép',
   },
 
   // AI

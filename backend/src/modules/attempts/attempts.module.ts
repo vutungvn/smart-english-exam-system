@@ -7,9 +7,11 @@ import { AttemptsController } from './attempts.controller.js';
 import { AttemptsService } from './attempts.service.js';
 import { ExamCatalogController } from './exam-catalog.controller.js';
 import { ExamCatalogService } from './exam-catalog.service.js';
+import { RecordingService } from './recording.service.js';
 
 // Học viên: xem đề đã xuất bản, làm bài (bắt đầu, tự động lưu, khôi phục, hủy), nộp bài và chấm
-// phần trắc nghiệm; tự nộp bài hết giờ bằng tác vụ định kỳ; xem lại bài đã nộp, lịch sử làm bài
+// phần trắc nghiệm; ghi âm Speaking (tải lên, chuẩn hóa ffmpeg); tự nộp bài hết giờ bằng tác vụ định
+// kỳ; xem lại bài đã nộp, lịch sử làm bài
 @Module({
   imports: [PaperCacheModule],
   controllers: [ExamCatalogController, AttemptsController],
@@ -19,6 +21,7 @@ import { ExamCatalogService } from './exam-catalog.service.js';
     AttemptSubmissionService,
     AttemptAutoSubmitService,
     AttemptReviewService,
+    RecordingService,
   ],
 })
 export class AttemptsModule {}
