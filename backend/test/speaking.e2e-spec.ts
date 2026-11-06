@@ -82,6 +82,40 @@ describe('Ghi âm Speaking (e2e)', () => {
     expect(started.status).toBe(201);
   });
 
+  it('luyện riêng Part Speaking: cũng cần đồng ý, chỉ có Part đó, tải bài nói lên được', async () => {
+    const fresh = await createUser(prisma, RoleCode.STUDENT);
+    const learner = api(app, await login(app, fresh.email));
+    const exam = await createSpeakingExam(prisma, teacherId);
+    const body = { mode: 'PART', sectionId: exam.speakingSectionId };
+
+    const blocked = await learner.post(`/exams/${exam.examId}/attempts`, body);
+    expect(blocked.status).toBe(403);
+    expect(errorOf(blocked).code).toBe('VOICE_CONSENT_REQUIRED');
+
+    await learner.put('/me/voice-consent', {});
+    const started = await learner.post(`/exams/${exam.examId}/attempts`, body);
+    expect(started.status).toBe(201);
+    const attempt = data<AttemptDetail>(started);
+    expect(attempt.paper.sections.map((section) => section.skill)).toEqual(['SPEAKING']);
+    expect(attempt.remainingSeconds).toBeNull();
+
+    const [first] = exam.speakingIds;
+    const uploaded = await learner.upload(
+      `/attempts/${attempt.id}/answers/${first}/audio`,
+      webm(2),
+      'answer.webm',
+    );
+    expect(uploaded.status).toBe(200);
+
+    // Luyện Part Speaking: chưa có điểm trắc nghiệm, bài nói chờ AI chấm
+    const result = await learner.post(`/attempts/${attempt.id}/submit`);
+    expect(result.status).toBe(200);
+    expect(data<{ status: string; pendingOpenCount: number }>(result)).toMatchObject({
+      status: 'SUBMITTED',
+      pendingOpenCount: 2,
+    });
+  });
+
   it('tải lên → chuẩn hóa MP3 → ghi đè → nộp → nghe lại ở trang xem lại', async () => {
     await student.put('/me/voice-consent', {});
     const exam = await createSpeakingExam(prisma, teacherId);

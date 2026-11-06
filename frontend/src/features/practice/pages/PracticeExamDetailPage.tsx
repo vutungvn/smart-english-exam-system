@@ -6,7 +6,6 @@ import {
   Clock,
   Layers,
   Loader2,
-  Lock,
   Rocket,
   ShieldCheck,
   Trash2,
@@ -196,24 +195,16 @@ function ExamDetail({ exam }: { exam: ExamCatalogDetail }) {
                         <Button
                           type="button"
                           variant="outline"
-                          disabled={speaking || starting}
+                          disabled={starting}
                           onClick={() => void start(dto)}
                           className="h-9 rounded-xl bg-white px-4 font-semibold"
                         >
-                          {busyFor(dto) ? (
-                            <Loader2 className="animate-spin" />
-                          ) : speaking ? (
-                            <Lock />
-                          ) : (
-                            <CirclePlay />
-                          )}
+                          {busyFor(dto) ? <Loader2 className="animate-spin" /> : <CirclePlay />}
                           Luyện Part này
                         </Button>
                       )}
-                      <span
-                        className={cn('text-xs', speaking ? 'text-destructive' : 'text-subtle')}
-                      >
-                        {speaking ? 'Ghi âm sắp có' : 'Không tính giờ'}
+                      <span className="text-xs text-subtle">
+                        {speaking ? 'Cần micro · không tính giờ' : 'Không tính giờ'}
                       </span>
                     </div>
                   )}

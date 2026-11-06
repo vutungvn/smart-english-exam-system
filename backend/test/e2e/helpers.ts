@@ -198,6 +198,7 @@ export async function createExam(
 
 export interface SpeakingExamFixture {
   examId: string;
+  speakingSectionId: string;
   /** Hai câu Speaking Part 3, trả lời tối đa 15 giây */
   speakingIds: string[];
   /** Một câu trắc nghiệm Part 5 cùng đề (để kiểm tra không tải bài nói lên câu không phải Speaking) */
@@ -292,7 +293,10 @@ export async function createSpeakingExam(
       id: true,
       sections: {
         orderBy: { orderIndex: 'asc' },
-        select: { questions: { orderBy: { orderIndex: 'asc' }, select: { id: true } } },
+        select: {
+          id: true,
+          questions: { orderBy: { orderIndex: 'asc' }, select: { id: true } },
+        },
       },
     },
   });
@@ -301,6 +305,7 @@ export async function createSpeakingExam(
   return {
     examId: exam.id,
     choiceId: reading.questions[0].id,
+    speakingSectionId: speaking.id,
     speakingIds: speaking.questions.map((item) => item.id),
   };
 }
