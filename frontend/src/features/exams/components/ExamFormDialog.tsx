@@ -25,6 +25,7 @@ const schema = z
     durationMinutes: z.string(),
     maxAttempts: z.string(),
     allowPartPractice: z.boolean(),
+    shuffleQuestions: z.boolean(),
   })
   .superRefine((values, ctx) => {
     const issue = (path: string, message: string) =>
@@ -54,6 +55,7 @@ const SERVER_FIELDS = [
   'durationMinutes',
   'maxAttempts',
   'allowPartPractice',
+  'shuffleQuestions',
 ] as const;
 
 interface ExamFormDialogProps {
@@ -63,6 +65,8 @@ interface ExamFormDialogProps {
   initial?: ExamFormValues;
   /** Đề đã có phần thi thì không đổi được loại đề (backend chặn đổi thang điểm) */
   lockScale?: boolean;
+  /** Đề đang xuất bản thì không đổi được cài đặt đảo câu (học viên đang làm sẽ bị nhảy câu) */
+  lockShuffle?: boolean;
   /** Gửi API; ném lỗi (từ `.unwrap()`) để hộp thoại hiện lên đúng ô */
   onSubmit: (values: ExamFormValues) => Promise<void>;
   /** Sửa đề gặp 409: tải bản mới nhất từ server và điền lại form */
@@ -77,6 +81,7 @@ function toFormValues(initial?: ExamFormValues): FormValues {
     durationMinutes: String(initial?.durationMinutes ?? EXAM_TYPE_META.TOEIC_990.defaultMinutes),
     maxAttempts: initial?.maxAttempts ? String(initial.maxAttempts) : '',
     allowPartPractice: initial?.allowPartPractice ?? true,
+    shuffleQuestions: initial?.shuffleQuestions ?? true,
   };
 }
 
@@ -86,6 +91,7 @@ export function ExamFormDialog({
   onOpenChange,
   initial,
   lockScale = false,
+  lockShuffle = false,
   onSubmit,
   onReload,
 }: ExamFormDialogProps) {
@@ -102,9 +108,9 @@ export function ExamFormDialog({
     control,
     formState: { errors, isSubmitting, dirtyFields },
   } = useForm({ resolver: zodResolver(schema), defaultValues: toFormValues(initial) });
-  const [scale, allowPartPractice] = useWatch({
+  const [scale, allowPartPractice, shuffleQuestions] = useWatch({
     control,
-    name: ['scoringScale', 'allowPartPractice'],
+    name: ['scoringScale', 'allowPartPractice', 'shuffleQuestions'],
   });
   const formError = errors.root?.server?.message;
 
@@ -126,6 +132,7 @@ export function ExamFormDialog({
         durationMinutes: Number(values.durationMinutes),
         maxAttempts: values.maxAttempts.trim() ? Number(values.maxAttempts) : null,
         allowPartPractice: values.allowPartPractice,
+        shuffleQuestions: values.shuffleQuestions,
       });
     } catch (err) {
       const apiError = toApiError(err);
@@ -300,6 +307,24 @@ export function ExamFormDialog({
           checked={allowPartPractice}
           onChange={(checked) => setValue('allowPartPractice', checked, { shouldDirty: true })}
         />
+
+        <div className="space-y-1.5">
+          <ToggleSwitch
+            label="Đảo thứ tự câu cho mỗi học viên"
+            checked={shuffleQuestions}
+            disabled={lockShuffle}
+            onChange={(checked) => setValue('shuffleQuestions', checked, { shouldDirty: true })}
+          />
+          <p className="flex items-start gap-1.5 text-xs text-subtle">
+            {lockShuffle && <Lock className="mt-0.5 size-3.5 shrink-0" />}
+            {lockShuffle
+              ? 'Đề đang xuất bản: gỡ xuất bản trước khi đổi cài đặt này.'
+              : 'Mỗi lượt làm bài có thứ tự câu riêng trong từng Part (nhóm câu đi cùng nhau, thứ tự Part và phương án giữ nguyên) để hạn chế chép bài.'}
+          </p>
+          {errors.shuffleQuestions?.message && (
+            <p className="text-xs text-destructive">{errors.shuffleQuestions.message}</p>
+          )}
+        </div>
 
         <FormField id="exam-description" label="Mô tả" error={errors.description?.message}>
           <textarea

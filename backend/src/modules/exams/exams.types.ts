@@ -50,6 +50,9 @@ export class ExamSummary {
   @ApiProperty()
   allowPartPractice: boolean;
 
+  @ApiProperty({ description: 'Đảo thứ tự câu trong từng Part theo từng lượt làm bài' })
+  shuffleQuestions: boolean;
+
   @ApiProperty({ enum: ExamStatus, enumName: 'ExamStatus' })
   status: ExamStatus;
 

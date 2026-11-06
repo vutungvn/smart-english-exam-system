@@ -66,6 +66,16 @@ export class CreateExamDto {
   @IsOptional()
   @IsBoolean({ message: 'allowPartPractice phải là true hoặc false' })
   allowPartPractice?: boolean;
+
+  @ApiPropertyOptional({
+    default: true,
+    description:
+      'Đảo thứ tự câu trong từng Part theo từng lượt làm bài (nhóm câu đi cùng nhau, Part giữ thứ tự). ' +
+      'Đề đang xuất bản thì không đổi được',
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'shuffleQuestions phải là true hoặc false' })
+  shuffleQuestions?: boolean;
 }
 
 /** Không đổi được chương trình thi; đổi thang điểm chỉ khi đề chưa có phần thi (kiểm tra ở Service) */

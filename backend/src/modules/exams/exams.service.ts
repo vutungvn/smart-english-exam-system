@@ -93,6 +93,7 @@ export class ExamsService {
         durationMinutes: dto.durationMinutes,
         maxAttempts: dto.maxAttempts ?? null,
         allowPartPractice: dto.allowPartPractice ?? true,
+        shuffleQuestions: dto.shuffleQuestions ?? true,
       },
       select: examDetailSelect,
     });
@@ -102,9 +103,23 @@ export class ExamsService {
   async update(id: string, dto: UpdateExamDto, user: AuthUser): Promise<ExamDetail> {
     const existing = await this.prisma.exam.findFirst({
       where: this.ownedWhere(id, user),
-      select: { scoringScale: true, _count: { select: { sections: true } } },
+      select: {
+        scoringScale: true,
+        status: true,
+        shuffleQuestions: true,
+        _count: { select: { sections: true } },
+      },
     });
     if (!existing) throw new AppException(ErrorCode.EXAM_NOT_FOUND);
+
+    // Thứ tự câu của học viên đang làm bài tính theo cài đặt này: đổi giữa chừng là câu nhảy chỗ
+    if (
+      dto.shuffleQuestions !== undefined &&
+      dto.shuffleQuestions !== existing.shuffleQuestions &&
+      existing.status === ExamStatus.PUBLISHED
+    ) {
+      throw fieldError('shuffleQuestions', 'Gỡ xuất bản đề trước khi đổi cài đặt đảo câu');
+    }
 
     // Thang điểm quyết định Part nào được có trong đề: đã có phần thi thì không đổi được
     if (
@@ -126,6 +141,7 @@ export class ExamsService {
         durationMinutes: dto.durationMinutes,
         maxAttempts: dto.maxAttempts,
         allowPartPractice: dto.allowPartPractice,
+        shuffleQuestions: dto.shuffleQuestions,
       },
     });
     if (count === 0) throw new AppException(ErrorCode.VERSION_CONFLICT);

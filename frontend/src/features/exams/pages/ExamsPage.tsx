@@ -286,6 +286,7 @@ export function ExamsPage() {
               durationMinutes: values.durationMinutes,
               maxAttempts: values.maxAttempts,
               allowPartPractice: values.allowPartPractice,
+              shuffleQuestions: values.shuffleQuestions,
             }).unwrap();
             const state: ExamsLocationState = {
               flash: 'Đã tạo đề, hãy thêm các Part và câu hỏi',

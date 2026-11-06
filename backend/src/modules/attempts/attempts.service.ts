@@ -33,6 +33,7 @@ import {
   withinDeadline,
   type AnswerInput,
 } from './attempt-rules.js';
+import { shuffleSections } from './paper-shuffle.js';
 import { recordingTooLong } from './recording-rules.js';
 import { RecordingService } from './recording.service.js';
 import type {
@@ -242,7 +243,7 @@ export class AttemptsService {
         select: detailSelect,
       });
       // Bài mới chưa có câu trả lời: trả luôn, không đọc lại bài vừa tạo
-      return this.toDetail(created, paper, [], false);
+      return this.toDetail(created, paper, exam.shuffleQuestions, [], false);
     } catch (error) {
       // Bấm "Bắt đầu" hai lần cùng lúc: uq_attempts_one_in_progress chặn lượt thứ hai → trả lượt đầu
       if (!isUniqueViolation(error)) throw error;
@@ -274,24 +275,33 @@ export class AttemptsService {
       this.prisma.attemptAnswer.findMany({ where: { attemptId: id }, select: answerSelect }),
     ]);
     if (!cached) throw new AppException(ErrorCode.EXAM_NOT_FOUND);
-    return this.toDetail(row, cached.paper, answers.map(toAnswerItem), resumed);
+    return this.toDetail(
+      row,
+      cached.paper,
+      cached.exam.shuffleQuestions,
+      answers.map(toAnswerItem),
+      resumed,
+    );
   }
 
   private toDetail(
     row: DetailRow,
     paper: ExamPaperRow,
+    shuffle: boolean,
     answers: AttemptAnswerItem[],
     resumed: boolean,
   ): AttemptDetail {
+    // Luyện theo Part: chỉ đưa Part đó, câu đánh số lại từ 1
+    const sections = row.sectionId
+      ? paper.sections.filter((section) => section.id === row.sectionId)
+      : paper.sections;
     return {
       ...toSummary(row, new Date()),
       resumed,
       result: toResult(row),
-      // Luyện theo Part: chỉ đưa Part đó, câu đánh số lại từ 1
+      // Đề bật đảo câu: thứ tự riêng của lượt làm bài này (seed = id lượt), khớp với trang xem lại
       paper: toExamPaper(
-        row.sectionId
-          ? { ...paper, sections: paper.sections.filter((section) => section.id === row.sectionId) }
-          : paper,
+        { ...paper, sections: shuffle ? shuffleSections(sections, row.id) : sections },
         this.media,
       ),
       answers,

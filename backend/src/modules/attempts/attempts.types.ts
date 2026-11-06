@@ -55,6 +55,9 @@ export class ExamCatalogItem {
   @ApiProperty()
   allowPartPractice: boolean;
 
+  @ApiProperty({ description: 'Mỗi lượt làm bài có thứ tự câu riêng' })
+  shuffleQuestions: boolean;
+
   @ApiProperty({ type: String, format: 'date-time', nullable: true })
   publishedAt: Date | null;
 

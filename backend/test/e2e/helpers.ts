@@ -110,7 +110,14 @@ export interface ExamFixture {
 export async function createExam(
   prisma: PrismaService,
   authorId: string,
-  options: { durationMinutes?: number; maxAttempts?: number | null } = {},
+  options: {
+    durationMinutes?: number;
+    maxAttempts?: number | null;
+    /** Số câu Part 5 (mặc định 3) */
+    questionCount?: number;
+    /** Mặc định tắt để test khác dựa vào thứ tự câu cố định */
+    shuffleQuestions?: boolean;
+  } = {},
 ): Promise<ExamFixture> {
   const subject = await prisma.subject.findUniqueOrThrow({
     where: { code: 'TOEIC' },
@@ -119,7 +126,7 @@ export async function createExam(
   const topicId = subject.topics[0].id;
 
   const questionIds: string[] = [];
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= (options.questionCount ?? 3); i++) {
     const question = await prisma.question.create({
       data: {
         topicId,
@@ -154,6 +161,7 @@ export async function createExam(
       durationMinutes: options.durationMinutes ?? 10,
       maxAttempts: options.maxAttempts ?? null,
       allowPartPractice: true,
+      shuffleQuestions: options.shuffleQuestions ?? false,
       status: ExamStatus.PUBLISHED,
       publishedAt: new Date(),
       sections: {

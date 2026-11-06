@@ -14916,6 +14916,10 @@
           "allowPartPractice": {
             "type": "boolean"
           },
+          "shuffleQuestions": {
+            "type": "boolean",
+            "description": "Đảo thứ tự câu trong từng Part theo từng lượt làm bài"
+          },
           "status": {
             "allOf": [
               {
@@ -14954,6 +14958,7 @@
           "durationMinutes",
           "maxAttempts",
           "allowPartPractice",
+          "shuffleQuestions",
           "status",
           "publishedAt",
           "sectionCount",
@@ -15073,6 +15078,10 @@
           "allowPartPractice": {
             "type": "boolean"
           },
+          "shuffleQuestions": {
+            "type": "boolean",
+            "description": "Đảo thứ tự câu trong từng Part theo từng lượt làm bài"
+          },
           "status": {
             "allOf": [
               {
@@ -15118,6 +15127,7 @@
           "durationMinutes",
           "maxAttempts",
           "allowPartPractice",
+          "shuffleQuestions",
           "status",
           "publishedAt",
           "sectionCount",
@@ -15170,6 +15180,11 @@
             "type": "boolean",
             "default": true,
             "description": "Cho phép học viên làm riêng từng Part"
+          },
+          "shuffleQuestions": {
+            "type": "boolean",
+            "default": true,
+            "description": "Đảo thứ tự câu trong từng Part theo từng lượt làm bài (nhóm câu đi cùng nhau, Part giữ thứ tự). Đề đang xuất bản thì không đổi được"
           }
         },
         "required": [
@@ -15217,6 +15232,11 @@
             "type": "boolean",
             "default": true,
             "description": "Cho phép học viên làm riêng từng Part"
+          },
+          "shuffleQuestions": {
+            "type": "boolean",
+            "default": true,
+            "description": "Đảo thứ tự câu trong từng Part theo từng lượt làm bài (nhóm câu đi cùng nhau, Part giữ thứ tự). Đề đang xuất bản thì không đổi được"
           },
           "updatedAt": {
             "type": "string",
@@ -15710,6 +15730,10 @@
           "allowPartPractice": {
             "type": "boolean"
           },
+          "shuffleQuestions": {
+            "type": "boolean",
+            "description": "Mỗi lượt làm bài có thứ tự câu riêng"
+          },
           "publishedAt": {
             "type": "string",
             "format": "date-time",
@@ -15756,6 +15780,7 @@
           "durationMinutes",
           "maxAttempts",
           "allowPartPractice",
+          "shuffleQuestions",
           "publishedAt",
           "skills",
           "sectionCount",
@@ -15840,6 +15865,10 @@
           "allowPartPractice": {
             "type": "boolean"
           },
+          "shuffleQuestions": {
+            "type": "boolean",
+            "description": "Mỗi lượt làm bài có thứ tự câu riêng"
+          },
           "publishedAt": {
             "type": "string",
             "format": "date-time",
@@ -15892,6 +15921,7 @@
           "durationMinutes",
           "maxAttempts",
           "allowPartPractice",
+          "shuffleQuestions",
           "publishedAt",
           "skills",
           "sectionCount",

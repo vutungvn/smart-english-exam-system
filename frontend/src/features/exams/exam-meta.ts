@@ -11,6 +11,7 @@ export interface ExamFormValues {
   durationMinutes: number;
   maxAttempts: number | null;
   allowPartPractice: boolean;
+  shuffleQuestions: boolean;
 }
 
 /** Số câu mỗi Part của đề TOEIC chuẩn (khớp backend exam-structure.ts) */

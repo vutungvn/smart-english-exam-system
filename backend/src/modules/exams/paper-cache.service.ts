@@ -12,6 +12,7 @@ const cachedExamSelect = {
   deletedAt: true,
   maxAttempts: true,
   allowPartPractice: true,
+  shuffleQuestions: true,
 } satisfies Prisma.ExamSelect;
 
 type CachedExamRow = Prisma.ExamGetPayload<{ select: typeof cachedExamSelect }>;
@@ -31,7 +32,10 @@ export interface PaperTarget {
 }
 
 export interface CachedPaper {
-  exam: Pick<CachedExamRow, 'kind' | 'status' | 'deletedAt' | 'maxAttempts' | 'allowPartPractice'>;
+  exam: Pick<
+    CachedExamRow,
+    'kind' | 'status' | 'deletedAt' | 'maxAttempts' | 'allowPartPractice' | 'shuffleQuestions'
+  >;
   /** Đề như examPaperSelect (không có đáp án). Dùng chung mọi request: không được sửa trực tiếp */
   paper: ExamPaperRow;
   /** examQuestionId → câu */
@@ -49,6 +53,7 @@ function toCached({
   deletedAt,
   maxAttempts,
   allowPartPractice,
+  shuffleQuestions,
   ...paper
 }: CachedExamRow): CachedPaper {
   const targets = new Map<string, PaperTarget>();
@@ -62,7 +67,11 @@ function toCached({
       });
     }
   }
-  return { exam: { kind, status, deletedAt, maxAttempts, allowPartPractice }, paper, targets };
+  return {
+    exam: { kind, status, deletedAt, maxAttempts, allowPartPractice, shuffleQuestions },
+    paper,
+    targets,
+  };
 }
 
 /**
