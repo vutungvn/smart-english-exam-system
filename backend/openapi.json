@@ -8857,6 +8857,628 @@
         ]
       }
     },
+    "/api/v1/teacher/exams/{id}/auto-fill/coverage": {
+      "get": {
+        "description": "Số câu hoặc nhóm rút được (ACTIVE, đúng định dạng), chia theo độ khó, chủ đề, kích thước nhóm; số chưa dùng ở đề khác; số câu đề này đang có ở mỗi Part.",
+        "operationId": "getAutoFillCoverage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AutoFillCoverage"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: EXAM_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "EXAM_NOT_FOUND": {
+                    "summary": "EXAM_NOT_FOUND: Không tìm thấy đề thi",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "EXAM_NOT_FOUND",
+                        "message": "Không tìm thấy đề thi"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rút đề tự động: ngân hàng hiện có cho từng Part của đề",
+        "tags": [
+          "Exams"
+        ]
+      }
+    },
+    "/api/v1/teacher/exams/{id}/auto-fill/preview": {
+      "post": {
+        "description": "Chọn câu theo ma trận số lượng × độ khó × chủ đề; nhóm câu chọn nguyên khối; Reading Part 7 đề TOEIC đúng 54 câu theo cấu trúc ETS. Ngân hàng không đủ thì nới ràng buộc theo thứ tự chủ đề → độ khó → câu đã dùng và ghi lại trong relaxed. Gửi lại cùng seed để ra cùng kết quả.",
+        "operationId": "previewAutoFill",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoFillPreviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AutoFillPreview"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "parts[0].difficulty",
+                            "message": "Tổng tỉ lệ độ khó phải bằng 100%"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: EXAM_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "EXAM_NOT_FOUND": {
+                    "summary": "EXAM_NOT_FOUND: Không tìm thấy đề thi",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "EXAM_NOT_FOUND",
+                        "message": "Không tìm thấy đề thi"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: EXAM_PUBLISHED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "EXAM_PUBLISHED": {
+                    "summary": "EXAM_PUBLISHED: Đề đang xuất bản, hãy gỡ xuất bản trước khi sửa nội dung hoặc xóa đề",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "EXAM_PUBLISHED",
+                        "message": "Đề đang xuất bản, hãy gỡ xuất bản trước khi sửa nội dung hoặc xóa đề"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rút đề tự động: xem trước (không ghi gì)",
+        "tags": [
+          "Exams"
+        ]
+      }
+    },
+    "/api/v1/teacher/exams/{id}/auto-fill": {
+      "post": {
+        "description": "Gửi đúng các câu, nhóm của bản xem trước kèm updatedAt của đề. Kiểm tra lại từng câu như khi thêm tay rồi ghi cả đề trong một transaction. scope ALL xóa toàn bộ câu cũ trước khi ghi.",
+        "operationId": "applyAutoFill",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoFillApplyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ExamDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "questionIds",
+                            "message": "Câu \"…\" đã ngừng dùng"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: EXAM_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "EXAM_NOT_FOUND": {
+                    "summary": "EXAM_NOT_FOUND: Không tìm thấy đề thi",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "EXAM_NOT_FOUND",
+                        "message": "Không tìm thấy đề thi"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: EXAM_PUBLISHED, EXAM_QUESTION_DUPLICATE, VERSION_CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "EXAM_PUBLISHED": {
+                    "summary": "EXAM_PUBLISHED: Đề đang xuất bản, hãy gỡ xuất bản trước khi sửa nội dung hoặc xóa đề",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "EXAM_PUBLISHED",
+                        "message": "Đề đang xuất bản, hãy gỡ xuất bản trước khi sửa nội dung hoặc xóa đề"
+                      }
+                    }
+                  },
+                  "EXAM_QUESTION_DUPLICATE": {
+                    "summary": "EXAM_QUESTION_DUPLICATE: Câu hỏi đã có trong đề",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "EXAM_QUESTION_DUPLICATE",
+                        "message": "Câu hỏi đã có trong đề"
+                      }
+                    }
+                  },
+                  "VERSION_CONFLICT": {
+                    "summary": "VERSION_CONFLICT: Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "VERSION_CONFLICT",
+                        "message": "Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rút đề tự động: áp dụng kết quả xem trước",
+        "tags": [
+          "Exams"
+        ]
+      }
+    },
     "/api/v1/teacher/exams/{id}/validation": {
       "get": {
         "description": "ERROR chặn xuất bản; WARNING chỉ nhắc (ví dụ chưa có tệp âm thanh).",
@@ -15292,6 +15914,545 @@
             }
           }
         }
+      },
+      "AutoFillUnit": {
+        "type": "string",
+        "enum": [
+          "QUESTION",
+          "GROUP"
+        ]
+      },
+      "DifficultyCount": {
+        "type": "object",
+        "properties": {
+          "easy": {
+            "type": "integer"
+          },
+          "medium": {
+            "type": "integer"
+          },
+          "hard": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "easy",
+          "medium",
+          "hard"
+        ]
+      },
+      "TopicCount": {
+        "type": "object",
+        "properties": {
+          "topicId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "example": "P5/P6 – Từ loại"
+          },
+          "count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "topicId",
+          "name",
+          "count"
+        ]
+      },
+      "SizeCount": {
+        "type": "object",
+        "properties": {
+          "size": {
+            "type": "integer",
+            "description": "Số câu mỗi nhóm"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Số nhóm"
+          }
+        },
+        "required": [
+          "size",
+          "count"
+        ]
+      },
+      "AutoFillCoveragePart": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "example": "Incomplete Sentences"
+          },
+          "unit": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AutoFillUnit"
+              }
+            ]
+          },
+          "reading7Profile": {
+            "type": "boolean",
+            "description": "Reading Part 7 đề TOEIC: rút đúng 54 câu theo cấu trúc ETS (4×2, 3×3, 3×4, 5×5 câu); chủ đề tính theo nhóm"
+          },
+          "required": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Số lượng chuẩn của đề TOEIC (theo đơn vị); null với đề PERCENT"
+          },
+          "requiredQuestions": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Số câu chuẩn; null với đề PERCENT"
+          },
+          "available": {
+            "type": "integer",
+            "description": "Số câu hoặc nhóm rút được (ACTIVE, đúng định dạng)"
+          },
+          "unused": {
+            "type": "integer",
+            "description": "Trong đó chưa dùng ở đề khác"
+          },
+          "difficulty": {
+            "$ref": "#/components/schemas/DifficultyCount"
+          },
+          "topics": {
+            "description": "Mọi chủ đề của Part (kể cả chủ đề chưa có câu)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopicCount"
+            }
+          },
+          "sizes": {
+            "description": "Part nhóm: số nhóm theo số câu mỗi nhóm",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SizeCount"
+            }
+          },
+          "graphics": {
+            "type": "integer",
+            "description": "Số nhóm có biểu đồ (Listening 3, 4)"
+          },
+          "current": {
+            "type": "integer",
+            "description": "Số câu trong đề này hiện có ở Part (0: Part trống)"
+          }
+        },
+        "required": [
+          "skill",
+          "part",
+          "name",
+          "unit",
+          "reading7Profile",
+          "required",
+          "requiredQuestions",
+          "available",
+          "unused",
+          "difficulty",
+          "topics",
+          "sizes",
+          "graphics",
+          "current"
+        ]
+      },
+      "AutoFillCoverage": {
+        "type": "object",
+        "properties": {
+          "scoringScale": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScoringScale"
+              }
+            ]
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoFillCoveragePart"
+            }
+          }
+        },
+        "required": [
+          "scoringScale",
+          "parts"
+        ]
+      },
+      "AutoFillScope": {
+        "type": "string",
+        "enum": [
+          "EMPTY_PARTS",
+          "ALL"
+        ]
+      },
+      "AutoFillPreviewItem": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "groupId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "label": {
+            "type": "string",
+            "description": "Đoạn đầu nội dung câu hoặc đoạn văn"
+          },
+          "difficulty": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Difficulty"
+              }
+            ]
+          },
+          "topicName": {
+            "type": "string"
+          },
+          "usedCount": {
+            "type": "integer",
+            "description": "Số đề khác đang dùng"
+          },
+          "questionCount": {
+            "type": "integer",
+            "description": "Số câu (câu đơn là 1)"
+          },
+          "hasGraphic": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "questionId",
+          "groupId",
+          "label",
+          "difficulty",
+          "topicName",
+          "usedCount",
+          "questionCount",
+          "hasGraphic"
+        ]
+      },
+      "AutoFillPreviewPart": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "unit": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AutoFillUnit"
+              }
+            ]
+          },
+          "reading7Profile": {
+            "type": "boolean",
+            "description": "Reading Part 7 đề TOEIC: rút đúng 54 câu theo cấu trúc ETS (4×2, 3×3, 3×4, 5×5 câu); chủ đề tính theo nhóm"
+          },
+          "kept": {
+            "type": "boolean",
+            "description": "Part đã có câu và phạm vi \"chỉ Part trống\": giữ nguyên, không rút"
+          },
+          "required": {
+            "type": "integer",
+            "description": "Số lượng cần (Reading Part 7 đề TOEIC: số câu)"
+          },
+          "selected": {
+            "type": "integer"
+          },
+          "shortage": {
+            "type": "integer"
+          },
+          "questionCount": {
+            "type": "integer",
+            "description": "Số câu đã chọn"
+          },
+          "relaxed": {
+            "description": "Các ràng buộc đã nới",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "difficulty": {
+            "$ref": "#/components/schemas/DifficultyCount"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopicCount"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoFillPreviewItem"
+            }
+          }
+        },
+        "required": [
+          "skill",
+          "part",
+          "name",
+          "unit",
+          "reading7Profile",
+          "kept",
+          "required",
+          "selected",
+          "shortage",
+          "questionCount",
+          "relaxed",
+          "difficulty",
+          "topics",
+          "items"
+        ]
+      },
+      "AutoFillPreview": {
+        "type": "object",
+        "properties": {
+          "seed": {
+            "type": "string",
+            "description": "Gửi lại cùng seed và ma trận để ra cùng kết quả"
+          },
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AutoFillScope"
+              }
+            ]
+          },
+          "totalQuestions": {
+            "type": "integer",
+            "description": "Tổng số câu sẽ có trong đề sau khi áp dụng"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoFillPreviewPart"
+            }
+          }
+        },
+        "required": [
+          "seed",
+          "scope",
+          "totalQuestions",
+          "parts"
+        ]
+      },
+      "DifficultyRatioDto": {
+        "type": "object",
+        "properties": {
+          "easy": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 30
+          },
+          "medium": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 50
+          },
+          "hard": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 20
+          }
+        },
+        "required": [
+          "easy",
+          "medium",
+          "hard"
+        ]
+      },
+      "TopicMinDto": {
+        "type": "object",
+        "properties": {
+          "topicId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "min": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Số tối thiểu: câu với Part câu đơn, nhóm với Part nhóm"
+          }
+        },
+        "required": [
+          "topicId",
+          "min"
+        ]
+      },
+      "AutoFillPartDto": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 7
+          },
+          "count": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Chỉ đề PERCENT: số câu (Part câu đơn) hoặc số nhóm (Part nhóm). Đề TOEIC theo chuẩn"
+          },
+          "difficulty": {
+            "description": "Bỏ trống: 30/50/20",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DifficultyRatioDto"
+              }
+            ]
+          },
+          "topics": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopicMinDto"
+            }
+          }
+        },
+        "required": [
+          "skill",
+          "part"
+        ]
+      },
+      "AutoFillPreviewDto": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AutoFillScope"
+              }
+            ]
+          },
+          "seed": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "Bỏ trống: server tự tạo; gửi lại để ra cùng kết quả"
+          },
+          "preferUnused": {
+            "type": "boolean",
+            "description": "Ưu tiên câu chưa dùng ở đề khác"
+          },
+          "parts": {
+            "maxItems": 15,
+            "description": "Đề TOEIC: cấu hình riêng từng Part (Part không gửi dùng mặc định). Đề PERCENT: các Part cần rút",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoFillPartDto"
+            }
+          }
+        },
+        "required": [
+          "scope",
+          "preferUnused",
+          "parts"
+        ]
+      },
+      "AutoFillApplyPartDto": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 7
+          },
+          "questionIds": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "groupIds": {
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "skill",
+          "part"
+        ]
+      },
+      "AutoFillApplyDto": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AutoFillScope"
+              }
+            ]
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "updatedAt của đề lúc xem trước"
+          },
+          "parts": {
+            "maxItems": 15,
+            "description": "Kết quả của bản xem trước, đúng thứ tự câu trong từng Part",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoFillApplyPartDto"
+            }
+          }
+        },
+        "required": [
+          "scope",
+          "updatedAt",
+          "parts"
+        ]
       },
       "ExamPartCheck": {
         "type": "object",

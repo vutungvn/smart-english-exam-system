@@ -81,6 +81,8 @@ export const enhancedApi = api.enhanceEndpoints({
     // Làm bài: lưu câu trả lời không được làm tải lại cả đề (getAttempt) sau mỗi lần chọn;
     // bắt đầu, nộp, hủy bài làm đổi số lượt và nút "Làm tiếp" ở danh sách đề
     saveAnswer: { invalidatesTags: [] },
+    // Rút đề tự động: xem trước không ghi gì nên không làm mới đề, danh sách đề
+    previewAutoFill: { invalidatesTags: [] },
     syncAnswers: { invalidatesTags: [] },
     // Bài nói Speaking: gửi multipart (field "file"); không tải lại đề sau mỗi câu như saveAnswer
     saveRecording: {

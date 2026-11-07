@@ -26,6 +26,9 @@ import { ApiErrors } from '../../common/swagger/api-errors.decorator.js';
 import type { ApiErrorExample } from '../../common/swagger/api-errors.decorator.js';
 import type { WithMeta } from '../../common/types/api-response.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
+import { AutoFillApplyDto, AutoFillPreviewDto } from './auto-fill/auto-fill.dto.js';
+import { ExamAutoFillService } from './auto-fill/auto-fill.service.js';
+import { AutoFillCoverage, AutoFillPreview } from './auto-fill/auto-fill.types.js';
 import { AddExamQuestionsDto, AddExamSectionDto } from './dto/exam-content.dto.js';
 import { CreateExamDto, ExamQueryDto, UpdateExamDto } from './dto/exam.dto.js';
 import { ExamContentService } from './exam-content.service.js';
@@ -75,6 +78,7 @@ export class ExamsController {
   constructor(
     private readonly examsService: ExamsService,
     private readonly contentService: ExamContentService,
+    private readonly autoFillService: ExamAutoFillService,
   ) {}
 
   @Get()
@@ -219,6 +223,75 @@ export class ExamsController {
     @CurrentUser() user: AuthUser,
   ): Promise<ExamDetail> {
     return this.contentService.removeQuestion(id, section, examQuestionId, user);
+  }
+
+  @Get(':id/auto-fill/coverage')
+  @ApiOperation({
+    summary: 'Rút đề tự động: ngân hàng hiện có cho từng Part của đề',
+    description:
+      'Số câu hoặc nhóm rút được (ACTIVE, đúng định dạng), chia theo độ khó, chủ đề, kích thước nhóm; ' +
+      'số chưa dùng ở đề khác; số câu đề này đang có ở mỗi Part.',
+  })
+  @ApiEnvelope(AutoFillCoverage)
+  @ApiErrors(ErrorCode.EXAM_NOT_FOUND)
+  getAutoFillCoverage(
+    @Param('id', examId()) id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<AutoFillCoverage> {
+    return this.autoFillService.coverage(id, user);
+  }
+
+  @Post(':id/auto-fill/preview')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Rút đề tự động: xem trước (không ghi gì)',
+    description:
+      'Chọn câu theo ma trận số lượng × độ khó × chủ đề; nhóm câu chọn nguyên khối; Reading Part 7 ' +
+      'đề TOEIC đúng 54 câu theo cấu trúc ETS. Ngân hàng không đủ thì nới ràng buộc theo thứ tự chủ ' +
+      'đề → độ khó → câu đã dùng và ghi lại trong relaxed. Gửi lại cùng seed để ra cùng kết quả.',
+  })
+  @ApiEnvelope(AutoFillPreview)
+  @ApiErrors(
+    {
+      code: ErrorCode.VALIDATION_ERROR,
+      details: [{ field: 'parts[0].difficulty', message: 'Tổng tỉ lệ độ khó phải bằng 100%' }],
+    },
+    ErrorCode.EXAM_NOT_FOUND,
+    ErrorCode.EXAM_PUBLISHED,
+  )
+  previewAutoFill(
+    @Param('id', examId()) id: string,
+    @Body() dto: AutoFillPreviewDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<AutoFillPreview> {
+    return this.autoFillService.preview(id, dto, user);
+  }
+
+  @Post(':id/auto-fill')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Rút đề tự động: áp dụng kết quả xem trước',
+    description:
+      'Gửi đúng các câu, nhóm của bản xem trước kèm updatedAt của đề. Kiểm tra lại từng câu như khi ' +
+      'thêm tay rồi ghi cả đề trong một transaction. scope ALL xóa toàn bộ câu cũ trước khi ghi.',
+  })
+  @ApiEnvelope(ExamDetail)
+  @ApiErrors(
+    {
+      code: ErrorCode.VALIDATION_ERROR,
+      details: [{ field: 'questionIds', message: 'Câu "…" đã ngừng dùng' }],
+    },
+    ErrorCode.EXAM_NOT_FOUND,
+    ErrorCode.EXAM_PUBLISHED,
+    ErrorCode.EXAM_QUESTION_DUPLICATE,
+    ErrorCode.VERSION_CONFLICT,
+  )
+  applyAutoFill(
+    @Param('id', examId()) id: string,
+    @Body() dto: AutoFillApplyDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<ExamDetail> {
+    return this.autoFillService.apply(id, dto, user);
   }
 
   @Get(':id/validation')

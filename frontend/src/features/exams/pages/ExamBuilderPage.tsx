@@ -8,6 +8,7 @@ import {
   ListPlus,
   MoreVertical,
   Pencil,
+  Wand2,
   Send,
   Trash2,
   Undo2,
@@ -52,6 +53,7 @@ import {
   sectionTitle,
   type ExamFormValues,
 } from '../exam-meta';
+import { AutoFillDialog } from '../auto-fill/AutoFillDialog';
 import { EXAM_LIST_PATH, examPreviewPath } from '../paths';
 import type { ExamsLocationState } from './ExamsPage';
 
@@ -131,6 +133,7 @@ function Builder({ exam, reload }: { exam: ExamDetail; reload: () => Promise<Exa
 
   const [selectedId, setSelectedId] = useState<string | undefined>(exam.sections[0]?.id);
   const [editing, setEditing] = useState(0);
+  const [autoFilling, setAutoFilling] = useState(false);
   const [picking, setPicking] = useState(false);
   const [confirm, setConfirm] = useState<Confirm>(null);
   const [confirming, setConfirming] = useState(false);
@@ -304,6 +307,17 @@ function Builder({ exam, reload }: { exam: ExamDetail; reload: () => Promise<Exa
               <Pencil />
               Sửa thông tin
             </Button>
+            {!published && (
+              <Button
+                type="button"
+                variant="outline"
+                className={outlineButton}
+                onClick={() => setAutoFilling(true)}
+              >
+                <Wand2 />
+                Rút đề tự động
+              </Button>
+            )}
             <Link
               to={examPreviewPath(exam.id)}
               className={cn(buttonVariants({ variant: 'outline' }), outlineButton)}
@@ -476,6 +490,20 @@ function Builder({ exam, reload }: { exam: ExamDetail; reload: () => Promise<Exa
                 : `Đã thêm ${ids.questionIds.length} câu vào ${sectionTitle(selected.skill, selected.part)}`,
             );
           }}
+        />
+      )}
+
+      {autoFilling && (
+        <AutoFillDialog
+          exam={exam}
+          onClose={() => setAutoFilling(false)}
+          onApplied={(message) => {
+            setAutoFilling(false);
+            setActionError(undefined);
+            setFlash(message);
+            setSelectedId(undefined);
+          }}
+          onStale={() => void reload()}
         />
       )}
 
