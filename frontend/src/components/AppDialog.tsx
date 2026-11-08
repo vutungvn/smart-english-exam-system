@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Chiều rộng tối đa; dùng class cố định vì cn() không gộp class Tailwind trùng nhau
-const SIZES = { md: 'max-w-md', lg: 'max-w-2xl' } as const;
+const SIZES = { md: 'max-w-md', lg: 'max-w-2xl', xl: 'max-w-5xl' } as const;
 
 interface AppDialogProps {
   open: boolean;

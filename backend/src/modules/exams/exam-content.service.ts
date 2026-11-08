@@ -13,7 +13,7 @@ import { excerpt, partOrder, SCALE_SKILLS } from './exam-structure.js';
 import { ExamsService } from './exams.service.js';
 import type { ExamDetail } from './exams.types.js';
 
-interface SectionRef {
+export interface SectionRef {
   id: string;
   skill: Skill;
   part: number;
@@ -206,12 +206,11 @@ export class ExamContentService {
     return this.exams.get(examId, user);
   }
 
-  /** Câu đơn: còn trong ngân hàng, đúng kỹ năng + Part của phần thi, không ở trạng thái Ngừng dùng */
-  private async collectSingles(
-    ids: string[],
-    section: SectionRef,
-    partName: string,
-  ): Promise<string[]> {
+  /**
+   * Câu đơn: còn trong ngân hàng, đúng kỹ năng + Part của phần thi, không ở trạng thái Ngừng dùng.
+   * Rút đề tự động (ExamAutoFillService) dùng lại để kiểm tra giống hệt khi thêm tay
+   */
+  async collectSingles(ids: string[], section: SectionRef, partName: string): Promise<string[]> {
     if (ids.length === 0) return [];
     const rows = await this.prisma.question.findMany({
       where: { id: { in: ids }, deletedAt: null },
@@ -235,11 +234,7 @@ export class ExamContentService {
   }
 
   /** Nhóm câu: thêm toàn bộ câu còn hiệu lực của nhóm, theo thứ tự trong nhóm */
-  private async collectGroups(
-    ids: string[],
-    section: SectionRef,
-    partName: string,
-  ): Promise<string[]> {
+  async collectGroups(ids: string[], section: SectionRef, partName: string): Promise<string[]> {
     if (ids.length === 0) return [];
     const groups = await this.prisma.questionGroup.findMany({
       where: { id: { in: ids }, deletedAt: null },

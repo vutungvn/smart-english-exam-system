@@ -384,6 +384,26 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ['Exams'],
       }),
+      getAutoFillCoverage: build.query<GetAutoFillCoverageApiResponse, GetAutoFillCoverageApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/teacher/exams/${queryArg}/auto-fill/coverage` }),
+        providesTags: ['Exams'],
+      }),
+      previewAutoFill: build.mutation<PreviewAutoFillApiResponse, PreviewAutoFillApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/exams/${queryArg.id}/auto-fill/preview`,
+          method: 'POST',
+          body: queryArg.autoFillPreviewDto,
+        }),
+        invalidatesTags: ['Exams'],
+      }),
+      applyAutoFill: build.mutation<ApplyAutoFillApiResponse, ApplyAutoFillApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/exams/${queryArg.id}/auto-fill`,
+          method: 'POST',
+          body: queryArg.autoFillApplyDto,
+        }),
+        invalidatesTags: ['Exams'],
+      }),
       validateExam: build.query<ValidateExamApiResponse, ValidateExamApiArg>({
         query: (queryArg) => ({ url: `/api/v1/teacher/exams/${queryArg}/validation` }),
         providesTags: ['Exams'],
@@ -909,6 +929,30 @@ export type RemoveQuestionApiArg = {
   id: string;
   sectionId: string;
   examQuestionId: string;
+};
+export type GetAutoFillCoverageApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AutoFillCoverage;
+};
+export type GetAutoFillCoverageApiArg = string;
+export type PreviewAutoFillApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AutoFillPreview;
+};
+export type PreviewAutoFillApiArg = {
+  id: string;
+  autoFillPreviewDto: AutoFillPreviewDto;
+};
+export type ApplyAutoFillApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: ExamDetail;
+};
+export type ApplyAutoFillApiArg = {
+  id: string;
+  autoFillApplyDto: AutoFillApplyDto;
 };
 export type ValidateExamApiResponse = /** status 200 Thành công */ {
   success: true;
@@ -1682,6 +1726,136 @@ export type AddExamQuestionsDto = {
   /** Nhóm câu (L3, L4, R6, R7, S4): thêm toàn bộ câu của nhóm theo thứ tự trong nhóm */
   groupIds?: string[];
 };
+export type AutoFillUnit = 'QUESTION' | 'GROUP';
+export type DifficultyCount = {
+  easy: number;
+  medium: number;
+  hard: number;
+};
+export type TopicCount = {
+  topicId: string;
+  name: string;
+  count: number;
+};
+export type SizeCount = {
+  /** Số câu mỗi nhóm */
+  size: number;
+  /** Số nhóm */
+  count: number;
+};
+export type AutoFillCoveragePart = {
+  skill: Skill;
+  part: number;
+  name: string;
+  unit: AutoFillUnit;
+  /** Reading Part 7 đề TOEIC: rút đúng 54 câu theo cấu trúc ETS (4×2, 3×3, 3×4, 5×5 câu); chủ đề tính theo nhóm */
+  reading7Profile: boolean;
+  /** Số lượng chuẩn của đề TOEIC (theo đơn vị); null với đề PERCENT */
+  required: number | null;
+  /** Số câu chuẩn; null với đề PERCENT */
+  requiredQuestions: number | null;
+  /** Số câu hoặc nhóm rút được (ACTIVE, đúng định dạng) */
+  available: number;
+  /** Trong đó chưa dùng ở đề khác */
+  unused: number;
+  difficulty: DifficultyCount;
+  /** Mọi chủ đề của Part (kể cả chủ đề chưa có câu) */
+  topics: TopicCount[];
+  /** Part nhóm: số nhóm theo số câu mỗi nhóm */
+  sizes: SizeCount[];
+  /** Số nhóm có biểu đồ (Listening 3, 4) */
+  graphics: number;
+  /** Số câu trong đề này hiện có ở Part (0: Part trống) */
+  current: number;
+};
+export type AutoFillCoverage = {
+  scoringScale: ScoringScale;
+  parts: AutoFillCoveragePart[];
+};
+export type AutoFillScope = 'EMPTY_PARTS' | 'ALL';
+export type AutoFillPreviewItem = {
+  questionId: string | null;
+  groupId: string | null;
+  /** Đoạn đầu nội dung câu hoặc đoạn văn */
+  label: string;
+  difficulty: Difficulty;
+  topicName: string;
+  /** Số đề khác đang dùng */
+  usedCount: number;
+  /** Số câu (câu đơn là 1) */
+  questionCount: number;
+  hasGraphic: boolean;
+};
+export type AutoFillPreviewPart = {
+  skill: Skill;
+  part: number;
+  name: string;
+  unit: AutoFillUnit;
+  /** Reading Part 7 đề TOEIC: rút đúng 54 câu theo cấu trúc ETS (4×2, 3×3, 3×4, 5×5 câu); chủ đề tính theo nhóm */
+  reading7Profile: boolean;
+  /** Part đã có câu và phạm vi "chỉ Part trống": giữ nguyên, không rút */
+  kept: boolean;
+  /** Số lượng cần (Reading Part 7 đề TOEIC: số câu) */
+  required: number;
+  selected: number;
+  shortage: number;
+  /** Số câu đã chọn */
+  questionCount: number;
+  /** Các ràng buộc đã nới */
+  relaxed: string[];
+  difficulty: DifficultyCount;
+  topics: TopicCount[];
+  items: AutoFillPreviewItem[];
+};
+export type AutoFillPreview = {
+  /** Gửi lại cùng seed và ma trận để ra cùng kết quả */
+  seed: string;
+  scope: AutoFillScope;
+  /** Tổng số câu sẽ có trong đề sau khi áp dụng */
+  totalQuestions: number;
+  parts: AutoFillPreviewPart[];
+};
+export type DifficultyRatioDto = {
+  easy: number;
+  medium: number;
+  hard: number;
+};
+export type TopicMinDto = {
+  topicId: string;
+  /** Số tối thiểu: câu với Part câu đơn, nhóm với Part nhóm */
+  min: number;
+};
+export type AutoFillPartDto = {
+  skill: Skill;
+  part: number;
+  /** Chỉ đề PERCENT: số câu (Part câu đơn) hoặc số nhóm (Part nhóm). Đề TOEIC theo chuẩn */
+  count?: number;
+  /** Bỏ trống: 30/50/20 */
+  difficulty?: DifficultyRatioDto;
+  topics?: TopicMinDto[];
+};
+export type AutoFillPreviewDto = {
+  scope: AutoFillScope;
+  /** Bỏ trống: server tự tạo; gửi lại để ra cùng kết quả */
+  seed?: string;
+  /** Ưu tiên câu chưa dùng ở đề khác */
+  preferUnused: boolean;
+  /** Đề TOEIC: cấu hình riêng từng Part (Part không gửi dùng mặc định). Đề PERCENT: các Part cần rút */
+  parts: AutoFillPartDto[];
+};
+export type AutoFillApplyPartDto = {
+  skill: Skill;
+  part: number;
+  questionIds?: string[];
+  groupIds?: string[];
+};
+export type AutoFillApplyDto = {
+  scope: AutoFillScope;
+  /** updatedAt của đề lúc xem trước */
+  updatedAt: string;
+  /** Kết quả của bản xem trước, đúng thứ tự câu trong từng Part */
+  parts: AutoFillApplyPartDto[];
+};
 export type ExamPartCheck = {
   skill: Skill;
   part: number;
@@ -2264,6 +2438,9 @@ export const {
   useRemoveSectionMutation,
   useAddQuestionsMutation,
   useRemoveQuestionMutation,
+  useGetAutoFillCoverageQuery,
+  usePreviewAutoFillMutation,
+  useApplyAutoFillMutation,
   useValidateExamQuery,
   usePreviewExamQuery,
   usePublishExamMutation,
