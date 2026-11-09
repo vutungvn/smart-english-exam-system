@@ -1,0 +1,160 @@
+# CI: kiểm tra mọi push và PR vào develop, main. Hai app npm độc lập nên chạy hai job song song,
+# mỗi job dùng thư mục và cache npm riêng. PR chỉ được merge khi cả hai job xanh.
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+# Push mới lên cùng nhánh/PR thì hủy lượt chạy cũ đang dở
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: backend
+
+    # Hạ tầng cho test e2e, cùng image và cổng với infra/docker-compose.yml
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: smart_exam
+          POSTGRES_PASSWORD: smart_exam
+          # Tên DB phải kết thúc bằng _test (test/e2e/setup-env.ts chặn nếu không đúng)
+          POSTGRES_DB: smart_exam_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U smart_exam -d smart_exam_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      # Test Speaking tải bài ghi âm lên kho tệp thật; bucket do backend tự tạo khi khởi động
+      rustfs:
+        image: rustfs/rustfs:1.0.1
+        env:
+          RUSTFS_ACCESS_KEY: smart_exam
+          RUSTFS_SECRET_KEY: smart_exam_secret
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/health"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    env:
+      # prisma.config.ts đọc DATABASE_URL cho prisma generate; test e2e nạp lại từ .env.test
+      DATABASE_URL: postgresql://smart_exam:smart_exam@localhost:5433/smart_exam_test
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      # Bài nói Speaking: backend chuyển sang MP3 bằng ffmpeg, test tạo bài nói mẫu WebM/Opus
+      - name: Cài ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          ffmpeg -version | head -n 1
+
+      - name: Cài package
+        run: npm ci
+
+      # src/generated/ không commit: typecheck, test, build đều cần Prisma Client
+      - name: Sinh Prisma Client
+        run: npx prisma generate
+
+      # .env.test bị .gitignore chặn nên tạo tại chỗ. Secret JWT sinh ngẫu nhiên mỗi lượt chạy;
+      # SMTP không tồn tại (không gửi mail thật), GEMINI_API_KEY trống để dùng FakeAiProvider
+      - name: Tạo .env.test
+        run: |
+          cat > .env.test <<EOF
+          NODE_ENV=test
+          PORT=3001
+          DATABASE_URL=${DATABASE_URL}
+          DATABASE_POOL_MAX=10
+          REDIS_URL=redis://localhost:6379/1
+          JWT_ACCESS_SECRET=$(openssl rand -base64 48 | tr -d '\n')
+          JWT_REFRESH_SECRET=$(openssl rand -base64 48 | tr -d '\n')
+          SMTP_HOST=localhost
+          SMTP_PORT=2525
+          MAIL_FROM=test@example.com
+          S3_ENDPOINT=http://localhost:9000
+          S3_ACCESS_KEY=smart_exam
+          S3_SECRET_KEY=smart_exam_secret
+          S3_BUCKET=smart-english-exam-test
+          GEMINI_API_KEY=
+          EOF
+
+      - name: Lint (ESLint + Prettier)
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit test
+        run: npm test
+
+      # Reset DB test, migrate deploy, seed danh mục rồi chạy e2e; coverage attempts ≥ 70% (SPRINT-57)
+      - name: E2E test + coverage
+        run: npm run test:e2e:cov
+
+      - name: Build
+        run: npm run build
+
+  frontend:
+    name: Frontend (lint, typecheck, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cài package
+        run: npm ci
+
+      - name: Lint (ESLint + Prettier)
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
