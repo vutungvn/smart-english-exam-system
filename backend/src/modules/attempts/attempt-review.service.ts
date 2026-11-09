@@ -7,6 +7,12 @@ import { paginate, toPrismaPage } from '../../common/utils/pagination.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { AttemptStatus } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
+import {
+  AssessmentsService,
+  assessmentViewSelect,
+  effectiveAssessment,
+  toQuestionAssessment,
+} from '../assessments/assessments.service.js';
 import { MediaUrlService } from '../media/media-url.service.js';
 import { findPartRule } from '../questions/toeic-parts.js';
 import { SYNC_GRACE_SECONDS, withinDeadline } from './attempt-rules.js';
@@ -93,6 +99,7 @@ export class AttemptReviewService {
     private readonly prisma: PrismaService,
     private readonly media: MediaUrlService,
     private readonly submission: AttemptSubmissionService,
+    private readonly assessments: AssessmentsService,
   ) {}
 
   async review(id: string, user: AuthUser): Promise<AttemptReview> {
@@ -105,7 +112,7 @@ export class AttemptReviewService {
       await this.submission.submit(id);
       row = await this.load(id, user);
     }
-    const result = toResult(row);
+    const result = toResult(row, await this.assessments.progress(id));
     if (!result) {
       throw new AppException(
         ErrorCode.ATTEMPT_NOT_SUBMITTED,
@@ -126,6 +133,7 @@ export class AttemptReviewService {
           isFlagged: true,
           isCorrect: true,
           audioKey: true,
+          assessments: { select: assessmentViewSelect },
         },
       }),
     ]);
@@ -147,7 +155,8 @@ export class AttemptReviewService {
         const { group, explanation, sampleAnswer, ...question } = item.question;
         const answer = answerOf.get(item.id);
         const correctOptionId = question.options.find((option) => option.isCorrect)?.id ?? null;
-        const outcome = reviewOutcome(question.type, answer, correctOptionId);
+        const assessment = effectiveAssessment(answer?.assessments ?? []);
+        const outcome = reviewOutcome(question.type, answer, correctOptionId, assessment?.status);
         addOutcome(counts, outcome);
 
         const reviewQuestion: ReviewQuestion = this.media.withUrls({
@@ -161,6 +170,7 @@ export class AttemptReviewService {
           isFlagged: answer?.isFlagged ?? false,
           explanation,
           sampleAnswer,
+          assessment: assessment ? toQuestionAssessment(assessment) : null,
         });
 
         // Các câu liền nhau cùng nhóm gom vào một khối (đoạn văn, lời thoại hiện một lần)

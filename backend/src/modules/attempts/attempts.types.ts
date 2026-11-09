@@ -6,6 +6,7 @@ import {
   ScoringScale,
   Skill,
 } from '../../generated/prisma/enums.js';
+import { GradingProgress, QuestionAssessment } from '../assessments/assessments.types.js';
 import { ExamPaper, PaperGroup, PaperOption, PaperQuestion } from '../exams/exams.types.js';
 
 const REMAINING_NOTE =
@@ -226,7 +227,7 @@ export class InProgressAttempt extends AttemptSummary {
   totalQuestions: number;
 }
 
-export const SCORING_STRATEGIES = ['TOEIC_990', 'PERCENT'] as const;
+export const SCORING_STRATEGIES = ['TOEIC_990', 'TOEIC_SW', 'PERCENT'] as const;
 
 export class SkillScoreItem {
   @ApiProperty({ enum: Skill, enumName: 'Skill' })
@@ -244,13 +245,30 @@ export class SkillScoreItem {
   @ApiProperty({ type: 'integer', description: 'Số câu trắc nghiệm của kỹ năng' })
   total: number;
 
-  @ApiProperty({ type: 'integer', description: 'Số câu Speaking/Writing (chấm bằng AI, làm sau)' })
+  @ApiProperty({ type: 'integer', description: 'Số câu Speaking/Writing (chấm bằng AI)' })
   openCount: number;
+
+  @ApiProperty({ type: 'number', description: 'Tổng điểm tối đa các câu Speaking/Writing' })
+  openMax: number;
 
   @ApiProperty({
     type: 'number',
     nullable: true,
-    description: 'TOEIC LR: 5–495 · %: 0–100 · null khi kỹ năng chỉ có câu chờ AI chấm',
+    description: 'Tổng điểm các câu Speaking/Writing (bỏ trống 0); null khi còn câu chờ chấm',
+  })
+  openRaw: number | null;
+
+  @ApiProperty({
+    type: 'integer',
+    description: 'Số câu Speaking/Writing chưa có điểm (chờ AI chấm hoặc chấm lỗi)',
+  })
+  openPending: number;
+
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description:
+      'TOEIC LR: 5–495 · TOEIC SW: 0–200 · %: 0–100 · null khi kỹ năng còn câu chờ AI chấm',
   })
   scaled: number | null;
 }
@@ -273,7 +291,8 @@ export class AttemptResult {
   @ApiProperty({
     enum: SCORING_STRATEGIES,
     description:
-      'TOEIC_990: làm cả đề TOEIC LR · PERCENT: đề luyện tập và mọi lượt luyện theo Part',
+      'TOEIC_990: làm cả đề TOEIC LR · TOEIC_SW: làm cả đề Speaking/Writing (0–200 mỗi kỹ năng) · ' +
+      'PERCENT: đề luyện tập và mọi lượt luyện theo Part',
   })
   scoring: (typeof SCORING_STRATEGIES)[number];
 
@@ -292,15 +311,23 @@ export class AttemptResult {
   @ApiProperty({
     type: 'number',
     nullable: true,
-    description: 'Điểm theo thang (TOEIC 10–990 hoặc %); null khi còn câu chờ AI chấm',
+    description:
+      'Điểm theo thang (TOEIC 10–990, TOEIC SW 0–400 hoặc %); null khi còn câu chờ AI chấm',
   })
   scaledScore: number | null;
 
-  @ApiProperty({ type: 'integer', description: 'Số câu Speaking/Writing chờ AI chấm' })
+  @ApiProperty({ type: 'integer', description: 'Số câu Speaking/Writing chưa có điểm' })
   pendingOpenCount: number;
 
   @ApiProperty({ type: [SkillScoreItem] })
   skillScores: SkillScoreItem[];
+
+  @ApiProperty({
+    type: GradingProgress,
+    nullable: true,
+    description: 'Tiến độ AI chấm Speaking/Writing; null với đề chỉ có trắc nghiệm và ở lịch sử',
+  })
+  grading: GradingProgress | null;
 }
 
 /** Đầy đủ để làm bài hoặc khôi phục bài: đề (không đáp án) + các câu đã trả lời */
@@ -327,14 +354,16 @@ export class AttemptDetail extends AttemptSummary {
 // ---------------------------------------------------------------
 
 /**
- * Kết quả từng câu khi xem lại. PENDING: câu Speaking/Writing đã trả lời, chờ AI chấm (SPRINT-86).
- * Câu trả lời mở chưa làm cũng là SKIPPED.
+ * Kết quả từng câu khi xem lại. Câu Speaking/Writing đã trả lời: PENDING (chờ AI chấm), SCORED (đã có
+ * điểm), FAILED (chấm lỗi, có thể chấm lại). Câu trả lời mở chưa làm cũng là SKIPPED.
  */
 export const ReviewOutcome = {
   CORRECT: 'CORRECT',
   WRONG: 'WRONG',
   SKIPPED: 'SKIPPED',
   PENDING: 'PENDING',
+  SCORED: 'SCORED',
+  FAILED: 'FAILED',
 } as const;
 export type ReviewOutcome = (typeof ReviewOutcome)[keyof typeof ReviewOutcome];
 
@@ -375,6 +404,13 @@ export class ReviewQuestion extends PaperQuestion {
 
   @ApiProperty({ type: String, nullable: true, description: 'Câu trả lời mẫu (Speaking/Writing)' })
   sampleAnswer: string | null;
+
+  @ApiProperty({
+    type: QuestionAssessment,
+    nullable: true,
+    description: 'Kết quả AI chấm câu Speaking/Writing; null với câu trắc nghiệm, câu bỏ trống',
+  })
+  assessment: QuestionAssessment | null;
 }
 
 export class ReviewGroup extends PaperGroup {
@@ -406,6 +442,12 @@ export class ReviewCounts {
 
   @ApiProperty({ type: 'integer', description: 'Câu Speaking/Writing chờ AI chấm' })
   pending: number;
+
+  @ApiProperty({ type: 'integer', description: 'Câu Speaking/Writing đã có điểm AI' })
+  scored: number;
+
+  @ApiProperty({ type: 'integer', description: 'Câu Speaking/Writing chấm lỗi' })
+  failed: number;
 }
 
 export class ReviewSection {

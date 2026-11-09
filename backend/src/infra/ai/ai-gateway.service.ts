@@ -30,6 +30,7 @@ const RETRY_BASE_MS = 1000;
 
 const FEATURE_LABEL: Record<AiFeature, string> = {
   [AiFeature.EXPLANATION]: 'giải thích đáp án bằng AI',
+  [AiFeature.SW_GRADING]: 'chấm Speaking/Writing bằng AI',
 };
 
 type QuotaScope = Pick<
@@ -126,9 +127,11 @@ export class AiGateway {
     );
     if (!(await this.quota.take(budgetKey(day), budget))) {
       await this.giveBack(taken);
+      // resetAt: hàng đợi chấm Speaking/Writing hoãn tới lúc này thay vì báo lỗi
       throw new AppException(
         ErrorCode.AI_UNAVAILABLE,
         'Hệ thống đã dùng hết lượt AI hôm nay, vui lòng thử lại sau',
+        { resetAt: nextPacificMidnight(now).toISOString() },
       );
     }
     taken.push(budgetKey(day));

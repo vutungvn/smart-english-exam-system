@@ -29,18 +29,28 @@ import { ReviewNavigator } from '../review/ReviewNavigator';
 import {
   choiceSummary,
   formatScore,
+  GRADING_POLL_MS,
+  hasChoice,
+  isGrading,
   matchesFilter,
   REVIEW_FILTERS,
+  scoreLabel,
   type ReviewFilter,
 } from '../review/review-meta';
 
 /** `/app/attempts/:id/review`: đáp án, giải thích từng câu của bài đã nộp */
 export function AttemptReviewPage() {
   const { id = '' } = useParams();
-  // Luôn lấy bản mới: giáo viên có thể vừa sửa giải thích
+  const [polling, setPolling] = useState(false);
+  // Luôn lấy bản mới: giáo viên có thể vừa sửa giải thích. Còn câu Writing đang chấm (kể cả vừa bấm
+  // "Chấm lại") thì hỏi lại mỗi 5 giây tới khi chấm xong
   const { data, error, isLoading, refetch } = useGetAttemptReviewQuery(id, {
     refetchOnMountOrArgChange: true,
+    pollingInterval: polling ? GRADING_POLL_MS : 0,
+    skipPollingIfUnfocused: true,
   });
+  const grading = isGrading(data?.data.result);
+  if (grading !== polling) setPolling(grading);
 
   if (isLoading) return <ReviewSkeleton />;
   if (!data) {
@@ -125,6 +135,7 @@ function ReviewContent({ review }: { review: AttemptReview }) {
 
   const { result } = review;
   const score = formatScore(result);
+  const choice = hasChoice(result);
   const subtitle = review.section
     ? `Luyện Part ${review.section.part} · ${review.section.name}`
     : 'Làm cả đề';
@@ -160,25 +171,40 @@ function ReviewContent({ review }: { review: AttemptReview }) {
 
       <section className="flex flex-col gap-4 rounded-3xl border border-border bg-white p-5 shadow-2xs sm:flex-row sm:items-center sm:gap-6 sm:p-6">
         <div className="min-w-0 sm:w-48 sm:shrink-0">
-          <p className="text-xs font-semibold text-subtle">
-            {score ? (result.scoring === 'TOEIC_990' ? 'Điểm TOEIC' : 'Tỉ lệ câu đúng') : 'Điểm'}
-          </p>
+          <p className="text-xs font-semibold text-subtle">{scoreLabel(result)}</p>
           <p className="text-2xl font-bold text-foreground tabular-nums">
             {score ?? <span className="text-base font-semibold text-amber-700">Chờ AI chấm</span>}
           </p>
-          <p className="text-xs text-muted-foreground">{choiceSummary(result)} (trắc nghiệm)</p>
+          <p className="text-xs text-muted-foreground">{choiceSummary(result)}</p>
         </div>
         <dl className="grid flex-1 grid-cols-4 gap-2">
-          <Stat
-            label="Đúng"
-            value={totalOf(review.sections, 'correct')}
-            tone="bg-emerald-50 text-success"
-          />
-          <Stat
-            label="Sai"
-            value={totalOf(review.sections, 'wrong')}
-            tone="bg-danger-soft text-destructive"
-          />
+          {choice ? (
+            <>
+              <Stat
+                label="Đúng"
+                value={totalOf(review.sections, 'correct')}
+                tone="bg-emerald-50 text-success"
+              />
+              <Stat
+                label="Sai"
+                value={totalOf(review.sections, 'wrong')}
+                tone="bg-danger-soft text-destructive"
+              />
+            </>
+          ) : (
+            <>
+              <Stat
+                label="Đã chấm"
+                value={totalOf(review.sections, 'scored')}
+                tone="bg-sky-50 text-sky-700"
+              />
+              <Stat
+                label="Chấm lỗi"
+                value={totalOf(review.sections, 'failed')}
+                tone="bg-rose-50 text-rose-700"
+              />
+            </>
+          )}
           <Stat
             label="Bỏ trống"
             value={totalOf(review.sections, 'skipped')}

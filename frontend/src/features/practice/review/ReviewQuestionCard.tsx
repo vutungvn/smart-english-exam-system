@@ -6,6 +6,7 @@ import { MediaAudio } from '@/components/media/MediaAudio';
 import { cn } from '@/lib/utils';
 import { countWords } from '../practice-meta';
 import { AiExplanationPanel } from './AiExplanationPanel';
+import { AssessmentPanel } from './AssessmentPanel';
 import { OUTCOME_META } from './review-meta';
 
 interface ReviewQuestionCardProps {
@@ -38,6 +39,9 @@ export function ReviewQuestionCard({ attemptId, question }: ReviewQuestionCardPr
         </span>
         <span className={cn('rounded-full px-2.5 py-1 text-xs font-semibold', meta.badge)}>
           {meta.label}
+          {question.outcome === 'SCORED' &&
+            question.assessment &&
+            ` · ${question.assessment.score}/${question.assessment.maxScore} điểm`}
         </span>
         {question.isFlagged && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
@@ -67,7 +71,12 @@ export function ReviewQuestionCard({ attemptId, question }: ReviewQuestionCardPr
       {choice ? (
         <ChoiceReview question={question} />
       ) : question.type === 'WRITTEN_RESPONSE' ? (
-        <WritingReview question={question} />
+        <>
+          <WritingReview question={question} />
+          {question.assessment && (
+            <AssessmentPanel attemptId={attemptId} assessment={question.assessment} />
+          )}
+        </>
       ) : (
         <SpeakingReview question={question} />
       )}
@@ -183,9 +192,9 @@ function WritingReview({ question }: { question: ReviewQuestion }) {
       ) : (
         <p className="text-subtle italic">Bạn chưa viết bài cho câu này.</p>
       )}
-      {question.outcome === 'PENDING' && (
-        <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-          Bài viết đang chờ AI chấm theo tiêu chí; điểm sẽ hiện ở đây khi chấm xong.
+      {!text && (
+        <p className="mt-2 text-xs text-subtle">
+          Câu bỏ trống được tính 0 điểm, không cần AI chấm.
         </p>
       )}
     </Note>

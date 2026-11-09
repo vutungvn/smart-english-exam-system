@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { QuestionType } from '../../generated/prisma/enums.js';
+import { AssessmentStatus, QuestionType } from '../../generated/prisma/enums.js';
 import { ReviewOutcome } from './attempts.types.js';
 import { addOutcome, durationOf, emptyCounts, reviewOutcome } from './review-outcome.js';
 
@@ -46,6 +46,19 @@ describe('reviewOutcome', () => {
     expect(reviewOutcome(SPOKEN_RESPONSE, undefined, null)).toBe(ReviewOutcome.SKIPPED);
   });
 
+  it('câu Writing có phiếu chấm: theo trạng thái phiếu (chờ, đã có điểm, chấm lỗi)', () => {
+    const written = answer({ textAnswer: 'My answer' });
+    expect(reviewOutcome(WRITTEN_RESPONSE, written, null, AssessmentStatus.PENDING)).toBe(
+      ReviewOutcome.PENDING,
+    );
+    expect(reviewOutcome(WRITTEN_RESPONSE, written, null, AssessmentStatus.DONE)).toBe(
+      ReviewOutcome.SCORED,
+    );
+    expect(reviewOutcome(WRITTEN_RESPONSE, written, null, AssessmentStatus.FAILED)).toBe(
+      ReviewOutcome.FAILED,
+    );
+  });
+
   it('đếm kết quả theo từng loại', () => {
     const counts = emptyCounts();
     for (const outcome of [
@@ -57,7 +70,7 @@ describe('reviewOutcome', () => {
     ]) {
       addOutcome(counts, outcome);
     }
-    expect(counts).toEqual({ correct: 2, wrong: 1, skipped: 1, pending: 1 });
+    expect(counts).toEqual({ correct: 2, wrong: 1, skipped: 1, pending: 1, scored: 0, failed: 0 });
   });
 });
 
