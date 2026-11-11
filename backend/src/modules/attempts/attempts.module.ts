@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AssessmentsModule } from '../assessments/assessments.module.js';
 import { PaperCacheModule } from '../exams/paper-cache.module.js';
 import { AttemptAutoSubmitService } from './attempt-auto-submit.service.js';
 import { AttemptReviewService } from './attempt-review.service.js';
@@ -11,9 +12,9 @@ import { RecordingService } from './recording.service.js';
 
 // Học viên: xem đề đã xuất bản, làm bài (bắt đầu, tự động lưu, khôi phục, hủy), nộp bài và chấm
 // phần trắc nghiệm; ghi âm Speaking (tải lên, chuẩn hóa ffmpeg); tự nộp bài hết giờ bằng tác vụ định
-// kỳ; xem lại bài đã nộp, lịch sử làm bài
+// kỳ; xem lại bài đã nộp, lịch sử làm bài. Câu Writing đưa vào hàng đợi AI chấm (AssessmentsModule)
 @Module({
-  imports: [PaperCacheModule],
+  imports: [PaperCacheModule, AssessmentsModule],
   controllers: [ExamCatalogController, AttemptsController],
   providers: [
     ExamCatalogService,

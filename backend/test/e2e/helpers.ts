@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -316,4 +317,186 @@ export async function createSpeakingExam(
     speakingSectionId: speaking.id,
     speakingIds: speaking.questions.map((item) => item.id),
   };
+}
+
+export interface WritingExamFixture {
+  examId: string;
+  /** Part 1 (0–3), Part 2 (0–4), Part 3 (0–5) theo thứ tự đề */
+  writingIds: string[];
+  part1SectionId: string;
+}
+
+/** Đề TOEIC_SW đã xuất bản, rút gọn: Writing Part 1, 2, 3 mỗi Part một câu (điểm thô tối đa 12) */
+export async function createWritingExam(
+  prisma: PrismaService,
+  authorId: string,
+): Promise<WritingExamFixture> {
+  const subject = await prisma.subject.findUniqueOrThrow({
+    where: { code: 'TOEIC' },
+    select: { id: true, topics: { select: { id: true, name: true } } },
+  });
+  const topicId = (name: string) => subject.topics.find((topic) => topic.name === name)?.id ?? '';
+  const parts = [
+    { part: 1, topic: 'W1 – Viết câu theo tranh', content: 'Words: man / bicycle' },
+    { part: 2, topic: 'W2 – Trả lời email', content: 'Ask TWO questions and make ONE suggestion.' },
+    { part: 3, topic: 'W3 – Bài luận nêu quan điểm', content: 'Should employees work from home?' },
+  ];
+
+  const sections = [];
+  for (const item of parts) {
+    const question = await prisma.question.create({
+      data: {
+        topicId: topicId(item.topic),
+        authorId,
+        type: QuestionType.WRITTEN_RESPONSE,
+        skill: Skill.WRITING,
+        part: item.part,
+        difficulty: Difficulty.MEDIUM,
+        status: QuestionStatus.ACTIVE,
+        content: `E2E writing: ${item.content}`,
+        sampleAnswer: 'E2E sample answer.',
+      },
+      select: { id: true },
+    });
+    sections.push({
+      skill: Skill.WRITING,
+      part: item.part,
+      orderIndex: partOrder(Skill.WRITING, item.part),
+      questions: { create: [{ questionId: question.id, orderIndex: 0 }] },
+    });
+  }
+
+  const exam = await prisma.exam.create({
+    data: {
+      authorId,
+      subjectId: subject.id,
+      title: `E2E writing ${randomUUID().slice(0, 8)}`,
+      scoringScale: ScoringScale.TOEIC_SW,
+      durationMinutes: 60,
+      allowPartPractice: true,
+      status: ExamStatus.PUBLISHED,
+      publishedAt: new Date(),
+      sections: { create: sections },
+    },
+    select: {
+      id: true,
+      sections: {
+        orderBy: { orderIndex: 'asc' },
+        select: { id: true, questions: { select: { id: true } } },
+      },
+    },
+  });
+  return {
+    examId: exam.id,
+    writingIds: exam.sections.map((section) => section.questions[0].id),
+    part1SectionId: exam.sections[0].id,
+  };
+}
+
+export interface SpeakingSwExamFixture {
+  examId: string;
+  /** Part 1 (0–6, trả lời 45 giây), Part 3 (0–3, trả lời 15 giây) theo thứ tự đề */
+  speakingIds: string[];
+  part3SectionId: string;
+}
+
+/** Đề TOEIC_SW đã xuất bản, rút gọn: Speaking Part 1 và Part 3 mỗi Part một câu (điểm thô tối đa 9) */
+export async function createSpeakingSwExam(
+  prisma: PrismaService,
+  authorId: string,
+): Promise<SpeakingSwExamFixture> {
+  const subject = await prisma.subject.findUniqueOrThrow({
+    where: { code: 'TOEIC' },
+    select: { id: true, topics: { select: { id: true, name: true } } },
+  });
+  const topicId = (name: string) => subject.topics.find((topic) => topic.name === name)?.id ?? '';
+  const parts = [
+    {
+      part: 1,
+      topic: 'S1 – Đọc thành tiếng',
+      content: 'Welcome to City Library. We are open from nine to five.',
+      prep: 45,
+      response: 45,
+    },
+    {
+      part: 3,
+      topic: 'S3 – Trả lời câu hỏi',
+      content: 'How often do you visit a park?',
+      prep: 3,
+      response: 15,
+    },
+  ];
+
+  const sections = [];
+  for (const item of parts) {
+    const question = await prisma.question.create({
+      data: {
+        topicId: topicId(item.topic),
+        authorId,
+        type: QuestionType.SPOKEN_RESPONSE,
+        skill: Skill.SPEAKING,
+        part: item.part,
+        difficulty: Difficulty.MEDIUM,
+        status: QuestionStatus.ACTIVE,
+        content: `E2E speaking: ${item.content}`,
+        sampleAnswer: 'E2E sample answer.',
+        explanation: 'E2E',
+        prepSeconds: item.prep,
+        responseSeconds: item.response,
+      },
+      select: { id: true },
+    });
+    sections.push({
+      skill: Skill.SPEAKING,
+      part: item.part,
+      orderIndex: partOrder(Skill.SPEAKING, item.part),
+      questions: { create: [{ questionId: question.id, orderIndex: 0 }] },
+    });
+  }
+
+  const exam = await prisma.exam.create({
+    data: {
+      authorId,
+      subjectId: subject.id,
+      title: `E2E speaking SW ${randomUUID().slice(0, 8)}`,
+      scoringScale: ScoringScale.TOEIC_SW,
+      durationMinutes: 20,
+      allowPartPractice: true,
+      status: ExamStatus.PUBLISHED,
+      publishedAt: new Date(),
+      sections: { create: sections },
+    },
+    select: {
+      id: true,
+      sections: {
+        orderBy: { orderIndex: 'asc' },
+        select: { id: true, questions: { select: { id: true } } },
+      },
+    },
+  });
+  return {
+    examId: exam.id,
+    speakingIds: exam.sections.map((section) => section.questions[0].id),
+    part3SectionId: exam.sections[1].id,
+  };
+}
+
+/** Bài nói giả bằng ffmpeg: âm sin dài `seconds` giây, WebM/Opus như Chrome ghi */
+export function webm(seconds: number): Buffer {
+  const result = spawnSync(process.env.FFMPEG_PATH || 'ffmpeg', [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-f',
+    'lavfi',
+    '-i',
+    `sine=frequency=440:duration=${seconds}`,
+    '-c:a',
+    'libopus',
+    '-f',
+    'webm',
+    'pipe:1',
+  ]);
+  if (result.status !== 0) throw new Error(`Không tạo được bài nói mẫu: ${String(result.stderr)}`);
+  return result.stdout;
 }

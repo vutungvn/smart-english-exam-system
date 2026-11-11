@@ -133,8 +133,28 @@ enum AttemptStatus {
 /// Tính năng gọi AI (Mục 7.4); tính năng mới (SW_GRADING, ANALYSIS, CHAT…) thêm giá trị khi làm tới
 enum AiFeature {
   EXPLANATION
+  /// Chấm Speaking/Writing (SPRINT-86)
+  SW_GRADING
 
   @@map("ai_feature")
+}
+
+/// PENDING: chờ hàng đợi chấm (kể cả đang chờ lượt AI ngày mới) · DONE: đã có điểm · FAILED: AI lỗi
+/// quá số lần thử, học viên bấm chấm lại hoặc giáo viên chấm tay
+enum AssessmentStatus {
+  PENDING
+  DONE
+  FAILED
+
+  @@map("assessment_status")
+}
+
+/// Người chấm: bản của giáo viên (SPRINT-91) ghi đè bản AI, bản AI vẫn giữ để đối chiếu
+enum Grader {
+  AI
+  TEACHER
+
+  @@map("grader")
 }
 
 /// SUCCESS: kết quả đúng cấu trúc · FAILED: Google báo lỗi, hết lượt hoặc quá thời gian chờ ·
@@ -213,12 +233,14 @@ model User {
   createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt          DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  role           Role           @relation(fields: [roleId], references: [id], onDelete: Restrict, map: "fk_users_role_id")
-  student        Student?
-  teacher        Teacher?
-  admin          Admin?
-  loginHistories LoginHistory[]
-  aiUsageLogs    AiUsageLog[]
+  role                Role               @relation(fields: [roleId], references: [id], onDelete: Restrict, map: "fk_users_role_id")
+  student             Student?
+  teacher             Teacher?
+  admin               Admin?
+  loginHistories      LoginHistory[]
+  aiUsageLogs         AiUsageLog[]
+  /// Các câu giáo viên này đã chấm lại (SPRINT-91)
+  reviewedAssessments AnswerAssessment[]
 
   @@index([roleId], map: "ix_users_role_id")
   @@index([status], map: "ix_users_status")
@@ -544,13 +566,60 @@ model AttemptAnswer {
   answeredAt       DateTime @map("answered_at") @db.Timestamptz(6)
   updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  attempt        ExamAttempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade, map: "fk_attempt_answers_attempt_id")
-  examQuestion   ExamQuestion    @relation(fields: [examQuestionId], references: [id], onDelete: Restrict, map: "fk_attempt_answers_exam_question_id")
-  selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: Restrict, map: "fk_attempt_answers_selected_option_id")
+  attempt        ExamAttempt        @relation(fields: [attemptId], references: [id], onDelete: Cascade, map: "fk_attempt_answers_attempt_id")
+  examQuestion   ExamQuestion       @relation(fields: [examQuestionId], references: [id], onDelete: Restrict, map: "fk_attempt_answers_exam_question_id")
+  selectedOption QuestionOption?    @relation(fields: [selectedOptionId], references: [id], onDelete: Restrict, map: "fk_attempt_answers_selected_option_id")
+  assessments    AnswerAssessment[]
 
   @@unique([attemptId, examQuestionId], map: "uq_attempt_answers_attempt_question")
   @@index([examQuestionId], map: "ix_attempt_answers_exam_question_id")
   @@map("attempt_answers")
+}
+
+/// Kết quả chấm một câu trả lời mở (Speaking/Writing, D18): tạo PENDING lúc nộp bài cho câu đã trả
+/// lời, câu bỏ trống không có phiếu (0 điểm). Mỗi câu tối đa một bản của AI và một bản của giáo viên
+model AnswerAssessment {
+  id              String           @id(map: "pk_answer_assessments") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attemptAnswerId String           @map("attempt_answer_id") @db.Uuid
+  grader          Grader           @default(AI)
+  status          AssessmentStatus @default(PENDING)
+  /// Điểm theo thang của dạng câu (Writing P1 0–3, P2 0–4, P3 0–5); có khi DONE
+  score           Decimal?         @db.Decimal(5, 2)
+  /// Điểm tối đa của dạng câu lúc tạo phiếu
+  maxScore        Decimal          @map("max_score") @db.Decimal(5, 2)
+  /// Điểm tiêu chí 0–5: { grammar, vocabulary, coherence, task } (Writing)
+  criteria        Json?
+  /// Nhận xét tiếng Việt
+  feedback        String?
+  /// Lời nói nhận dạng được (Speaking)
+  transcript      String?
+  /// Writing: [{ original, corrected, explanation }]
+  corrections     Json?
+  /// Bài viết lại tốt hơn dựa trên bài của học viên
+  improvedAnswer  String?          @map("improved_answer")
+  model           String?          @db.VarChar(100)
+  /// Số lần đã gọi AI chấm (kể cả lần lỗi)
+  tries           Int              @default(0) @db.SmallInt
+  /// Số lần học viên bấm "Chấm lại" (tối đa 2)
+  regradeCount    Int              @default(0) @map("regrade_count") @db.SmallInt
+  /// Lý do lỗi gần nhất (FAILED), không chứa nội dung bài làm
+  errorMessage    String?          @map("error_message") @db.VarChar(500)
+  /// AI hết lượt trong ngày: chấm tiếp lúc này
+  nextRunAt       DateTime?        @map("next_run_at") @db.Timestamptz(6)
+  /// Giáo viên chấm (grader = TEACHER)
+  reviewedBy      String?          @map("reviewed_by") @db.Uuid
+  gradedAt        DateTime?        @map("graded_at") @db.Timestamptz(6)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  attemptAnswer AttemptAnswer @relation(fields: [attemptAnswerId], references: [id], onDelete: Cascade, map: "fk_answer_assessments_attempt_answer_id")
+  reviewer      User?         @relation(fields: [reviewedBy], references: [id], onDelete: SetNull, map: "fk_answer_assessments_reviewed_by")
+
+  @@unique([attemptAnswerId, grader], map: "uq_answer_assessments_answer_grader")
+  /// Quét phiếu PENDING bị kẹt (đưa lại vào hàng đợi)
+  @@index([status, updatedAt], map: "ix_answer_assessments_status_updated")
+  @@index([reviewedBy], map: "ix_answer_assessments_reviewed_by")
+  @@map("answer_assessments")
 }
 
 // ================================================================

@@ -508,6 +508,13 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/api/v1/attempts/${queryArg}/cancel`, method: 'POST' }),
         invalidatesTags: ['Attempts'],
       }),
+      regradeAssessment: build.mutation<RegradeAssessmentApiResponse, RegradeAssessmentApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/attempts/${queryArg.id}/assessments/${queryArg.assessmentId}/regrade`,
+          method: 'POST',
+        }),
+        invalidatesTags: ['Attempts'],
+      }),
       getScoreTrend: build.query<GetScoreTrendApiResponse, GetScoreTrendApiArg>({
         query: (queryArg) => ({
           url: `/api/v1/me/progress/score-trend`,
@@ -1090,6 +1097,15 @@ export type CancelAttemptApiResponse = /** status 200 Thành công */ {
   data: object | null;
 };
 export type CancelAttemptApiArg = string;
+export type RegradeAssessmentApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: QuestionAssessment;
+};
+export type RegradeAssessmentApiArg = {
+  id: string;
+  assessmentId: string;
+};
 export type GetScoreTrendApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
@@ -1191,6 +1207,10 @@ export type ErrorCode =
   | 'VOICE_CONSENT_REQUIRED'
   | 'ATTEMPT_RECORDING_INVALID'
   | 'ATTEMPT_RECORDING_TOO_LONG'
+  | 'ASSESSMENT_NOT_FOUND'
+  | 'ASSESSMENT_NOT_FAILED'
+  | 'ASSESSMENT_REGRADE_LIMIT'
+  | 'ASSESSMENT_RECORDING_MISSING'
   | 'AI_QUOTA_EXCEEDED'
   | 'AI_UNAVAILABLE'
   | 'AI_EXPLANATION_NOT_SUPPORTED';
@@ -2030,28 +2050,47 @@ export type SkillScoreItem = {
   skipped: number;
   /** Số câu trắc nghiệm của kỹ năng */
   total: number;
-  /** Số câu Speaking/Writing (chấm bằng AI, làm sau) */
+  /** Số câu Speaking/Writing (chấm bằng AI) */
   openCount: number;
-  /** TOEIC LR: 5–495 · %: 0–100 · null khi kỹ năng chỉ có câu chờ AI chấm */
+  /** Tổng điểm tối đa các câu Speaking/Writing */
+  openMax: number;
+  /** Tổng điểm các câu Speaking/Writing (bỏ trống 0); null khi còn câu chờ chấm */
+  openRaw: number | null;
+  /** Số câu Speaking/Writing chưa có điểm (chờ AI chấm hoặc chấm lỗi) */
+  openPending: number;
+  /** TOEIC LR: 5–495 · TOEIC SW: 0–200 · %: 0–100 · null khi kỹ năng còn câu chờ AI chấm */
   scaled: number | null;
+};
+export type GradingProgress = {
+  /** Số câu cần AI chấm (câu bỏ trống không tính) */
+  total: number;
+  done: number;
+  /** Đang chờ chấm (kể cả chờ lượt AI ngày mới) */
+  pending: number;
+  /** Chấm lỗi, học viên có thể bấm "Chấm lại" */
+  failed: number;
+  /** AI tạm hết lượt hôm nay: các câu còn lại chấm tiếp lúc này */
+  waitingUntil: string | null;
 };
 export type AttemptResult = {
   attemptId: string;
   /** GRADED: đã có điểm · SUBMITTED: còn câu Speaking/Writing chờ AI chấm */
   status: AttemptStatus;
   submittedAt: string;
-  /** TOEIC_990: làm cả đề TOEIC LR · PERCENT: đề luyện tập và mọi lượt luyện theo Part */
-  scoring: 'TOEIC_990' | 'PERCENT';
+  /** TOEIC_990: làm cả đề TOEIC LR · TOEIC_SW: làm cả đề Speaking/Writing (0–200 mỗi kỹ năng) · PERCENT: đề luyện tập và mọi lượt luyện theo Part */
+  scoring: 'TOEIC_990' | 'TOEIC_SW' | 'PERCENT';
   correctCount: number;
   wrongCount: number;
   skippedCount: number;
   /** Số câu trắc nghiệm đúng */
   rawScore: number;
-  /** Điểm theo thang (TOEIC 10–990 hoặc %); null khi còn câu chờ AI chấm */
+  /** Điểm theo thang (TOEIC 10–990, TOEIC SW 0–400 hoặc %); null khi còn câu chờ AI chấm */
   scaledScore: number | null;
-  /** Số câu Speaking/Writing chờ AI chấm */
+  /** Số câu Speaking/Writing chưa có điểm */
   pendingOpenCount: number;
   skillScores: SkillScoreItem[];
+  /** Tiến độ AI chấm Speaking/Writing; null với đề chỉ có trắc nghiệm và ở lịch sử */
+  grading: GradingProgress | null;
 };
 export type AttemptAnswerItem = {
   examQuestionId: string;
@@ -2128,6 +2167,10 @@ export type ReviewCounts = {
   skipped: number;
   /** Câu Speaking/Writing chờ AI chấm */
   pending: number;
+  /** Câu Speaking/Writing đã có điểm AI */
+  scored: number;
+  /** Câu Speaking/Writing chấm lỗi */
+  failed: number;
 };
 export type ReviewGroup = {
   id: string;
@@ -2148,7 +2191,53 @@ export type ReviewOption = {
   content: string;
   isCorrect: boolean;
 };
-export type ReviewOutcome = 'CORRECT' | 'WRONG' | 'SKIPPED' | 'PENDING';
+export type ReviewOutcome = 'CORRECT' | 'WRONG' | 'SKIPPED' | 'PENDING' | 'SCORED' | 'FAILED';
+export type AssessmentStatus = 'PENDING' | 'DONE' | 'FAILED';
+export type AssessmentCriterion = {
+  /** Writing: grammar · vocabulary · coherence · task; Speaking: pronunciation · intonation · fluency · grammar · vocabulary · task */
+  key: string;
+  label: string;
+  score: number;
+};
+export type AssessmentSubScore = {
+  /** pronunciation · intonation */
+  key: string;
+  label: string;
+  score: number;
+  max: number;
+};
+export type AssessmentCorrection = {
+  original: string;
+  corrected: string;
+  explanation: string;
+};
+export type QuestionAssessment = {
+  id: string;
+  status: AssessmentStatus;
+  /** Điểm câu theo thang của dạng câu */
+  score: number | null;
+  /** Writing P1: 3 · P2: 4 · P3: 5; Speaking P1: 6 · P2–P4: 3 · P5: 5 */
+  maxScore: number;
+  /** Rỗng khi chưa chấm xong */
+  criteria: AssessmentCriterion[];
+  /** Nhận xét tiếng Việt */
+  feedback: string | null;
+  /** Speaking Part 1: phát âm + ngữ điệu; câu khác rỗng */
+  subScores: AssessmentSubScore[];
+  /** Speaking: lời nói AI nhận dạng được */
+  transcript: string | null;
+  /** Writing; Speaking rỗng */
+  corrections: AssessmentCorrection[];
+  /** Writing: bài viết lại tốt hơn; Speaking: câu trả lời gợi ý */
+  improvedAnswer: string | null;
+  /** Lý do chấm lỗi (FAILED), không chứa nội dung bài làm */
+  errorMessage: string | null;
+  /** AI tạm hết lượt hôm nay: dự kiến chấm tiếp lúc này */
+  nextRunAt: string | null;
+  /** Số lần học viên còn được bấm "Chấm lại" */
+  regradesLeft: number;
+  gradedAt: string | null;
+};
 export type ReviewQuestion = {
   /** Số câu liên tục trong cả đề: 1, 2, 3… */
   number: number;
@@ -2177,6 +2266,8 @@ export type ReviewQuestion = {
   explanation: string | null;
   /** Câu trả lời mẫu (Speaking/Writing) */
   sampleAnswer: string | null;
+  /** Kết quả AI chấm câu Speaking/Writing; null với câu trắc nghiệm, câu bỏ trống */
+  assessment: QuestionAssessment | null;
 };
 export type ReviewBlock = {
   group: ReviewGroup | null;
@@ -2261,7 +2352,7 @@ export type ScoreTrendPoint = {
   /** Part đã luyện (mode PART) */
   section: AttemptSectionRef | null;
   /** TOEIC_990: làm cả đề TOEIC LR · PERCENT: đề luyện tập, lượt luyện theo Part */
-  scoring: 'TOEIC_990' | 'PERCENT';
+  scoring: 'TOEIC_990' | 'TOEIC_SW' | 'PERCENT';
   /** Điểm theo thang (TOEIC 10–990 hoặc %); null khi còn câu Speaking/Writing chờ AI chấm */
   scaledScore: number | null;
   /** % câu trắc nghiệm đúng, có cả khi bài còn câu chờ chấm; null khi bài không có câu trắc nghiệm */
@@ -2457,6 +2548,7 @@ export const {
   useSyncAnswersMutation,
   useSubmitAttemptMutation,
   useCancelAttemptMutation,
+  useRegradeAssessmentMutation,
   useGetScoreTrendQuery,
   useGetProgressSkillsQuery,
   useGetAiExplanationQuery,

@@ -82,6 +82,12 @@ export const ErrorCode = {
   ATTEMPT_RECORDING_INVALID: 'ATTEMPT_RECORDING_INVALID',
   ATTEMPT_RECORDING_TOO_LONG: 'ATTEMPT_RECORDING_TOO_LONG',
 
+  // Chấm Speaking/Writing
+  ASSESSMENT_NOT_FOUND: 'ASSESSMENT_NOT_FOUND',
+  ASSESSMENT_NOT_FAILED: 'ASSESSMENT_NOT_FAILED',
+  ASSESSMENT_REGRADE_LIMIT: 'ASSESSMENT_REGRADE_LIMIT',
+  ASSESSMENT_RECORDING_MISSING: 'ASSESSMENT_RECORDING_MISSING',
+
   // AI
   AI_QUOTA_EXCEEDED: 'AI_QUOTA_EXCEEDED',
   AI_UNAVAILABLE: 'AI_UNAVAILABLE',
@@ -343,6 +349,24 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.ATTEMPT_RECORDING_TOO_LONG]: {
     status: HttpStatus.BAD_REQUEST,
     message: 'Bài nói dài hơn thời gian trả lời cho phép',
+  },
+
+  // Chấm Speaking/Writing
+  [ErrorCode.ASSESSMENT_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy kết quả chấm của câu này',
+  },
+  [ErrorCode.ASSESSMENT_NOT_FAILED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Chỉ chấm lại được câu bị chấm lỗi',
+  },
+  [ErrorCode.ASSESSMENT_REGRADE_LIMIT]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Câu này đã hết lượt chấm lại, vui lòng liên hệ giáo viên',
+  },
+  [ErrorCode.ASSESSMENT_RECORDING_MISSING]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy bài nói để chấm (có thể đã quá thời hạn lưu)',
   },
 
   // AI

@@ -6,6 +6,7 @@ import { MediaAudio } from '@/components/media/MediaAudio';
 import { cn } from '@/lib/utils';
 import { countWords } from '../practice-meta';
 import { AiExplanationPanel } from './AiExplanationPanel';
+import { AssessmentPanel } from './AssessmentPanel';
 import { OUTCOME_META } from './review-meta';
 
 interface ReviewQuestionCardProps {
@@ -38,6 +39,9 @@ export function ReviewQuestionCard({ attemptId, question }: ReviewQuestionCardPr
         </span>
         <span className={cn('rounded-full px-2.5 py-1 text-xs font-semibold', meta.badge)}>
           {meta.label}
+          {question.outcome === 'SCORED' &&
+            question.assessment &&
+            ` · ${question.assessment.score}/${question.assessment.maxScore} điểm`}
         </span>
         {question.isFlagged && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
@@ -66,10 +70,21 @@ export function ReviewQuestionCard({ attemptId, question }: ReviewQuestionCardPr
 
       {choice ? (
         <ChoiceReview question={question} />
-      ) : question.type === 'WRITTEN_RESPONSE' ? (
-        <WritingReview question={question} />
       ) : (
-        <SpeakingReview question={question} />
+        <>
+          {question.type === 'WRITTEN_RESPONSE' ? (
+            <WritingReview question={question} />
+          ) : (
+            <SpeakingReview question={question} />
+          )}
+          {question.assessment && (
+            <AssessmentPanel
+              attemptId={attemptId}
+              assessment={question.assessment}
+              kind={question.type === 'WRITTEN_RESPONSE' ? 'writing' : 'speaking'}
+            />
+          )}
+        </>
       )}
 
       {question.sampleAnswer && (
@@ -183,9 +198,9 @@ function WritingReview({ question }: { question: ReviewQuestion }) {
       ) : (
         <p className="text-subtle italic">Bạn chưa viết bài cho câu này.</p>
       )}
-      {question.outcome === 'PENDING' && (
-        <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-          Bài viết đang chờ AI chấm theo tiêu chí; điểm sẽ hiện ở đây khi chấm xong.
+      {!text && (
+        <p className="mt-2 text-xs text-subtle">
+          Câu bỏ trống được tính 0 điểm, không cần AI chấm.
         </p>
       )}
     </Note>
@@ -198,7 +213,7 @@ function SpeakingReview({ question }: { question: ReviewQuestion }) {
       <p className="mt-4 flex items-start gap-2.5 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
         <Mic className="mt-0.5 size-4 shrink-0" />
         <span>
-          Câu này chưa có bài nói.
+          Câu này chưa có bài nói nên được tính 0 điểm, không cần AI chấm.
           {question.responseSeconds !== null &&
             ` Thi thật: chuẩn bị ${question.prepSeconds ?? 0} giây, trả lời ${question.responseSeconds} giây.`}
         </span>
@@ -212,7 +227,8 @@ function SpeakingReview({ question }: { question: ReviewQuestion }) {
         Bài nói của bạn
       </h3>
       <MediaAudio url={question.recordingUrl} />
-      {question.outcome === 'PENDING' && (
+      {/* Bài nộp trước khi có chấm Speaking (chưa có phiếu chấm) */}
+      {question.outcome === 'PENDING' && !question.assessment && (
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
           Bài nói đang chờ AI chấm theo tiêu chí; điểm sẽ hiện ở đây khi chấm xong.
         </p>

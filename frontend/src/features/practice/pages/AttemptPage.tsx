@@ -35,6 +35,9 @@ import { clearAnswerQueue, useAnswerSync, type SyncStatus } from '../attempt/use
 import { useCountdown } from '../attempt/use-countdown';
 import { SpeakingSection } from '../speaking/SpeakingSection';
 import { useRecordingUploads } from '../speaking/use-recording-uploads';
+import { WritingStepBar } from '../writing/WritingStepBar';
+import { useWritingSteps } from '../writing/use-writing-steps';
+import { clearPosition, writingSteps } from '../writing/writing-steps';
 import { attemptResultPath, formatClock, PRACTICE_PATH, practiceExamPath } from '../practice-meta';
 
 /** Dưới 5 phút: đồng hồ chuyển đỏ */
@@ -105,7 +108,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [activeId, setActiveId] = useState<string>();
   const [scrollTick, setScrollTick] = useState(0);
-  const [dialog, setDialog] = useState<'submit' | 'cancel' | 'nav' | null>(null);
+  const [dialog, setDialog] = useState<'submit' | 'cancel' | 'nav' | 'next' | null>(null);
   const [actionError, setActionError] = useState<string>();
   const [submitAttempt, { isLoading: submitting }] = useSubmitAttemptMutation();
   const [cancelAttempt, { isLoading: cancelling }] = useCancelAttemptMutation();
@@ -136,6 +139,27 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
   const [speaking, setSpeaking] = useState(false);
   const onSpeakingChange = useCallback((running: boolean) => setSpeaking(running), []);
 
+  // Làm cả đề Writing có đếm giờ: chạy theo từng bước như thi thật (Part 1 8 phút, mỗi email 10 phút,
+  // bài luận 30 phút), hết giờ tự sang bước sau, không quay lại. Luyện theo Part thì làm tự do
+  const [steps] = useState(() =>
+    attempt.mode === 'FULL' && attempt.remainingSeconds !== null
+      ? (writingSteps(sections) ?? [])
+      : [],
+  );
+  // Lúc bắt đầu bài theo đồng hồ máy này (bù lệch giờ với server)
+  const [startedAtLocal] = useState(
+    () =>
+      Date.now() - (new Date(attempt.serverTime).getTime() - new Date(attempt.startedAt).getTime()),
+  );
+  const writing = useWritingSteps({
+    attemptId: attempt.id,
+    steps,
+    startedAt: startedAtLocal,
+    onFinish: () => void submitRef.current(),
+  });
+  const timedWriting = writing.step !== null;
+  const stepIds = new Set(writing.step?.examQuestionIds ?? []);
+
   const submit = async () => {
     if (submitStarted.current) return;
     submitStarted.current = true;
@@ -154,6 +178,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
       }
     }
     clearAnswerQueue(attempt.id);
+    clearPosition(attempt.id);
     void navigate(attemptResultPath(attempt.id), { replace: true });
   };
 
@@ -166,9 +191,11 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
     if (remaining === 0) void submitRef.current();
   }, [remaining]);
 
+  const currentIndex = writing.step ? writing.step.sectionIndex : sectionIndex;
+
   // Tải trước audio của Part kế tiếp sau khi Part hiện tại đã tải xong phần lớn (chờ vài giây)
   useEffect(() => {
-    const next = sections[sectionIndex + 1];
+    const next = sections[currentIndex + 1];
     if (!next) return;
     const timer = window.setTimeout(() => {
       for (const block of next.blocks) {
@@ -179,7 +206,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
       }
     }, PRELOAD_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [sections, sectionIndex]);
+  }, [sections, currentIndex]);
 
   // Bấm số câu ở bảng câu hỏi: sang đúng Part rồi cuộn tới câu đó
   useEffect(() => {
@@ -191,13 +218,15 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
 
   const jump = (index: number, examQuestionId: string) => {
     if (speaking) return;
+    // Writing theo bước: chỉ chuyển trong các câu của bước đang làm
+    if (timedWriting && !stepIds.has(examQuestionId)) return;
     setSectionIndex(index);
     setActiveId(examQuestionId);
     setScrollTick((n) => n + 1);
     setDialog(null);
   };
   const goSection = (index: number) => {
-    if (speaking) return;
+    if (speaking || timedWriting) return;
     setSectionIndex(index);
     setActiveId(undefined);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -212,6 +241,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
     try {
       await cancelAttempt(attempt.id).unwrap();
       clearAnswerQueue(attempt.id);
+      clearPosition(attempt.id);
       void navigate(practiceExamPath(attempt.exam.id), { replace: true });
     } catch (cause) {
       setActionError(toApiError(cause).message);
@@ -219,9 +249,19 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
     }
   };
 
-  const section = sections[sectionIndex];
+  const section = sections[currentIndex];
   const progress = progressOf(sections, answers, recordings.recorded);
-  const lastSection = sectionIndex === sections.length - 1;
+  const lastSection = currentIndex === sections.length - 1;
+  // Writing theo bước: chỉ hiện các câu của bước đang làm
+  const blocks = timedWriting
+    ? section.blocks
+        .map((block) => ({
+          ...block,
+          questions: block.questions.filter((q) => stepIds.has(q.examQuestionId)),
+        }))
+        .filter((block) => block.questions.length > 0)
+    : section.blocks;
+  const lastStep = writing.index === writing.total - 1;
   const timed = remaining !== null;
   const warning = timed && remaining <= WARNING_SECONDS;
 
@@ -291,11 +331,11 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
                 key={item.id}
                 type="button"
                 onClick={() => goSection(index)}
-                disabled={speaking && index !== sectionIndex}
-                aria-current={index === sectionIndex}
+                disabled={(speaking || timedWriting) && index !== currentIndex}
+                aria-current={index === currentIndex}
                 className={cn(
-                  'shrink-0 rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors',
-                  index === sectionIndex
+                  'shrink-0 rounded-xl px-3 py-1.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+                  index === currentIndex
                     ? 'bg-accent text-brand ring-1 ring-primary/30'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
                 )}
@@ -325,6 +365,15 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
           <h1 className="text-lg font-bold text-foreground">
             Part {section.part} · {section.name}
           </h1>
+          {writing.step && (
+            <WritingStepBar
+              step={writing.step}
+              index={writing.index}
+              total={writing.total}
+              remaining={writing.remaining}
+              onNext={() => setDialog(lastStep ? 'submit' : 'next')}
+            />
+          )}
           {recordings.error && (
             <FormAlert message={recordings.error} onClose={recordings.clearError} />
           )}
@@ -339,7 +388,7 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
               onRunningChange={onSpeakingChange}
             />
           ) : (
-            section.blocks.map((block, index) => (
+            blocks.map((block, index) => (
               <BlockView
                 key={block.group?.id ?? block.questions[0]?.examQuestionId ?? index}
                 block={block}
@@ -352,40 +401,53 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
             ))
           )}
 
-          <div className="flex items-center justify-between gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={sectionIndex === 0 || speaking}
-              onClick={() => goSection(sectionIndex - 1)}
-              className="h-10 rounded-xl bg-white px-4"
-            >
-              <ChevronLeft />
-              Part trước
-            </Button>
-            {lastSection ? (
+          {timedWriting ? (
+            <div className="flex items-center justify-end gap-3 pt-2">
               <Button
                 type="button"
-                onClick={() => setDialog('submit')}
-                disabled={speaking}
+                onClick={() => setDialog(lastStep ? 'submit' : 'next')}
                 className="h-10 rounded-xl bg-linear-to-r from-primary to-brand px-4 font-semibold"
               >
-                <Send />
-                Nộp bài
+                {lastStep ? <Send /> : <ChevronRight />}
+                {lastStep ? 'Nộp bài' : 'Sang phần tiếp'}
               </Button>
-            ) : (
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3 pt-2">
               <Button
                 type="button"
                 variant="outline"
-                disabled={speaking}
-                onClick={() => goSection(sectionIndex + 1)}
+                disabled={sectionIndex === 0 || speaking}
+                onClick={() => goSection(sectionIndex - 1)}
                 className="h-10 rounded-xl bg-white px-4"
               >
-                Part tiếp
-                <ChevronRight />
+                <ChevronLeft />
+                Part trước
               </Button>
-            )}
-          </div>
+              {lastSection ? (
+                <Button
+                  type="button"
+                  onClick={() => setDialog('submit')}
+                  disabled={speaking}
+                  className="h-10 rounded-xl bg-linear-to-r from-primary to-brand px-4 font-semibold"
+                >
+                  <Send />
+                  Nộp bài
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={speaking}
+                  onClick={() => goSection(sectionIndex + 1)}
+                  className="h-10 rounded-xl bg-white px-4"
+                >
+                  Part tiếp
+                  <ChevronRight />
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Bảng câu hỏi: cột phải trên màn rộng, hộp thoại trên màn hẹp */}
@@ -493,6 +555,43 @@ function AttemptWorkspace({ attempt }: { attempt: AttemptDetail }) {
             </p>
           )}
         </div>
+      </AppDialog>
+
+      <AppDialog
+        open={dialog === 'next'}
+        onOpenChange={(open) => !open && setDialog(null)}
+        title="Sang phần tiếp?"
+        description="Như thi thật, bạn sẽ không quay lại sửa các câu của phần này được nữa."
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialog(null)}
+              className="h-10 rounded-xl px-4"
+            >
+              Ở lại
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                writing.next();
+                setActiveId(undefined);
+                setDialog(null);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="h-10 rounded-xl bg-linear-to-r from-primary to-brand px-5 font-semibold"
+            >
+              <ChevronRight />
+              Sang phần tiếp
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-muted-foreground">
+          Phần này còn {formatClock(writing.remaining)}. Thời gian còn lại của phần này không được
+          cộng sang phần sau.
+        </p>
       </AppDialog>
 
       <AppDialog

@@ -12732,6 +12732,226 @@
         ]
       }
     },
+    "/api/v1/attempts/{id}/assessments/{assessmentId}/regrade": {
+      "post": {
+        "description": "Chỉ chủ bài làm, chỉ câu FAILED, tối đa 2 lần mỗi câu. Câu về PENDING và được xếp đầu hàng đợi chấm; xem kết quả bằng GET /attempts/{id}/review.",
+        "operationId": "regradeAssessment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assessmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/QuestionAssessment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: ASSESSMENT_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ASSESSMENT_NOT_FOUND": {
+                    "summary": "ASSESSMENT_NOT_FOUND: Không tìm thấy kết quả chấm của câu này",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "ASSESSMENT_NOT_FOUND",
+                        "message": "Không tìm thấy kết quả chấm của câu này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: ASSESSMENT_NOT_FAILED, ASSESSMENT_REGRADE_LIMIT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ASSESSMENT_NOT_FAILED": {
+                    "summary": "ASSESSMENT_NOT_FAILED: Chỉ chấm lại được câu bị chấm lỗi",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "ASSESSMENT_NOT_FAILED",
+                        "message": "Chỉ chấm lại được câu bị chấm lỗi"
+                      }
+                    }
+                  },
+                  "ASSESSMENT_REGRADE_LIMIT": {
+                    "summary": "ASSESSMENT_REGRADE_LIMIT: Câu này đã hết lượt chấm lại, vui lòng liên hệ giáo viên",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "ASSESSMENT_REGRADE_LIMIT",
+                        "message": "Câu này đã hết lượt chấm lại, vui lòng liên hệ giáo viên"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Chấm lại một câu Speaking/Writing bị chấm lỗi",
+        "tags": [
+          "Attempts"
+        ]
+      }
+    },
     "/api/v1/me/progress/score-trend": {
       "get": {
         "description": "Cũ nhất trước. Mỗi điểm có scaledScore (TOEIC 10–990 hoặc %, null khi còn câu chờ AI chấm), choicePercent (% câu trắc nghiệm đúng, luôn có) và điểm từng kỹ năng; kèm targetScore của học viên.",
@@ -13552,6 +13772,10 @@
           "VOICE_CONSENT_REQUIRED",
           "ATTEMPT_RECORDING_INVALID",
           "ATTEMPT_RECORDING_TOO_LONG",
+          "ASSESSMENT_NOT_FOUND",
+          "ASSESSMENT_NOT_FAILED",
+          "ASSESSMENT_REGRADE_LIMIT",
+          "ASSESSMENT_RECORDING_MISSING",
           "AI_QUOTA_EXCEEDED",
           "AI_UNAVAILABLE",
           "AI_EXPLANATION_NOT_SUPPORTED"
@@ -17185,12 +17409,25 @@
           },
           "openCount": {
             "type": "integer",
-            "description": "Số câu Speaking/Writing (chấm bằng AI, làm sau)"
+            "description": "Số câu Speaking/Writing (chấm bằng AI)"
+          },
+          "openMax": {
+            "type": "number",
+            "description": "Tổng điểm tối đa các câu Speaking/Writing"
+          },
+          "openRaw": {
+            "type": "number",
+            "nullable": true,
+            "description": "Tổng điểm các câu Speaking/Writing (bỏ trống 0); null khi còn câu chờ chấm"
+          },
+          "openPending": {
+            "type": "integer",
+            "description": "Số câu Speaking/Writing chưa có điểm (chờ AI chấm hoặc chấm lỗi)"
           },
           "scaled": {
             "type": "number",
             "nullable": true,
-            "description": "TOEIC LR: 5–495 · %: 0–100 · null khi kỹ năng chỉ có câu chờ AI chấm"
+            "description": "TOEIC LR: 5–495 · TOEIC SW: 0–200 · %: 0–100 · null khi kỹ năng còn câu chờ AI chấm"
           }
         },
         "required": [
@@ -17200,7 +17437,43 @@
           "skipped",
           "total",
           "openCount",
+          "openMax",
+          "openRaw",
+          "openPending",
           "scaled"
+        ]
+      },
+      "GradingProgress": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Số câu cần AI chấm (câu bỏ trống không tính)"
+          },
+          "done": {
+            "type": "integer"
+          },
+          "pending": {
+            "type": "integer",
+            "description": "Đang chờ chấm (kể cả chờ lượt AI ngày mới)"
+          },
+          "failed": {
+            "type": "integer",
+            "description": "Chấm lỗi, học viên có thể bấm \"Chấm lại\""
+          },
+          "waitingUntil": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "AI tạm hết lượt hôm nay: các câu còn lại chấm tiếp lúc này"
+          }
+        },
+        "required": [
+          "total",
+          "done",
+          "pending",
+          "failed",
+          "waitingUntil"
         ]
       },
       "AttemptResult": {
@@ -17226,9 +17499,10 @@
             "type": "string",
             "enum": [
               "TOEIC_990",
+              "TOEIC_SW",
               "PERCENT"
             ],
-            "description": "TOEIC_990: làm cả đề TOEIC LR · PERCENT: đề luyện tập và mọi lượt luyện theo Part"
+            "description": "TOEIC_990: làm cả đề TOEIC LR · TOEIC_SW: làm cả đề Speaking/Writing (0–200 mỗi kỹ năng) · PERCENT: đề luyện tập và mọi lượt luyện theo Part"
           },
           "correctCount": {
             "type": "integer"
@@ -17246,17 +17520,27 @@
           "scaledScore": {
             "type": "number",
             "nullable": true,
-            "description": "Điểm theo thang (TOEIC 10–990 hoặc %); null khi còn câu chờ AI chấm"
+            "description": "Điểm theo thang (TOEIC 10–990, TOEIC SW 0–400 hoặc %); null khi còn câu chờ AI chấm"
           },
           "pendingOpenCount": {
             "type": "integer",
-            "description": "Số câu Speaking/Writing chờ AI chấm"
+            "description": "Số câu Speaking/Writing chưa có điểm"
           },
           "skillScores": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SkillScoreItem"
             }
+          },
+          "grading": {
+            "nullable": true,
+            "description": "Tiến độ AI chấm Speaking/Writing; null với đề chỉ có trắc nghiệm và ở lịch sử",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GradingProgress"
+              }
+            ]
           }
         },
         "required": [
@@ -17270,7 +17554,8 @@
           "rawScore",
           "scaledScore",
           "pendingOpenCount",
-          "skillScores"
+          "skillScores",
+          "grading"
         ]
       },
       "AttemptAnswerItem": {
@@ -17590,13 +17875,23 @@
           "pending": {
             "type": "integer",
             "description": "Câu Speaking/Writing chờ AI chấm"
+          },
+          "scored": {
+            "type": "integer",
+            "description": "Câu Speaking/Writing đã có điểm AI"
+          },
+          "failed": {
+            "type": "integer",
+            "description": "Câu Speaking/Writing chấm lỗi"
           }
         },
         "required": [
           "correct",
           "wrong",
           "skipped",
-          "pending"
+          "pending",
+          "scored",
+          "failed"
         ]
       },
       "ReviewGroup": {
@@ -17676,7 +17971,187 @@
           "CORRECT",
           "WRONG",
           "SKIPPED",
-          "PENDING"
+          "PENDING",
+          "SCORED",
+          "FAILED"
+        ]
+      },
+      "AssessmentStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "DONE",
+          "FAILED"
+        ]
+      },
+      "AssessmentCriterion": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "grammar",
+            "description": "Writing: grammar · vocabulary · coherence · task; Speaking: pronunciation · intonation · fluency · grammar · vocabulary · task"
+          },
+          "label": {
+            "type": "string",
+            "example": "Ngữ pháp"
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "score"
+        ]
+      },
+      "AssessmentSubScore": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "pronunciation",
+            "description": "pronunciation · intonation"
+          },
+          "label": {
+            "type": "string",
+            "example": "Phát âm"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "max": {
+            "type": "integer",
+            "example": 3
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "score",
+          "max"
+        ]
+      },
+      "AssessmentCorrection": {
+        "type": "object",
+        "properties": {
+          "original": {
+            "type": "string",
+            "example": "A man ride a bicycle."
+          },
+          "corrected": {
+            "type": "string",
+            "example": "A man is riding a bicycle."
+          },
+          "explanation": {
+            "type": "string",
+            "example": "Hành động đang diễn ra trong tranh nên dùng hiện tại tiếp diễn."
+          }
+        },
+        "required": [
+          "original",
+          "corrected",
+          "explanation"
+        ]
+      },
+      "QuestionAssessment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssessmentStatus"
+              }
+            ]
+          },
+          "score": {
+            "type": "number",
+            "nullable": true,
+            "description": "Điểm câu theo thang của dạng câu"
+          },
+          "maxScore": {
+            "type": "number",
+            "description": "Writing P1: 3 · P2: 4 · P3: 5; Speaking P1: 6 · P2–P4: 3 · P5: 5"
+          },
+          "criteria": {
+            "description": "Rỗng khi chưa chấm xong",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentCriterion"
+            }
+          },
+          "feedback": {
+            "type": "string",
+            "nullable": true,
+            "description": "Nhận xét tiếng Việt"
+          },
+          "subScores": {
+            "description": "Speaking Part 1: phát âm + ngữ điệu; câu khác rỗng",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentSubScore"
+            }
+          },
+          "transcript": {
+            "type": "string",
+            "nullable": true,
+            "description": "Speaking: lời nói AI nhận dạng được"
+          },
+          "corrections": {
+            "description": "Writing; Speaking rỗng",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentCorrection"
+            }
+          },
+          "improvedAnswer": {
+            "type": "string",
+            "nullable": true,
+            "description": "Writing: bài viết lại tốt hơn; Speaking: câu trả lời gợi ý"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lý do chấm lỗi (FAILED), không chứa nội dung bài làm"
+          },
+          "nextRunAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "AI tạm hết lượt hôm nay: dự kiến chấm tiếp lúc này"
+          },
+          "regradesLeft": {
+            "type": "integer",
+            "description": "Số lần học viên còn được bấm \"Chấm lại\""
+          },
+          "gradedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "score",
+          "maxScore",
+          "criteria",
+          "feedback",
+          "subScores",
+          "transcript",
+          "corrections",
+          "improvedAnswer",
+          "errorMessage",
+          "nextRunAt",
+          "regradesLeft",
+          "gradedAt"
         ]
       },
       "ReviewQuestion": {
@@ -17768,6 +18243,16 @@
             "type": "string",
             "nullable": true,
             "description": "Câu trả lời mẫu (Speaking/Writing)"
+          },
+          "assessment": {
+            "nullable": true,
+            "description": "Kết quả AI chấm câu Speaking/Writing; null với câu trắc nghiệm, câu bỏ trống",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestionAssessment"
+              }
+            ]
           }
         },
         "required": [
@@ -17788,7 +18273,8 @@
           "recordingUrl",
           "isFlagged",
           "explanation",
-          "sampleAnswer"
+          "sampleAnswer",
+          "assessment"
         ]
       },
       "ReviewBlock": {
@@ -18121,6 +18607,7 @@
             "type": "string",
             "enum": [
               "TOEIC_990",
+              "TOEIC_SW",
               "PERCENT"
             ],
             "description": "TOEIC_990: làm cả đề TOEIC LR · PERCENT: đề luyện tập, lượt luyện theo Part"

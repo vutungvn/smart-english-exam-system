@@ -43,3 +43,8 @@ export function formatDateTime(iso: string): string {
   const date = new Date(iso);
   return `${date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} · ${date.toLocaleDateString('vi-VN')}`;
 }
+
+/** 14:20 (giờ trên máy người xem) */
+export function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+}

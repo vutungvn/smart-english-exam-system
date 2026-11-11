@@ -2,9 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import type { Prisma } from '../../generated/prisma/client.js';
-import { AttemptStatus } from '../../generated/prisma/enums.js';
+import { AttemptStatus, QuestionType } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
-import { gradeAttempt, strategyFor, type SkillScore } from './grading/grading.js';
+import type { GradingProgress } from '../assessments/assessments.types.js';
+import { AssessmentsService } from '../assessments/assessments.service.js';
+import {
+  AttemptScoringService,
+  normalizeSkills,
+  type OpenQuestion,
+} from '../assessments/attempt-scoring.service.js';
+import { GradingQueueService } from '../assessments/grading-queue.service.js';
+import { gradeAttempt, strategyFor } from './grading/grading.js';
+import { openMaxScore } from './grading/toeic-sw-conversion.js';
 import type { AttemptResult } from './attempts.types.js';
 
 /** Các cột kết quả của lượt làm bài, dùng để dựng AttemptResult */
@@ -24,15 +33,21 @@ export const resultSelect = {
 
 type ResultRow = Prisma.ExamAttemptGetPayload<{ select: typeof resultSelect }>;
 
-/** null khi lượt chưa nộp hoặc đã hủy */
-export function toResult(row: ResultRow): AttemptResult | null {
+/**
+ * null khi lượt chưa nộp hoặc đã hủy. grading: tiến độ AI chấm (trang kết quả, xem lại); danh sách
+ * lịch sử không truyền
+ */
+export function toResult(
+  row: ResultRow,
+  grading: GradingProgress | null = null,
+): AttemptResult | null {
   if (
     !row.submittedAt ||
     (row.status !== AttemptStatus.SUBMITTED && row.status !== AttemptStatus.GRADED)
   ) {
     return null;
   }
-  const skills = (row.skillScores ?? []) as unknown as SkillScore[];
+  const skills = normalizeSkills(row.skillScores, row.status);
   return {
     attemptId: row.id,
     status: row.status,
@@ -45,11 +60,14 @@ export function toResult(row: ResultRow): AttemptResult | null {
     scaledScore: row.scaledScore === null ? null : Number(row.scaledScore),
     pendingOpenCount:
       row.status === AttemptStatus.SUBMITTED
-        ? skills.reduce((sum, skill) => sum + skill.openCount, 0)
+        ? skills.reduce((sum, skill) => sum + skill.openPending, 0)
         : 0,
     skillScores: skills,
+    grading,
   };
 }
+
+const OPEN_TYPES: QuestionType[] = [QuestionType.WRITTEN_RESPONSE, QuestionType.SPOKEN_RESPONSE];
 
 /**
  * Nộp bài và chấm phần trắc nghiệm (Ke_hoach Mục 7.2). Học viên bấm nộp và job tự nộp khi hết giờ
@@ -58,11 +76,16 @@ export function toResult(row: ResultRow): AttemptResult | null {
  */
 @Injectable()
 export class AttemptSubmissionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly scoring: AttemptScoringService,
+    private readonly queue: GradingQueueService,
+    private readonly assessments: AssessmentsService,
+  ) {}
 
   /** studentId: chỉ cho chủ bài nộp (job tự nộp không truyền) */
   async submit(attemptId: string, studentId?: string): Promise<AttemptResult> {
-    await this.prisma.$transaction(
+    const created = await this.prisma.$transaction(
       async (tx) => {
         const [locked] = await tx.$queryRaw<{ status: AttemptStatus; student_id: string }[]>`
           SELECT status, student_id FROM exam_attempts WHERE id = ${attemptId}::uuid FOR UPDATE`;
@@ -76,21 +99,24 @@ export class AttemptSubmissionService {
           );
         }
         // Đã nộp (bấm nộp hai lần, hoặc job tự nộp đến trước): giữ nguyên kết quả cũ
-        if (locked.status !== AttemptStatus.IN_PROGRESS) return;
+        if (locked.status !== AttemptStatus.IN_PROGRESS) return [];
 
-        await this.grade(tx, attemptId);
+        return this.grade(tx, attemptId);
       },
       { timeout: 30_000 },
     );
+    // Phiếu chấm đã ghi xong mới đưa vào hàng đợi (worker đọc được phiếu)
+    await this.queue.enqueue(created);
 
-    const row = await this.prisma.examAttempt.findUniqueOrThrow({
-      where: { id: attemptId },
-      select: resultSelect,
-    });
-    return toResult(row) as AttemptResult;
+    const [row, grading] = await Promise.all([
+      this.prisma.examAttempt.findUniqueOrThrow({ where: { id: attemptId }, select: resultSelect }),
+      this.assessments.progress(attemptId),
+    ]);
+    return toResult(row, grading) as AttemptResult;
   }
 
-  private async grade(tx: Prisma.TransactionClient, attemptId: string): Promise<void> {
+  /** Chấm phần trắc nghiệm, tạo phiếu chấm câu Speaking/Writing đã trả lời; trả id các phiếu vừa tạo */
+  private async grade(tx: Prisma.TransactionClient, attemptId: string): Promise<string[]> {
     const attempt = await tx.examAttempt.findUniqueOrThrow({
       where: { id: attemptId },
       select: {
@@ -110,11 +136,22 @@ export class AttemptSubmissionService {
         question: {
           select: {
             type: true,
+            part: true,
             options: { where: { isCorrect: true }, select: { id: true }, take: 1 },
           },
         },
       },
     });
+    const openQuestions: OpenQuestion[] = examQuestions
+      .filter((item) => OPEN_TYPES.includes(item.question.type))
+      .map((item) => ({
+        examQuestionId: item.id,
+        skill: item.section.skill,
+        type: item.question.type,
+        part: item.question.part,
+      }));
+    // Speaking/Writing: bỏ trống 0 điểm, đã trả lời thì tạo phiếu chấm PENDING
+    const open = await this.scoring.openScores(tx, attemptId, openQuestions, true);
     const answers = await tx.attemptAnswer.findMany({
       where: { attemptId },
       select: { examQuestionId: true, selectedOptionId: true },
@@ -128,6 +165,8 @@ export class AttemptSubmissionService {
         skill: item.section.skill,
         type: item.question.type,
         correctOptionId: item.question.options[0]?.id ?? null,
+        maxScore: openMaxScore(item.section.skill, item.question.part),
+        openScore: open.scores.get(item.id) ?? null,
       })),
       answers,
     });
@@ -160,5 +199,6 @@ export class AttemptSubmissionService {
         skillScores: result.skills as unknown as Prisma.InputJsonValue,
       },
     });
+    return open.created;
   }
 }

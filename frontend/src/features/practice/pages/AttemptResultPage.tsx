@@ -1,7 +1,24 @@
+import { useState } from 'react';
 import { Navigate, useParams } from 'react-router';
-import { Eye, History, Hourglass, ListRestart, Timer, Trophy } from 'lucide-react';
+import {
+  Bot,
+  CircleCheck,
+  Eye,
+  History,
+  Hourglass,
+  ListRestart,
+  Loader2,
+  Timer,
+  TriangleAlert,
+  Trophy,
+} from 'lucide-react';
 import { toApiError } from '@/api/errors';
-import { useGetAttemptQuery, type AttemptResult, type SkillScoreItem } from '@/api/generated';
+import {
+  useGetAttemptQuery,
+  type AttemptResult,
+  type GradingProgress,
+  type SkillScoreItem,
+} from '@/api/generated';
 import { ButtonLink } from '@/components/ButtonLink';
 import { PageHeader } from '@/components/PageHeader';
 import { EmptyState, ErrorState } from '@/features/question-bank/components/ListStates';
@@ -11,17 +28,33 @@ import {
   attemptPath,
   attemptReviewPath,
   formatDateTime,
+  formatTime,
   PRACTICE_PATH,
   practiceExamPath,
   resultsPath,
 } from '../practice-meta';
+import {
+  choiceSummary,
+  formatScore,
+  GRADING_POLL_MS,
+  hasChoice,
+  hasOpen,
+  isGrading,
+  scoreLabel,
+} from '../review/review-meta';
 
 /** Kết quả sau khi nộp (bản gọn); đáp án từng câu ở trang Xem lại (AttemptReviewPage) */
 export function AttemptResultPage() {
   const { id = '' } = useParams();
+  const [polling, setPolling] = useState(false);
+  // Bài Speaking/Writing đang chờ AI chấm: hỏi lại mỗi 5 giây tới khi chấm xong (hoặc chỉ còn câu chấm lỗi)
   const { data, error, isLoading, refetch } = useGetAttemptQuery(id, {
     refetchOnMountOrArgChange: true,
+    pollingInterval: polling ? GRADING_POLL_MS : 0,
+    skipPollingIfUnfocused: true,
   });
+  const grading = isGrading(data?.data.result);
+  if (grading !== polling) setPolling(grading);
 
   if (isLoading) return <div className="h-96 animate-pulse rounded-3xl bg-white" aria-hidden />;
   if (error && !data) {
@@ -77,14 +110,17 @@ export function AttemptResultPage() {
 
       <div className="grid items-start gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <ScoreHero result={result} />
-          {result.pendingOpenCount > 0 && (
+          {result.grading && result.status === 'SUBMITTED' && (
+            <GradingCard grading={result.grading} reviewPath={attemptReviewPath(attempt.id)} />
+          )}
+          {!result.grading && result.pendingOpenCount > 0 && (
             <p className="flex items-start gap-2 rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-800">
               <Hourglass className="mt-0.5 size-4 shrink-0" />
               {result.pendingOpenCount} câu Speaking/Writing đang chờ AI chấm. Điểm tổng sẽ cập nhật
               khi chấm xong.
             </p>
           )}
+          <ScoreHero result={result} />
           <SkillScores skills={result.skillScores} scoring={result.scoring} />
         </div>
 
@@ -107,7 +143,7 @@ export function AttemptResultPage() {
             className="h-11 bg-white ring-1 ring-border"
           >
             <Eye />
-            Xem lại đáp án
+            {hasOpen(result) ? 'Xem lại bài và nhận xét' : 'Xem lại đáp án'}
           </ButtonLink>
           <ButtonLink
             to={resultsPath(attempt.exam.id)}
@@ -124,18 +160,15 @@ export function AttemptResultPage() {
 }
 
 function ScoreHero({ result }: { result: AttemptResult }) {
-  const toeic = result.scoring === 'TOEIC_990';
-  const score =
-    result.scaledScore === null
-      ? null
-      : toeic
-        ? `${result.scaledScore}`
-        : `${Number(result.scaledScore.toFixed(2))}%`;
-  // Còn câu chờ AI chấm: tạm hiện % phần trắc nghiệm
+  const score = formatScore(result);
+  const choice = hasChoice(result);
+  const open = hasOpen(result);
+  // Còn câu chờ AI chấm: tạm hiện % phần trắc nghiệm (đề chỉ có câu mở thì chưa có gì để hiện)
   const choiceTotal = result.correctCount + result.wrongCount + result.skippedCount;
   const partial = choiceTotal
     ? `${Number(((result.correctCount / choiceTotal) * 100).toFixed(2))}%`
     : '—';
+  const [value, max] = score?.split(' / ') ?? [];
 
   return (
     <section className="rounded-3xl border border-border bg-white p-6 shadow-2xs sm:p-8">
@@ -146,29 +179,91 @@ function ScoreHero({ result }: { result: AttemptResult }) {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-subtle">
             {score === null
-              ? 'Điểm phần trắc nghiệm (tạm tính)'
-              : toeic
-                ? 'Điểm TOEIC Listening & Reading'
-                : 'Tỉ lệ câu đúng'}
+              ? choice
+                ? 'Điểm phần trắc nghiệm (tạm tính)'
+                : `${scoreLabel(result)} (đang chấm)`
+              : scoreLabel(result)}
           </p>
           <p className="text-4xl font-bold text-foreground tabular-nums sm:text-5xl">
-            {score ?? partial}
-            {toeic && score !== null && (
-              <span className="text-xl font-semibold text-subtle"> / 990</span>
-            )}
+            {score === null ? partial : value}
+            {max && <span className="text-xl font-semibold text-subtle"> / {max}</span>}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Nộp lúc {formatDateTime(result.submittedAt)}
-            {toeic && ' · Quy đổi theo bảng tham khảo, không phải điểm chính thức của ETS'}
+            Nộp lúc {formatDateTime(result.submittedAt)} · {choiceSummary(result)}
+            {result.scoring !== 'PERCENT' &&
+              ' · Quy đổi theo bảng tham khảo, không phải điểm chính thức của ETS'}
           </p>
+          {open && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+              <Bot className="size-3.5" />
+              Điểm Speaking/Writing là điểm ước lượng do AI chấm
+            </p>
+          )}
         </div>
       </div>
 
-      <dl className="mt-6 grid grid-cols-3 gap-3">
-        <Stat label="Đúng" value={result.correctCount} tone="text-success bg-emerald-50" />
-        <Stat label="Sai" value={result.wrongCount} tone="text-destructive bg-danger-soft" />
-        <Stat label="Bỏ trống" value={result.skippedCount} tone="text-slate-600 bg-slate-100" />
-      </dl>
+      {choice && (
+        <dl className="mt-6 grid grid-cols-3 gap-3">
+          <Stat label="Đúng" value={result.correctCount} tone="text-success bg-emerald-50" />
+          <Stat label="Sai" value={result.wrongCount} tone="text-destructive bg-danger-soft" />
+          <Stat label="Bỏ trống" value={result.skippedCount} tone="text-slate-600 bg-slate-100" />
+        </dl>
+      )}
+    </section>
+  );
+}
+
+/** Tiến độ AI chấm Speaking/Writing (trang tự hỏi lại server tới khi chấm xong) */
+function GradingCard({ grading, reviewPath }: { grading: GradingProgress; reviewPath: string }) {
+  const percent = grading.total ? (grading.done / grading.total) * 100 : 0;
+  const running = grading.pending > 0;
+  return (
+    <section
+      aria-live="polite"
+      className="space-y-3 rounded-3xl border border-amber-300/60 bg-amber-50 p-5 text-amber-900"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        {running ? (
+          <Loader2 className="size-5 animate-spin" />
+        ) : (
+          <TriangleAlert className="size-5" />
+        )}
+        <h2 className="font-bold">{running ? 'AI đang chấm bài làm' : 'Còn câu chưa chấm được'}</h2>
+        <span className="ml-auto text-sm font-semibold tabular-nums">
+          Đã chấm {grading.done}/{grading.total} câu
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-white">
+        <div
+          className="h-full rounded-full bg-linear-to-r from-amber-400 to-primary transition-[width]"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <ul className="space-y-1 text-sm">
+        {grading.waitingUntil ? (
+          <li className="flex items-start gap-2">
+            <Hourglass className="mt-0.5 size-4 shrink-0" />
+            AI tạm hết lượt hôm nay, các câu còn lại sẽ được chấm tiếp sau{' '}
+            {formatTime(grading.waitingUntil)}.
+          </li>
+        ) : (
+          running && (
+            <li className="flex items-start gap-2">
+              <CircleCheck className="mt-0.5 size-4 shrink-0" />
+              Trang tự cập nhật, bạn có thể rời trang và quay lại sau.
+            </li>
+          )
+        )}
+        {grading.failed > 0 && (
+          <li className="flex flex-wrap items-center gap-2 font-semibold text-rose-700">
+            <TriangleAlert className="size-4 shrink-0" />
+            {grading.failed} câu chấm lỗi.
+            <ButtonLink to={reviewPath} variant="ghost" className="h-8 w-auto px-2 text-rose-700">
+              Xem và chấm lại
+            </ButtonLink>
+          </li>
+        )}
+      </ul>
     </section>
   );
 }
@@ -189,34 +284,51 @@ function SkillScores({
   skills: SkillScoreItem[];
   scoring: AttemptResult['scoring'];
 }) {
+  const scaleMax = scoring === 'TOEIC_990' ? 495 : scoring === 'TOEIC_SW' ? 200 : null;
   return (
     <section className="rounded-3xl border border-border bg-white p-5 shadow-2xs sm:p-6">
       <h2 className="font-bold text-foreground">Điểm theo kỹ năng</h2>
       <ul className="mt-4 space-y-4">
         {skills.map((skill) => {
-          const percent = skill.total ? (skill.correct / skill.total) * 100 : 0;
+          const open = skill.openCount > 0;
+          const openDone = open && skill.openRaw !== null;
+          // Câu mở: tỉ lệ điểm thô; câu trắc nghiệm: tỉ lệ câu đúng
+          const percent = open
+            ? openDone && skill.openMax > 0
+              ? ((skill.openRaw ?? 0) / skill.openMax) * 100
+              : 0
+            : skill.total
+              ? (skill.correct / skill.total) * 100
+              : 0;
           return (
             <li key={skill.skill} className="space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span className="flex items-center gap-2">
+                <span className="flex flex-wrap items-center gap-2">
                   <SkillPill skill={skill.skill} />
                   {skill.total > 0 && (
                     <span className="text-muted-foreground">
                       {skill.correct}/{skill.total} câu đúng
                     </span>
                   )}
+                  {openDone && (
+                    <span className="text-muted-foreground">
+                      Điểm thô {skill.openRaw}/{skill.openMax}
+                    </span>
+                  )}
                 </span>
                 <span className="font-bold text-foreground tabular-nums">
                   {skill.scaled === null ? (
-                    <span className="font-normal text-subtle italic">Đang chờ AI chấm</span>
-                  ) : scoring === 'TOEIC_990' ? (
-                    `${skill.scaled} / 495`
+                    <span className="font-normal text-subtle italic">
+                      Đang chờ AI chấm{skill.openPending > 0 && ` ${skill.openPending} câu`}
+                    </span>
+                  ) : scaleMax !== null ? (
+                    `${skill.scaled} / ${scaleMax}`
                   ) : (
                     `${Number(skill.scaled.toFixed(2))}%`
                   )}
                 </span>
               </div>
-              {skill.total > 0 && (
+              {(skill.total > 0 || openDone) && (
                 <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                   <div
                     className="h-full rounded-full bg-linear-to-r from-primary to-brand"

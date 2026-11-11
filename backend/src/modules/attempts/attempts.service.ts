@@ -20,6 +20,8 @@ import { toExamPaper, type ExamPaperRow } from '../exams/exams.mapper.js';
 import { PaperCacheService, type PaperTarget } from '../exams/paper-cache.service.js';
 import { MediaUrlService } from '../media/media-url.service.js';
 import { RECORDING_KEY_PREFIX } from '../media/media.constants.js';
+import { AssessmentsService } from '../assessments/assessments.service.js';
+import type { GradingProgress } from '../assessments/assessments.types.js';
 import { AttemptSubmissionService, resultSelect, toResult } from './attempt-submission.service.js';
 import { findPartRule } from '../questions/toeic-parts.js';
 import {
@@ -137,6 +139,7 @@ export class AttemptsService {
     private readonly papers: PaperCacheService,
     private readonly storage: StorageService,
     private readonly recordings: RecordingService,
+    private readonly assessments: AssessmentsService,
   ) {}
 
   private readonly logger = new Logger(AttemptsService.name);
@@ -269,10 +272,12 @@ export class AttemptsService {
     let row = await load();
     if (await this.submitIfOverdue(row, new Date())) row = await load();
 
-    // Đề lấy từ cache: mọi học viên làm cùng đề dùng chung một lần đọc DB
-    const [cached, answers] = await Promise.all([
+    // Đề lấy từ cache: mọi học viên làm cùng đề dùng chung một lần đọc DB. Bài đã nộp: kèm tiến độ AI
+    // chấm Speaking/Writing (trang kết quả hỏi lại định kỳ tới khi chấm xong)
+    const [cached, answers, grading] = await Promise.all([
       this.papers.get(row.examId),
       this.prisma.attemptAnswer.findMany({ where: { attemptId: id }, select: answerSelect }),
+      row.submittedAt ? this.assessments.progress(id) : null,
     ]);
     if (!cached) throw new AppException(ErrorCode.EXAM_NOT_FOUND);
     return this.toDetail(
@@ -281,6 +286,7 @@ export class AttemptsService {
       cached.exam.shuffleQuestions,
       answers.map(toAnswerItem),
       resumed,
+      grading,
     );
   }
 
@@ -290,6 +296,7 @@ export class AttemptsService {
     shuffle: boolean,
     answers: AttemptAnswerItem[],
     resumed: boolean,
+    grading: GradingProgress | null = null,
   ): AttemptDetail {
     // Luyện theo Part: chỉ đưa Part đó, câu đánh số lại từ 1
     const sections = row.sectionId
@@ -298,7 +305,7 @@ export class AttemptsService {
     return {
       ...toSummary(row, new Date()),
       resumed,
-      result: toResult(row),
+      result: toResult(row, grading),
       // Đề bật đảo câu: thứ tự riêng của lượt làm bài này (seed = id lượt), khớp với trang xem lại
       paper: toExamPaper(
         { ...paper, sections: shuffle ? shuffleSections(sections, row.id) : sections },
