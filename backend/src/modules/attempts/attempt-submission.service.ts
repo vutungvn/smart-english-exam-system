@@ -115,7 +115,7 @@ export class AttemptSubmissionService {
     return toResult(row, grading) as AttemptResult;
   }
 
-  /** Chấm phần trắc nghiệm, tạo phiếu chấm câu Writing đã viết; trả id các phiếu vừa tạo */
+  /** Chấm phần trắc nghiệm, tạo phiếu chấm câu Speaking/Writing đã trả lời; trả id các phiếu vừa tạo */
   private async grade(tx: Prisma.TransactionClient, attemptId: string): Promise<string[]> {
     const attempt = await tx.examAttempt.findUniqueOrThrow({
       where: { id: attemptId },
@@ -150,7 +150,7 @@ export class AttemptSubmissionService {
         type: item.question.type,
         part: item.question.part,
       }));
-    // Writing: bỏ trống 0 điểm, đã viết thì tạo phiếu chấm PENDING
+    // Speaking/Writing: bỏ trống 0 điểm, đã trả lời thì tạo phiếu chấm PENDING
     const open = await this.scoring.openScores(tx, attemptId, openQuestions, true);
     const answers = await tx.attemptAnswer.findMany({
       where: { attemptId },

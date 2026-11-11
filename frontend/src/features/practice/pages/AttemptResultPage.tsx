@@ -47,7 +47,7 @@ import {
 export function AttemptResultPage() {
   const { id = '' } = useParams();
   const [polling, setPolling] = useState(false);
-  // Bài Writing đang chờ AI chấm: hỏi lại mỗi 5 giây tới khi chấm xong (hoặc chỉ còn câu chấm lỗi)
+  // Bài Speaking/Writing đang chờ AI chấm: hỏi lại mỗi 5 giây tới khi chấm xong (hoặc chỉ còn câu chấm lỗi)
   const { data, error, isLoading, refetch } = useGetAttemptQuery(id, {
     refetchOnMountOrArgChange: true,
     pollingInterval: polling ? GRADING_POLL_MS : 0,
@@ -228,9 +228,7 @@ function GradingCard({ grading, reviewPath }: { grading: GradingProgress; review
         ) : (
           <TriangleAlert className="size-5" />
         )}
-        <h2 className="font-bold">
-          {running ? 'AI đang chấm bài viết' : 'Còn câu chưa chấm được'}
-        </h2>
+        <h2 className="font-bold">{running ? 'AI đang chấm bài làm' : 'Còn câu chưa chấm được'}</h2>
         <span className="ml-auto text-sm font-semibold tabular-nums">
           Đã chấm {grading.done}/{grading.total} câu
         </span>

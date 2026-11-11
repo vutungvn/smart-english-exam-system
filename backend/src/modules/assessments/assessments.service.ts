@@ -8,11 +8,27 @@ import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import type {
   AssessmentCorrection,
   AssessmentCriterion,
+  AssessmentSubScore,
   GradingProgress,
   QuestionAssessment,
 } from './assessments.types.js';
 import { GradingQueueService } from './grading-queue.service.js';
+import { READ_ALOUD_SUB_SCORES, SPEAKING_CRITERIA } from './speaking-grading.js';
 import { WRITING_CRITERIA } from './writing-grading.js';
+
+/**
+ * Thứ tự hiện tiêu chí của cả hai kỹ năng: phát âm, ngữ điệu, trôi chảy (Speaking), ngữ pháp, từ
+ * vựng (chung), mạch lạc (Writing), hoàn thành yêu cầu (chung). Phiếu chỉ có tiêu chí của kỹ năng mình
+ */
+const CRITERIA_ORDER: { key: string; label: string }[] = [
+  'pronunciation',
+  'intonation',
+  'fluency',
+  'grammar',
+  'vocabulary',
+  'coherence',
+  'task',
+].map((key) => [...SPEAKING_CRITERIA, ...WRITING_CRITERIA].find((c) => c.key === key)!);
 
 /** Học viên được bấm "Chấm lại" tối đa 2 lần cho mỗi câu chấm lỗi */
 export const MAX_REGRADES = 2;
@@ -25,6 +41,7 @@ export const assessmentViewSelect = {
   maxScore: true,
   criteria: true,
   feedback: true,
+  transcript: true,
   corrections: true,
   improvedAnswer: true,
   errorMessage: true,
@@ -37,18 +54,30 @@ type AssessmentRow = Prisma.AnswerAssessmentGetPayload<{ select: typeof assessme
 
 /** Phiếu chấm → dữ liệu hiện ở màn xem lại; tiêu chí theo thứ tự cố định, có nhãn tiếng Việt */
 export function toQuestionAssessment(row: AssessmentRow): QuestionAssessment {
-  const criteria = (row.criteria ?? {}) as Record<string, number>;
+  const done = row.status === AssessmentStatus.DONE;
+  const criteria = (row.criteria ?? {}) as Record<string, unknown>;
+  const subScores = (criteria.subScores ?? {}) as Record<string, unknown>;
   return {
     id: row.id,
     status: row.status,
     score: row.score === null ? null : Number(row.score),
     maxScore: Number(row.maxScore),
-    criteria:
-      row.status === AssessmentStatus.DONE
-        ? WRITING_CRITERIA.filter(({ key }) => typeof criteria[key] === 'number').map(
-            ({ key, label }): AssessmentCriterion => ({ key, label, score: criteria[key] }),
-          )
-        : [],
+    criteria: done
+      ? CRITERIA_ORDER.filter(({ key }) => typeof criteria[key] === 'number').map(
+          ({ key, label }): AssessmentCriterion => ({ key, label, score: criteria[key] as number }),
+        )
+      : [],
+    subScores: done
+      ? READ_ALOUD_SUB_SCORES.filter(({ key }) => typeof subScores[key] === 'number').map(
+          ({ key, label, max }): AssessmentSubScore => ({
+            key,
+            label,
+            max,
+            score: subScores[key] as number,
+          }),
+        )
+      : [],
+    transcript: done ? row.transcript : null,
     feedback: row.feedback,
     corrections: (row.corrections ?? []) as unknown as AssessmentCorrection[],
     improvedAnswer: row.improvedAnswer,

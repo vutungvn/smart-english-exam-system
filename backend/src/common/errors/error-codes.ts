@@ -86,6 +86,7 @@ export const ErrorCode = {
   ASSESSMENT_NOT_FOUND: 'ASSESSMENT_NOT_FOUND',
   ASSESSMENT_NOT_FAILED: 'ASSESSMENT_NOT_FAILED',
   ASSESSMENT_REGRADE_LIMIT: 'ASSESSMENT_REGRADE_LIMIT',
+  ASSESSMENT_RECORDING_MISSING: 'ASSESSMENT_RECORDING_MISSING',
 
   // AI
   AI_QUOTA_EXCEEDED: 'AI_QUOTA_EXCEEDED',
@@ -362,6 +363,10 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.ASSESSMENT_REGRADE_LIMIT]: {
     status: HttpStatus.CONFLICT,
     message: 'Câu này đã hết lượt chấm lại, vui lòng liên hệ giáo viên',
+  },
+  [ErrorCode.ASSESSMENT_RECORDING_MISSING]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy bài nói để chấm (có thể đã quá thời hạn lưu)',
   },
 
   // AI

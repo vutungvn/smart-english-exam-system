@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
@@ -19,27 +18,8 @@ import {
   data,
   errorOf,
   login,
+  webm,
 } from './e2e/helpers.js';
-
-/** Bài nói giả bằng ffmpeg: âm sin dài `seconds` giây, WebM/Opus như Chrome ghi */
-function webm(seconds: number): Buffer {
-  const result = spawnSync(process.env.FFMPEG_PATH || 'ffmpeg', [
-    '-hide_banner',
-    '-loglevel',
-    'error',
-    '-f',
-    'lavfi',
-    '-i',
-    `sine=frequency=440:duration=${seconds}`,
-    '-c:a',
-    'libopus',
-    '-f',
-    'webm',
-    'pipe:1',
-  ]);
-  if (result.status !== 0) throw new Error(`Không tạo được bài nói mẫu: ${String(result.stderr)}`);
-  return result.stdout;
-}
 
 describe('Ghi âm Speaking (e2e)', () => {
   let app: INestApplication<App>;
@@ -107,12 +87,12 @@ describe('Ghi âm Speaking (e2e)', () => {
     );
     expect(uploaded.status).toBe(200);
 
-    // Luyện Part Speaking: chưa có điểm trắc nghiệm, bài nói chờ AI chấm
+    // Luyện Part Speaking: bài nói chờ AI chấm, câu chưa ghi âm 0 điểm (không chờ chấm)
     const result = await learner.post(`/attempts/${attempt.id}/submit`);
     expect(result.status).toBe(200);
     expect(data<{ status: string; pendingOpenCount: number }>(result)).toMatchObject({
       status: 'SUBMITTED',
-      pendingOpenCount: 2,
+      pendingOpenCount: 1,
     });
   });
 
@@ -159,7 +139,8 @@ describe('Ghi âm Speaking (e2e)', () => {
     );
     const answered = questions.find((question) => question.examQuestionId === first);
     const skipped = questions.find((question) => question.examQuestionId === second);
-    expect(answered?.outcome).toBe('PENDING');
+    // Worker chấm nền (FakeAi) có thể đã chấm xong trước khi mở trang xem lại
+    expect(['PENDING', 'SCORED']).toContain(answered?.outcome);
     expect(skipped?.outcome).toBe('SKIPPED');
     expect(skipped?.recordingUrl).toBeNull();
 

@@ -44,7 +44,14 @@ export function normalizeSkills(value: unknown, status: AttemptStatus): SkillSco
   }));
 }
 
-const isBlank = (text: string | null | undefined) => !text?.trim();
+/** Câu chưa trả lời: Writing chưa viết gì, Speaking chưa có bài nói */
+function isUnanswered(
+  type: QuestionType,
+  answer: { textAnswer: string | null; audioKey: string | null } | undefined,
+): boolean {
+  if (!answer) return true;
+  return type === QuestionType.SPOKEN_RESPONSE ? !answer.audioKey : !answer.textAnswer?.trim();
+}
 
 /**
  * Điểm câu Speaking/Writing của một lượt làm bài (SPRINT-86): tạo phiếu chấm lúc nộp bài, tổng hợp
@@ -57,9 +64,9 @@ export class AttemptScoringService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Điểm từng câu mở. Writing: bỏ trống 0 điểm, không gọi AI; đã viết thì lấy điểm của phiếu chấm
-   * (bản giáo viên ưu tiên hơn bản AI), chưa có phiếu và createMissing thì tạo phiếu PENDING.
-   * Speaking chưa chấm bằng AI (làm ở đợt sau) nên luôn chờ chấm như trước
+   * Điểm từng câu mở (Speaking, Writing). Bỏ trống (chưa viết, chưa có bài nói) 0 điểm, không gọi
+   * AI; đã trả lời thì lấy điểm của phiếu chấm (bản giáo viên ưu tiên hơn bản AI), chưa có phiếu và
+   * createMissing thì tạo phiếu PENDING
    */
   async openScores(
     tx: Prisma.TransactionClient,
@@ -77,18 +84,15 @@ export class AttemptScoringService {
         id: true,
         examQuestionId: true,
         textAnswer: true,
+        audioKey: true,
         assessments: { select: { grader: true, status: true, score: true } },
       },
     });
     const answerOf = new Map(answers.map((answer) => [answer.examQuestionId, answer]));
 
     for (const question of questions) {
-      if (question.type !== QuestionType.WRITTEN_RESPONSE) {
-        scores.set(question.examQuestionId, null);
-        continue;
-      }
       const answer = answerOf.get(question.examQuestionId);
-      if (!answer || isBlank(answer.textAnswer)) {
+      if (!answer || isUnanswered(question.type, answer)) {
         scores.set(question.examQuestionId, 0);
         continue;
       }

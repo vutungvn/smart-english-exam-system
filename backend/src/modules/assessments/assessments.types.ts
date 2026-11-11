@@ -3,7 +3,11 @@ import { AssessmentStatus } from '../../generated/prisma/enums.js';
 
 /** Một tiêu chí chấm (thang 0–5), dùng để chẩn đoán điểm mạnh/yếu, không cộng vào điểm câu */
 export class AssessmentCriterion {
-  @ApiProperty({ example: 'grammar', description: 'grammar · vocabulary · coherence · task' })
+  @ApiProperty({
+    example: 'grammar',
+    description:
+      'Writing: grammar · vocabulary · coherence · task; Speaking: pronunciation · intonation · fluency · grammar · vocabulary · task',
+  })
   key: string;
 
   @ApiProperty({ example: 'Ngữ pháp' })
@@ -11,6 +15,21 @@ export class AssessmentCriterion {
 
   @ApiProperty({ type: 'integer', minimum: 0, maximum: 5 })
   score: number;
+}
+
+/** Điểm con của Speaking Part 1 (đọc thành tiếng): phát âm 0–3, ngữ điệu 0–3, cộng lại là điểm câu */
+export class AssessmentSubScore {
+  @ApiProperty({ example: 'pronunciation', description: 'pronunciation · intonation' })
+  key: string;
+
+  @ApiProperty({ example: 'Phát âm' })
+  label: string;
+
+  @ApiProperty({ type: 'integer' })
+  score: number;
+
+  @ApiProperty({ type: 'integer', example: 3 })
+  max: number;
 }
 
 /** Câu sai → câu sửa (Writing) */
@@ -36,7 +55,10 @@ export class QuestionAssessment {
   @ApiProperty({ type: 'number', nullable: true, description: 'Điểm câu theo thang của dạng câu' })
   score: number | null;
 
-  @ApiProperty({ type: 'number', description: 'Writing P1: 3 · P2: 4 · P3: 5' })
+  @ApiProperty({
+    type: 'number',
+    description: 'Writing P1: 3 · P2: 4 · P3: 5; Speaking P1: 6 · P2–P4: 3 · P5: 5',
+  })
   maxScore: number;
 
   @ApiProperty({ type: [AssessmentCriterion], description: 'Rỗng khi chưa chấm xong' })
@@ -45,10 +67,23 @@ export class QuestionAssessment {
   @ApiProperty({ type: String, nullable: true, description: 'Nhận xét tiếng Việt' })
   feedback: string | null;
 
-  @ApiProperty({ type: [AssessmentCorrection] })
+  @ApiProperty({
+    type: [AssessmentSubScore],
+    description: 'Speaking Part 1: phát âm + ngữ điệu; câu khác rỗng',
+  })
+  subScores: AssessmentSubScore[];
+
+  @ApiProperty({ type: String, nullable: true, description: 'Speaking: lời nói AI nhận dạng được' })
+  transcript: string | null;
+
+  @ApiProperty({ type: [AssessmentCorrection], description: 'Writing; Speaking rỗng' })
   corrections: AssessmentCorrection[];
 
-  @ApiProperty({ type: String, nullable: true, description: 'Bài viết lại tốt hơn' })
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Writing: bài viết lại tốt hơn; Speaking: câu trả lời gợi ý',
+  })
   improvedAnswer: string | null;
 
   @ApiProperty({

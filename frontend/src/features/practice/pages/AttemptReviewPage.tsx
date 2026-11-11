@@ -42,7 +42,7 @@ import {
 export function AttemptReviewPage() {
   const { id = '' } = useParams();
   const [polling, setPolling] = useState(false);
-  // Luôn lấy bản mới: giáo viên có thể vừa sửa giải thích. Còn câu Writing đang chấm (kể cả vừa bấm
+  // Luôn lấy bản mới: giáo viên có thể vừa sửa giải thích. Còn câu Speaking/Writing đang chấm (kể cả vừa bấm
   // "Chấm lại") thì hỏi lại mỗi 5 giây tới khi chấm xong
   const { data, error, isLoading, refetch } = useGetAttemptReviewQuery(id, {
     refetchOnMountOrArgChange: true,

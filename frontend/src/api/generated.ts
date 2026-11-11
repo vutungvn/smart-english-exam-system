@@ -1210,6 +1210,7 @@ export type ErrorCode =
   | 'ASSESSMENT_NOT_FOUND'
   | 'ASSESSMENT_NOT_FAILED'
   | 'ASSESSMENT_REGRADE_LIMIT'
+  | 'ASSESSMENT_RECORDING_MISSING'
   | 'AI_QUOTA_EXCEEDED'
   | 'AI_UNAVAILABLE'
   | 'AI_EXPLANATION_NOT_SUPPORTED';
@@ -2193,10 +2194,17 @@ export type ReviewOption = {
 export type ReviewOutcome = 'CORRECT' | 'WRONG' | 'SKIPPED' | 'PENDING' | 'SCORED' | 'FAILED';
 export type AssessmentStatus = 'PENDING' | 'DONE' | 'FAILED';
 export type AssessmentCriterion = {
-  /** grammar · vocabulary · coherence · task */
+  /** Writing: grammar · vocabulary · coherence · task; Speaking: pronunciation · intonation · fluency · grammar · vocabulary · task */
   key: string;
   label: string;
   score: number;
+};
+export type AssessmentSubScore = {
+  /** pronunciation · intonation */
+  key: string;
+  label: string;
+  score: number;
+  max: number;
 };
 export type AssessmentCorrection = {
   original: string;
@@ -2208,14 +2216,19 @@ export type QuestionAssessment = {
   status: AssessmentStatus;
   /** Điểm câu theo thang của dạng câu */
   score: number | null;
-  /** Writing P1: 3 · P2: 4 · P3: 5 */
+  /** Writing P1: 3 · P2: 4 · P3: 5; Speaking P1: 6 · P2–P4: 3 · P5: 5 */
   maxScore: number;
   /** Rỗng khi chưa chấm xong */
   criteria: AssessmentCriterion[];
   /** Nhận xét tiếng Việt */
   feedback: string | null;
+  /** Speaking Part 1: phát âm + ngữ điệu; câu khác rỗng */
+  subScores: AssessmentSubScore[];
+  /** Speaking: lời nói AI nhận dạng được */
+  transcript: string | null;
+  /** Writing; Speaking rỗng */
   corrections: AssessmentCorrection[];
-  /** Bài viết lại tốt hơn */
+  /** Writing: bài viết lại tốt hơn; Speaking: câu trả lời gợi ý */
   improvedAnswer: string | null;
   /** Lý do chấm lỗi (FAILED), không chứa nội dung bài làm */
   errorMessage: string | null;

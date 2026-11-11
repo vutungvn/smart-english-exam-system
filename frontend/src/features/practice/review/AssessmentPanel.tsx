@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Bot,
   Hourglass,
+  AudioLines,
   Loader2,
   MessageSquareText,
   RotateCcw,
@@ -17,10 +18,27 @@ import { cn } from '@/lib/utils';
 import { formatTime } from '../practice-meta';
 import { scoreLevel } from './review-meta';
 
+/** speaking: bài nói (có transcript, Part 1 có điểm con) · writing: bài viết (có câu sửa) */
+export type AssessmentKind = 'speaking' | 'writing';
+
 interface AssessmentPanelProps {
   attemptId: string;
   assessment: QuestionAssessment;
+  kind: AssessmentKind;
 }
+
+const KIND_TEXT: Record<AssessmentKind, { rubric: string; improved: string; answer: string }> = {
+  speaking: {
+    rubric: 'Theo rubric TOEIC Speaking, không phải điểm chính thức của ETS',
+    improved: 'Câu trả lời gợi ý',
+    answer: 'bài nói',
+  },
+  writing: {
+    rubric: 'Theo rubric TOEIC Writing, không phải điểm chính thức của ETS',
+    improved: 'Bài viết lại gợi ý',
+    answer: 'bài viết',
+  },
+};
 
 const LEVEL_TONE = {
   high: 'bg-emerald-50 text-success',
@@ -29,13 +47,17 @@ const LEVEL_TONE = {
 } as const;
 
 /**
- * Kết quả AI chấm một câu Writing (SPRINT-86): điểm câu, điểm 4 tiêu chí, nhận xét, câu sửa, bài viết
- * lại; đang chấm thì báo chờ, chấm lỗi thì có nút "Chấm lại" (tối đa 2 lần)
+ * Kết quả AI chấm một câu Speaking/Writing (SPRINT-86): điểm câu (Speaking Part 1 kèm 2 điểm con),
+ * điểm tiêu chí, nhận xét, lời nói AI nghe được (Speaking), câu sửa (Writing), bài làm gợi ý; đang
+ * chấm thì báo chờ, chấm lỗi thì có nút "Chấm lại" (tối đa 2 lần)
  */
-export function AssessmentPanel({ attemptId, assessment }: AssessmentPanelProps) {
-  if (assessment.status === 'PENDING') return <PendingNote assessment={assessment} />;
+export function AssessmentPanel({ attemptId, assessment, kind }: AssessmentPanelProps) {
+  const text = KIND_TEXT[kind];
+  if (assessment.status === 'PENDING') {
+    return <PendingNote assessment={assessment} answer={text.answer} />;
+  }
   if (assessment.status === 'FAILED') {
-    return <FailedNote attemptId={attemptId} assessment={assessment} />;
+    return <FailedNote attemptId={attemptId} assessment={assessment} kind={kind} />;
   }
 
   const score = assessment.score ?? 0;
@@ -60,14 +82,33 @@ export function AssessmentPanel({ attemptId, assessment }: AssessmentPanelProps)
             <Bot className="size-4 text-sky-600" />
             Điểm ước lượng do AI chấm
           </p>
-          <p className="text-xs text-subtle">
-            Theo rubric TOEIC Writing, không phải điểm chính thức của ETS
-          </p>
+          <p className="text-xs text-subtle">{text.rubric}</p>
         </div>
       </div>
 
+      {assessment.subScores.length > 0 && (
+        <ul aria-label="Điểm thành phần" className="flex flex-wrap gap-2 text-sm">
+          {assessment.subScores.map((item) => (
+            <li
+              key={item.key}
+              className="rounded-xl bg-white px-3 py-1.5 font-semibold text-slate-700 ring-1 ring-border"
+            >
+              {item.label}:{' '}
+              <span className="text-foreground tabular-nums">
+                {item.score}/{item.max}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {assessment.criteria.length > 0 && (
-        <dl className="grid gap-2 sm:grid-cols-2">
+        <dl
+          className={cn(
+            'grid gap-2 sm:grid-cols-2',
+            assessment.criteria.length > 4 && 'lg:grid-cols-3',
+          )}
+        >
           {assessment.criteria.map((criterion) => (
             <div key={criterion.key} className="rounded-xl bg-white px-3 py-2 ring-1 ring-border">
               <div className="flex items-center justify-between gap-2 text-xs">
@@ -83,6 +124,18 @@ export function AssessmentPanel({ attemptId, assessment }: AssessmentPanelProps)
             </div>
           ))}
         </dl>
+      )}
+
+      {kind === 'speaking' && assessment.transcript && (
+        <div className="text-sm">
+          <h4 className="mb-1 flex items-center gap-2 font-semibold text-slate-800">
+            <AudioLines className="size-4 text-sky-600" />
+            AI nghe được bạn nói
+          </h4>
+          <p className="rounded-xl bg-white px-3 py-2 leading-relaxed wrap-break-word whitespace-pre-line text-slate-700 italic ring-1 ring-border">
+            {assessment.transcript}
+          </p>
+        </div>
       )}
 
       {assessment.feedback && (
@@ -124,7 +177,7 @@ export function AssessmentPanel({ attemptId, assessment }: AssessmentPanelProps)
         <details className="group rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-border">
           <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold text-slate-800 select-none [&::-webkit-details-marker]:hidden">
             <WandSparkles className="size-4 text-primary" />
-            Bài viết lại gợi ý
+            {text.improved}
             <span className="ml-auto text-xs font-medium text-primary group-open:hidden">Xem</span>
             <span className="ml-auto hidden text-xs font-medium text-primary group-open:inline">
               Thu gọn
@@ -139,7 +192,7 @@ export function AssessmentPanel({ attemptId, assessment }: AssessmentPanelProps)
   );
 }
 
-function PendingNote({ assessment }: { assessment: QuestionAssessment }) {
+function PendingNote({ assessment, answer }: { assessment: QuestionAssessment; answer: string }) {
   return (
     <p className="mt-4 flex items-start gap-2 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
       {assessment.nextRunAt ? (
@@ -149,7 +202,7 @@ function PendingNote({ assessment }: { assessment: QuestionAssessment }) {
       )}
       {assessment.nextRunAt
         ? `AI tạm hết lượt hôm nay, bài sẽ được chấm tiếp sau ${formatTime(assessment.nextRunAt)}.`
-        : 'AI đang chấm bài viết này, kết quả tự hiện khi chấm xong.'}
+        : `AI đang chấm ${answer} này, kết quả tự hiện khi chấm xong.`}
     </p>
   );
 }

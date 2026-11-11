@@ -15,6 +15,16 @@ import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { StorageService } from '../../infra/storage/storage.service.js';
 import { AttemptScoringService } from './attempt-scoring.service.js';
 import {
+  fakeSpeakingResult,
+  recordingSeconds,
+  SPEAKING_SYSTEM,
+  speakingPrompt,
+  speakingResultSchema,
+  speakingScore,
+  speakingSubScores,
+  type SpeakingResult,
+} from './speaking-grading.js';
+import {
   fakeWritingResult,
   WRITING_SYSTEM,
   writingPrompt,
@@ -27,6 +37,8 @@ export interface GradingJobData {
 }
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+/** Bài nói dài nhất 60 giây ở 32 kbps khoảng 240 KB; quá mức này là tệp lỗi */
+const MAX_RECORDING_BYTES = 5 * 1024 * 1024;
 /** Hết lượt AI trong ngày: chấm tiếp sau giờ reset một chút, rải ngẫu nhiên để không dồn cùng lúc */
 const RESUME_JITTER_MS = 60_000;
 
@@ -38,6 +50,7 @@ const assessmentSelect = {
   attemptAnswer: {
     select: {
       textAnswer: true,
+      audioKey: true,
       attempt: { select: { id: true, studentId: true, status: true } },
       examQuestion: {
         select: {
@@ -48,7 +61,8 @@ const assessmentSelect = {
               content: true,
               sampleAnswer: true,
               imageKey: true,
-              group: { select: { imageKey: true } },
+              responseSeconds: true,
+              group: { select: { imageKey: true, passage: true } },
             },
           },
         },
@@ -56,6 +70,19 @@ const assessmentSelect = {
     },
   },
 } satisfies Prisma.AnswerAssessmentSelect;
+
+type AssessmentRow = Prisma.AnswerAssessmentGetPayload<{ select: typeof assessmentSelect }>;
+
+/** Kết quả chấm một câu, đã quy về các cột của answer_assessments */
+interface GradedAnswer {
+  score: number;
+  criteria: Prisma.InputJsonValue;
+  feedback: string;
+  transcript: string | null;
+  corrections?: Prisma.InputJsonValue;
+  improvedAnswer: string | null;
+  model: string;
+}
 
 /** AI hết ngân sách trong ngày (AiGateway gửi kèm giờ reset) */
 function quotaResetAt(error: unknown): Date | null {
@@ -65,13 +92,14 @@ function quotaResetAt(error: unknown): Date | null {
 }
 
 /**
- * Chấm một câu Writing (một job của hàng đợi sw-grading, SPRINT-86): gửi đề, rubric, bài làm (Part 1
- * kèm ảnh) cho AI qua AiGateway, kết quả đúng thang thì lưu DONE rồi tổng hợp điểm bài làm. Không gửi
- * tên, email, id của học viên cho AI
+ * Chấm một câu Speaking/Writing (một job của hàng đợi sw-grading, SPRINT-86): gửi đề, rubric, bài làm
+ * cho AI qua AiGateway (Writing: bài viết, Part 1 kèm ảnh; Speaking: tệp ghi âm, kèm ảnh/bảng thông
+ * tin nếu có), kết quả đúng thang thì lưu DONE rồi tổng hợp điểm bài làm. Không gửi tên, email, id
+ * của học viên cho AI
  */
 @Injectable()
-export class WritingGraderService {
-  private readonly logger = new Logger(WritingGraderService.name);
+export class AnswerGraderService {
+  private readonly logger = new Logger(AnswerGraderService.name);
 
   constructor(
     private readonly prisma: PrismaService,
@@ -98,9 +126,8 @@ export class WritingGraderService {
     ) {
       return;
     }
-    const { question } = assessment.attemptAnswer.examQuestion;
-    // Speaking chấm ở đợt sau
-    if (question.type !== QuestionType.WRITTEN_RESPONSE) return;
+    const { type } = assessment.attemptAnswer.examQuestion.question;
+    if (type !== QuestionType.WRITTEN_RESPONSE && type !== QuestionType.SPOKEN_RESPONSE) return;
 
     const tries = assessment.tries + 1;
     await this.prisma.answerAssessment.update({
@@ -109,16 +136,20 @@ export class WritingGraderService {
     });
 
     try {
-      const result = await this.grade(assessment, tries);
+      const result =
+        type === QuestionType.WRITTEN_RESPONSE
+          ? await this.gradeWriting(assessment, tries)
+          : await this.gradeSpeaking(assessment, tries);
       await this.prisma.answerAssessment.updateMany({
         where: { id: assessment.id, status: AssessmentStatus.PENDING },
         data: {
           status: AssessmentStatus.DONE,
-          score: result.data.score,
-          criteria: result.data.criteria,
-          feedback: result.data.feedback,
-          corrections: result.data.corrections,
-          improvedAnswer: result.data.improvedAnswer || null,
+          score: result.score,
+          criteria: result.criteria,
+          feedback: result.feedback,
+          transcript: result.transcript,
+          corrections: result.corrections,
+          improvedAnswer: result.improvedAnswer || null,
           model: result.model,
           errorMessage: null,
           gradedAt: new Date(),
@@ -155,20 +186,20 @@ export class WritingGraderService {
     }
   }
 
-  private async grade(
-    assessment: Prisma.AnswerAssessmentGetPayload<{ select: typeof assessmentSelect }>,
-    tries: number,
-  ) {
+  private async gradeWriting(assessment: AssessmentRow, tries: number): Promise<GradedAnswer> {
     const { textAnswer, attempt, examQuestion } = assessment.attemptAnswer;
     const { question } = examQuestion;
     const answer = textAnswer ?? '';
     const image =
       question.part === 1
-        ? await this.loadImage(question.imageKey ?? question.group?.imageKey ?? null)
+        ? await this.loadFile(
+            question.imageKey ?? question.group?.imageKey ?? null,
+            MAX_IMAGE_BYTES,
+          )
         : null;
     const maxScore = Number(assessment.maxScore);
 
-    return this.ai.generate<WritingResult>({
+    const { data, model } = await this.ai.generate<WritingResult>({
       feature: AiFeature.SW_GRADING,
       // Chỉ để ghi ai_usage_logs, không gửi cho AI
       userId: attempt.studentId,
@@ -185,15 +216,79 @@ export class WritingGraderService {
       temperature: 0.1,
       fake: () => fakeWritingResult(question.part, answer, tries) as WritingResult,
     });
+    return {
+      score: data.score,
+      criteria: data.criteria,
+      feedback: data.feedback,
+      transcript: null,
+      corrections: data.corrections,
+      improvedAnswer: data.improvedAnswer,
+      model,
+    };
   }
 
-  /** Ảnh của câu Part 1; không đọc được thì chấm không kèm ảnh */
-  private async loadImage(key: string | null): Promise<AiAttachment | null> {
+  private async gradeSpeaking(assessment: AssessmentRow, tries: number): Promise<GradedAnswer> {
+    const { audioKey, attempt, examQuestion } = assessment.attemptAnswer;
+    const { question } = examQuestion;
+    const recording = await this.loadFile(audioKey, MAX_RECORDING_BYTES);
+    // Tệp đã bị xóa (quá hạn lưu) hoặc lỗi kho tệp: thử lại vài lần rồi báo chấm lỗi
+    if (!recording) throw new AppException(ErrorCode.ASSESSMENT_RECORDING_MISSING);
+
+    // Ảnh của câu (P2) và ảnh bảng thông tin của nhóm (P4)
+    const images: AiAttachment[] = [];
+    for (const key of new Set([question.imageKey, question.group?.imageKey])) {
+      const image = await this.loadFile(key ?? null, MAX_IMAGE_BYTES);
+      if (image) images.push(image);
+    }
+    const maxScore = Number(assessment.maxScore);
+    const seconds = recordingSeconds(recording.data.length);
+
+    const { data, model } = await this.ai.generate<SpeakingResult>({
+      feature: AiFeature.SW_GRADING,
+      // Chỉ để ghi ai_usage_logs, không gửi cho AI
+      userId: attempt.studentId,
+      schema: speakingResultSchema(question.part, maxScore),
+      systemInstruction: SPEAKING_SYSTEM,
+      prompt: speakingPrompt({
+        part: question.part,
+        content: question.content,
+        passage: question.group?.passage ?? null,
+        sampleAnswer: question.sampleAnswer,
+        responseSeconds: question.responseSeconds,
+        seconds,
+        imageCount: images.length,
+      }),
+      // Bài nói luôn ở cuối (prompt nói rõ thứ tự)
+      attachments: [...images, { ...recording, mimeType: 'audio/mpeg' }],
+      temperature: 0.1,
+      fake: () =>
+        fakeSpeakingResult({
+          part: question.part,
+          maxScore,
+          seconds,
+          responseSeconds: question.responseSeconds,
+          sampleAnswer: question.sampleAnswer,
+          tries,
+        }) as SpeakingResult,
+    });
+    const subScores = speakingSubScores(data);
+    return {
+      score: speakingScore(data),
+      criteria: subScores ? { ...data.criteria, subScores } : data.criteria,
+      feedback: data.feedback,
+      transcript: data.transcript || null,
+      improvedAnswer: data.improvedAnswer,
+      model,
+    };
+  }
+
+  /** Ảnh hoặc bài nói trong kho tệp; không có key, không đọc được hoặc quá lớn thì null */
+  private async loadFile(key: string | null, maxBytes: number): Promise<AiAttachment | null> {
     if (!key) return null;
     try {
       const object = await this.storage.get(key);
       if (!object) return null;
-      if ((object.contentLength ?? 0) > MAX_IMAGE_BYTES) {
+      if ((object.contentLength ?? 0) > maxBytes) {
         object.body.destroy();
         return null;
       }
@@ -201,7 +296,7 @@ export class WritingGraderService {
       for await (const chunk of object.body) chunks.push(chunk as Buffer);
       return { mimeType: object.contentType ?? 'image/jpeg', data: Buffer.concat(chunks) };
     } catch (error) {
-      this.logger.warn(`Không đọc được ảnh ${key}: ${(error as Error).message}`);
+      this.logger.warn(`Không đọc được tệp ${key}: ${(error as Error).message}`);
       return null;
     }
   }

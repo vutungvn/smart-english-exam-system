@@ -5,7 +5,7 @@ import { Queue, Worker, type ConnectionOptions, type JobsOptions, type RedisOpti
 import type { Env } from '../../config/env.schema.js';
 import { AssessmentStatus, Grader } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
-import { WritingGraderService, type GradingJobData } from './writing-grader.service.js';
+import { AnswerGraderService, type GradingJobData } from './answer-grader.service.js';
 
 export const GRADING_QUEUE = 'sw-grading';
 
@@ -36,7 +36,7 @@ export class GradingQueueService implements OnApplicationBootstrap, OnModuleDest
   constructor(
     config: ConfigService<Env, true>,
     private readonly prisma: PrismaService,
-    private readonly grader: WritingGraderService,
+    private readonly grader: AnswerGraderService,
   ) {
     // BullMQ cần maxRetriesPerRequest = null để worker chờ job (lệnh chặn) không bị ngắt
     const url: string = config.get('REDIS_URL', { infer: true });

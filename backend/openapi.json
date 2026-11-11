@@ -13775,6 +13775,7 @@
           "ASSESSMENT_NOT_FOUND",
           "ASSESSMENT_NOT_FAILED",
           "ASSESSMENT_REGRADE_LIMIT",
+          "ASSESSMENT_RECORDING_MISSING",
           "AI_QUOTA_EXCEEDED",
           "AI_UNAVAILABLE",
           "AI_EXPLANATION_NOT_SUPPORTED"
@@ -17989,7 +17990,7 @@
           "key": {
             "type": "string",
             "example": "grammar",
-            "description": "grammar · vocabulary · coherence · task"
+            "description": "Writing: grammar · vocabulary · coherence · task; Speaking: pronunciation · intonation · fluency · grammar · vocabulary · task"
           },
           "label": {
             "type": "string",
@@ -18005,6 +18006,33 @@
           "key",
           "label",
           "score"
+        ]
+      },
+      "AssessmentSubScore": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "pronunciation",
+            "description": "pronunciation · intonation"
+          },
+          "label": {
+            "type": "string",
+            "example": "Phát âm"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "max": {
+            "type": "integer",
+            "example": 3
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "score",
+          "max"
         ]
       },
       "AssessmentCorrection": {
@@ -18050,7 +18078,7 @@
           },
           "maxScore": {
             "type": "number",
-            "description": "Writing P1: 3 · P2: 4 · P3: 5"
+            "description": "Writing P1: 3 · P2: 4 · P3: 5; Speaking P1: 6 · P2–P4: 3 · P5: 5"
           },
           "criteria": {
             "description": "Rỗng khi chưa chấm xong",
@@ -18064,7 +18092,20 @@
             "nullable": true,
             "description": "Nhận xét tiếng Việt"
           },
+          "subScores": {
+            "description": "Speaking Part 1: phát âm + ngữ điệu; câu khác rỗng",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentSubScore"
+            }
+          },
+          "transcript": {
+            "type": "string",
+            "nullable": true,
+            "description": "Speaking: lời nói AI nhận dạng được"
+          },
           "corrections": {
+            "description": "Writing; Speaking rỗng",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AssessmentCorrection"
@@ -18073,7 +18114,7 @@
           "improvedAnswer": {
             "type": "string",
             "nullable": true,
-            "description": "Bài viết lại tốt hơn"
+            "description": "Writing: bài viết lại tốt hơn; Speaking: câu trả lời gợi ý"
           },
           "errorMessage": {
             "type": "string",
@@ -18103,6 +18144,8 @@
           "maxScore",
           "criteria",
           "feedback",
+          "subScores",
+          "transcript",
           "corrections",
           "improvedAnswer",
           "errorMessage",
