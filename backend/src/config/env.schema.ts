@@ -48,6 +48,9 @@ export const envSchema = z
     // ffmpeg chuẩn hóa bài nói Speaking (WebM/Opus, MP4/AAC → MP3 mono 16 kHz); để mặc định nếu
     // ffmpeg đã có trong PATH, Windows có thể ghi đường dẫn đầy đủ (C:\ffmpeg\bin\ffmpeg.exe)
     FFMPEG_PATH: z.string().min(1).default('ffmpeg'),
+    // Số ngày giữ bài nói Speaking sau khi nộp bài, quá hạn thì job dọn dẹp xóa (D19). TẠM ở env,
+    // chuyển sang system_settings khi làm cấu hình hệ thống (SPRINT-69)
+    RECORDING_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
 
     // AI (D28, Mục 7.4): để trống GEMINI_API_KEY thì dùng FakeAiProvider (dữ liệu mẫu, không gọi Google)
     GEMINI_API_KEY: z.string().optional(),

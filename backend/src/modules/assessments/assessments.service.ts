@@ -136,13 +136,17 @@ export class AssessmentsService {
         grader: Grader.AI,
         attemptAnswer: { attemptId, attempt: { studentId: user.id } },
       },
-      select: assessmentViewSelect,
+      select: { ...assessmentViewSelect, attemptAnswer: { select: { audioDeletedAt: true } } },
     });
     if (!row) throw new AppException(ErrorCode.ASSESSMENT_NOT_FOUND);
     if (row.status !== AssessmentStatus.FAILED)
       throw new AppException(ErrorCode.ASSESSMENT_NOT_FAILED);
     if (row.regradeCount >= MAX_REGRADES) {
       throw new AppException(ErrorCode.ASSESSMENT_REGRADE_LIMIT);
+    }
+    // Bài nói đã tự xóa vì quá hạn lưu: chấm lại chắc chắn lỗi, báo luôn và không tốn lượt chấm lại
+    if (row.attemptAnswer.audioDeletedAt) {
+      throw new AppException(ErrorCode.ASSESSMENT_RECORDING_MISSING);
     }
 
     // Điều kiện trong WHERE: bấm hai lần cùng lúc chỉ một lần được tính

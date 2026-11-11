@@ -336,6 +336,7 @@ export class AttemptsService {
                   { selectedOptionId: { not: null } },
                   { textAnswer: { not: null } },
                   { audioKey: { not: null } },
+                  { audioDeletedAt: { not: null } },
                 ],
               },
             },

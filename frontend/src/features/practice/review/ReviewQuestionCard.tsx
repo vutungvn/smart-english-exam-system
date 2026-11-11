@@ -1,5 +1,14 @@
 import type { ReactNode } from 'react';
-import { BookmarkCheck, Check, Lightbulb, Mic, NotebookPen, Sparkles, X } from 'lucide-react';
+import {
+  BookmarkCheck,
+  Check,
+  Lightbulb,
+  Mic,
+  MicOff,
+  NotebookPen,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import type { ReviewQuestion } from '@/api/generated';
 import { QuestionMedia } from '@/components/QuestionMedia';
 import { MediaAudio } from '@/components/media/MediaAudio';
@@ -208,6 +217,20 @@ function WritingReview({ question }: { question: ReviewQuestion }) {
 }
 
 function SpeakingReview({ question }: { question: ReviewQuestion }) {
+  // Bài nói đã tự xóa khi hết thời hạn lưu (D19): vẫn là câu đã trả lời, điểm và transcript còn giữ
+  if (question.recordingDeletedAt) {
+    return (
+      <p className="mt-4 flex items-start gap-2.5 rounded-2xl bg-violet-50 px-4 py-3 text-sm text-violet-900">
+        <MicOff className="mt-0.5 size-4 shrink-0" />
+        <span>
+          Bản ghi âm đã tự xóa ngày{' '}
+          {new Date(question.recordingDeletedAt).toLocaleDateString('vi-VN')} do hết thời hạn lưu
+          giọng nói (bảo vệ dữ liệu cá nhân). Điểm, nhận xét và nội dung AI nghe được vẫn giữ
+          nguyên.
+        </span>
+      </p>
+    );
+  }
   if (!question.recordingUrl) {
     return (
       <p className="mt-4 flex items-start gap-2.5 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">

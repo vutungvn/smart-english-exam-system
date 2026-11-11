@@ -563,21 +563,24 @@ model ExamAttempt {
 /// Câu trả lời của một câu trong lượt làm bài, ghi đè khi tự động lưu (upsert).
 /// D25: câu trắc nghiệm chỉ chọn một phương án nên lưu thẳng selected_option_id, không dùng bảng attempt_answer_options
 model AttemptAnswer {
-  id               String   @id(map: "pk_attempt_answers") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  attemptId        String   @map("attempt_id") @db.Uuid
-  examQuestionId   String   @map("exam_question_id") @db.Uuid
-  selectedOptionId String?  @map("selected_option_id") @db.Uuid
+  id               String    @id(map: "pk_attempt_answers") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attemptId        String    @map("attempt_id") @db.Uuid
+  examQuestionId   String    @map("exam_question_id") @db.Uuid
+  selectedOptionId String?   @map("selected_option_id") @db.Uuid
   /// Câu Writing
-  textAnswer       String?  @map("text_answer")
+  textAnswer       String?   @map("text_answer")
   /// Học viên đánh dấu để xem lại
-  isFlagged        Boolean  @default(false) @map("is_flagged")
+  isFlagged        Boolean   @default(false) @map("is_flagged")
   /// Câu trắc nghiệm: đúng/sai khi nộp bài; NULL khi bỏ trống hoặc câu Speaking/Writing
-  isCorrect        Boolean? @map("is_correct")
+  isCorrect        Boolean?  @map("is_correct")
   /// Bài nói Speaking đã chuẩn hóa (MP3 mono 16 kHz) trong kho tệp: recordings/<uuid>.mp3
-  audioKey         String?  @map("audio_key") @db.VarChar(500)
+  audioKey         String?   @map("audio_key") @db.VarChar(500)
+  /// Thời điểm job dọn dẹp xóa bài nói quá hạn lưu (D19, mặc định 30 ngày sau khi nộp); khi đó
+  /// audio_key về NULL nhưng câu vẫn tính là đã trả lời (khác câu bỏ trống)
+  audioDeletedAt   DateTime? @map("audio_deleted_at") @db.Timestamptz(6)
   /// Thời điểm học viên trả lời (đồng bộ sau mất mạng: bản có answered_at mới hơn được giữ)
-  answeredAt       DateTime @map("answered_at") @db.Timestamptz(6)
-  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  answeredAt       DateTime  @map("answered_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   attempt        ExamAttempt        @relation(fields: [attemptId], references: [id], onDelete: Cascade, map: "fk_attempt_answers_attempt_id")
   examQuestion   ExamQuestion       @relation(fields: [examQuestionId], references: [id], onDelete: Restrict, map: "fk_attempt_answers_exam_question_id")

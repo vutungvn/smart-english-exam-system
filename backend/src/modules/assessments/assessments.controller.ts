@@ -32,6 +32,7 @@ export class AssessmentsController {
     ErrorCode.ASSESSMENT_NOT_FOUND,
     ErrorCode.ASSESSMENT_NOT_FAILED,
     ErrorCode.ASSESSMENT_REGRADE_LIMIT,
+    ErrorCode.ASSESSMENT_RECORDING_MISSING,
   )
   regradeAssessment(
     @Param('id', UuidParam(ErrorCode.ATTEMPT_NOT_FOUND)) id: string,

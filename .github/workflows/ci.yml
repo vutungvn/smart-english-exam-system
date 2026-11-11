@@ -112,6 +112,7 @@ jobs:
           S3_SECRET_KEY=smart_exam_secret
           S3_BUCKET=smart-english-exam-test
           GEMINI_API_KEY=
+          RECORDING_RETENTION_DAYS=30
           EOF
 
       - name: Lint (ESLint + Prettier)

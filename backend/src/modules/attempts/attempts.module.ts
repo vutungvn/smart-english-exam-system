@@ -9,10 +9,11 @@ import { AttemptsController } from './attempts.controller.js';
 import { AttemptsService } from './attempts.service.js';
 import { ExamCatalogController } from './exam-catalog.controller.js';
 import { ExamCatalogService } from './exam-catalog.service.js';
+import { RecordingCleanupService } from './recording-cleanup.service.js';
 import { RecordingService } from './recording.service.js';
 
 // Học viên: xem đề đã xuất bản, làm bài (bắt đầu, tự động lưu, khôi phục, hủy), nộp bài và chấm
-// phần trắc nghiệm; ghi âm Speaking (tải lên, chuẩn hóa ffmpeg); tự nộp bài hết giờ bằng tác vụ định
+// phần trắc nghiệm; ghi âm Speaking (tải lên, chuẩn hóa ffmpeg, tự xóa sau 30 ngày); tự nộp bài hết giờ bằng tác vụ định
 // kỳ (kèm thông báo); xem lại bài đã nộp, lịch sử làm bài. Câu Speaking/Writing đưa vào hàng đợi AI
 // chấm (AssessmentsModule)
 @Module({
@@ -25,6 +26,7 @@ import { RecordingService } from './recording.service.js';
     AttemptAutoSubmitService,
     AttemptReviewService,
     RecordingService,
+    RecordingCleanupService,
   ],
 })
 export class AttemptsModule {}
