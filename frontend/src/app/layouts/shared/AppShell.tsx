@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Outlet } from 'react-router';
+import { NotificationListener } from '@/features/notifications/NotificationListener';
 
 export interface SidebarSlotProps {
   onNavigate?: () => void; // đóng ngăn kéo trên màn hẹp sau khi chọn mục
@@ -65,6 +66,8 @@ export function AppShell({
       </main>
 
       {children}
+      {/* Nhận thông báo realtime (chấm xong bài, tự nộp…) khi đang ở các trang sau đăng nhập */}
+      <NotificationListener />
     </div>
   );
 }

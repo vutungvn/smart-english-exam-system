@@ -1,22 +1,32 @@
 import { Logger } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PrismaService } from '../../infra/prisma/prisma.service.js';
+import type { AttemptNotificationsService } from '../notifications/attempt-notifications.service.js';
 import { AttemptAutoSubmitService } from './attempt-auto-submit.service.js';
 import { SYNC_GRACE_SECONDS } from './attempt-rules.js';
 import type { AttemptSubmissionService } from './attempt-submission.service.js';
 
 const NOW = new Date('2026-11-05T08:00:00.000Z');
 
-function setup(due: Promise<{ id: string }[]>, failing: string[] = []) {
+/** failing: nộp lỗi; alreadySubmitted: học viên đã tự nộp ngay trước lượt quét */
+function setup(
+  due: Promise<{ id: string }[]>,
+  failing: string[] = [],
+  alreadySubmitted: string[] = [],
+) {
   const findMany = vi.fn(() => due);
   const submit = vi.fn((id: string) =>
-    failing.includes(id) ? Promise.reject(new Error('DB lỗi')) : Promise.resolve({}),
+    failing.includes(id)
+      ? Promise.reject(new Error('DB lỗi'))
+      : Promise.resolve(!alreadySubmitted.includes(id)),
   );
+  const autoSubmitted = vi.fn(() => Promise.resolve());
   const service = new AttemptAutoSubmitService(
     { examAttempt: { findMany } } as unknown as PrismaService,
-    { submit } as unknown as AttemptSubmissionService,
+    { autoSubmit: submit } as unknown as AttemptSubmissionService,
+    { autoSubmitted } as unknown as AttemptNotificationsService,
   );
-  return { service, findMany, submit };
+  return { service, findMany, submit, autoSubmitted };
 }
 
 describe('AttemptAutoSubmitService', () => {
@@ -46,6 +56,17 @@ describe('AttemptAutoSubmitService', () => {
       }),
     );
     expect(submit.mock.calls).toEqual([['a'], ['b']]);
+  });
+
+  it('báo cho học viên bài nào vừa được tự nộp; bài học viên đã nộp trước thì không báo', async () => {
+    const { service, autoSubmitted } = setup(
+      Promise.resolve([{ id: 'a' }, { id: 'b' }]),
+      [],
+      ['b'],
+    );
+
+    expect(await service.submitExpired()).toBe(1);
+    expect(autoSubmitted.mock.calls).toEqual([['a']]);
   });
 
   it('một bài lỗi không chặn các bài còn lại', async () => {

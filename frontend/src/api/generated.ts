@@ -9,6 +9,7 @@ export const addTagTypes = [
   'Exams',
   'Exam Catalog',
   'Attempts',
+  'Notifications',
   'Progress',
   'AI Explanations',
 ] as const;
@@ -514,6 +515,37 @@ const injectedRtkApi = api
           method: 'POST',
         }),
         invalidatesTags: ['Attempts'],
+      }),
+      listNotifications: build.query<ListNotificationsApiResponse, ListNotificationsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/me/notifications`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ['Notifications'],
+      }),
+      getUnreadNotificationCount: build.query<
+        GetUnreadNotificationCountApiResponse,
+        GetUnreadNotificationCountApiArg
+      >({
+        query: () => ({ url: `/api/v1/me/notifications/unread-count` }),
+        providesTags: ['Notifications'],
+      }),
+      markAllNotificationsRead: build.mutation<
+        MarkAllNotificationsReadApiResponse,
+        MarkAllNotificationsReadApiArg
+      >({
+        query: () => ({ url: `/api/v1/me/notifications/read-all`, method: 'POST' }),
+        invalidatesTags: ['Notifications'],
+      }),
+      markNotificationRead: build.mutation<
+        MarkNotificationReadApiResponse,
+        MarkNotificationReadApiArg
+      >({
+        query: (queryArg) => ({ url: `/api/v1/me/notifications/${queryArg}/read`, method: 'POST' }),
+        invalidatesTags: ['Notifications'],
       }),
       getScoreTrend: build.query<GetScoreTrendApiResponse, GetScoreTrendApiArg>({
         query: (queryArg) => ({
@@ -1106,6 +1138,34 @@ export type RegradeAssessmentApiArg = {
   id: string;
   assessmentId: string;
 };
+export type ListNotificationsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: NotificationItem[];
+  meta: PaginationMetaDto;
+};
+export type ListNotificationsApiArg = {
+  page?: number;
+  limit?: number;
+};
+export type GetUnreadNotificationCountApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: UnreadNotificationCount;
+};
+export type GetUnreadNotificationCountApiArg = void;
+export type MarkAllNotificationsReadApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: object | null;
+};
+export type MarkAllNotificationsReadApiArg = void;
+export type MarkNotificationReadApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: object | null;
+};
+export type MarkNotificationReadApiArg = string;
 export type GetScoreTrendApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
@@ -1213,7 +1273,8 @@ export type ErrorCode =
   | 'ASSESSMENT_RECORDING_MISSING'
   | 'AI_QUOTA_EXCEEDED'
   | 'AI_UNAVAILABLE'
-  | 'AI_EXPLANATION_NOT_SUPPORTED';
+  | 'AI_EXPLANATION_NOT_SUPPORTED'
+  | 'NOTIFICATION_NOT_FOUND';
 export type FieldErrorDto = {
   /** Trường lỗi, trường lồng nhau dạng address.city */
   field: string;
@@ -2344,6 +2405,25 @@ export type SyncAnswerItemDto = {
 export type SyncAnswersDto = {
   answers: SyncAnswerItemDto[];
 };
+export type NotificationType = 'ATTEMPT_GRADED' | 'ATTEMPT_AUTO_SUBMITTED' | 'GRADING_FAILED';
+export type NotificationData = {
+  /** Bài làm liên quan (trang kết quả, xem lại) */
+  attemptId?: string;
+};
+export type NotificationItem = {
+  id: string;
+  /** ATTEMPT_GRADED: AI chấm xong, bài đã có điểm · ATTEMPT_AUTO_SUBMITTED: hết giờ, hệ thống tự nộp · GRADING_FAILED: có câu Speaking/Writing chấm lỗi, cần bấm "Chấm lại" */
+  type: NotificationType;
+  title: string;
+  message: string;
+  data: NotificationData | null;
+  /** null: chưa đọc */
+  readAt: string | null;
+  createdAt: string;
+};
+export type UnreadNotificationCount = {
+  count: number;
+};
 export type ScoreTrendPoint = {
   attemptId: string;
   submittedAt: string;
@@ -2549,6 +2629,10 @@ export const {
   useSubmitAttemptMutation,
   useCancelAttemptMutation,
   useRegradeAssessmentMutation,
+  useListNotificationsQuery,
+  useGetUnreadNotificationCountQuery,
+  useMarkAllNotificationsReadMutation,
+  useMarkNotificationReadMutation,
   useGetScoreTrendQuery,
   useGetProgressSkillsQuery,
   useGetAiExplanationQuery,

@@ -85,6 +85,21 @@ export class AttemptSubmissionService {
 
   /** studentId: chỉ cho chủ bài nộp (job tự nộp không truyền) */
   async submit(attemptId: string, studentId?: string): Promise<AttemptResult> {
+    return (await this.submitOnce(attemptId, studentId)).result;
+  }
+
+  /**
+   * Job tự nộp bài hết giờ: true khi chính lần gọi này nộp bài (để gửi thông báo), false khi học
+   * viên hoặc lượt quét khác đã nộp trước
+   */
+  async autoSubmit(attemptId: string): Promise<boolean> {
+    return (await this.submitOnce(attemptId)).submittedNow;
+  }
+
+  private async submitOnce(
+    attemptId: string,
+    studentId?: string,
+  ): Promise<{ result: AttemptResult; submittedNow: boolean }> {
     const created = await this.prisma.$transaction(
       async (tx) => {
         const [locked] = await tx.$queryRaw<{ status: AttemptStatus; student_id: string }[]>`
@@ -99,20 +114,20 @@ export class AttemptSubmissionService {
           );
         }
         // Đã nộp (bấm nộp hai lần, hoặc job tự nộp đến trước): giữ nguyên kết quả cũ
-        if (locked.status !== AttemptStatus.IN_PROGRESS) return [];
+        if (locked.status !== AttemptStatus.IN_PROGRESS) return null;
 
         return this.grade(tx, attemptId);
       },
       { timeout: 30_000 },
     );
     // Phiếu chấm đã ghi xong mới đưa vào hàng đợi (worker đọc được phiếu)
-    await this.queue.enqueue(created);
+    await this.queue.enqueue(created ?? []);
 
     const [row, grading] = await Promise.all([
       this.prisma.examAttempt.findUniqueOrThrow({ where: { id: attemptId }, select: resultSelect }),
       this.assessments.progress(attemptId),
     ]);
-    return toResult(row, grading) as AttemptResult;
+    return { result: toResult(row, grading) as AttemptResult, submittedNow: created !== null };
   }
 
   /** Chấm phần trắc nghiệm, tạo phiếu chấm câu Speaking/Writing đã trả lời; trả id các phiếu vừa tạo */

@@ -13,6 +13,7 @@ import { AiGateway } from '../../infra/ai/ai-gateway.service.js';
 import type { AiAttachment } from '../../infra/ai/ai.types.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { StorageService } from '../../infra/storage/storage.service.js';
+import { AttemptNotificationsService } from '../notifications/attempt-notifications.service.js';
 import { AttemptScoringService } from './attempt-scoring.service.js';
 import {
   fakeSpeakingResult,
@@ -95,7 +96,7 @@ function quotaResetAt(error: unknown): Date | null {
  * Chấm một câu Speaking/Writing (một job của hàng đợi sw-grading, SPRINT-86): gửi đề, rubric, bài làm
  * cho AI qua AiGateway (Writing: bài viết, Part 1 kèm ảnh; Speaking: tệp ghi âm, kèm ảnh/bảng thông
  * tin nếu có), kết quả đúng thang thì lưu DONE rồi tổng hợp điểm bài làm. Không gửi tên, email, id
- * của học viên cho AI
+ * của học viên cho AI. Bài làm chấm xong hoặc có câu chấm lỗi hẳn thì gửi thông báo (SPRINT-56)
  */
 @Injectable()
 export class AnswerGraderService {
@@ -106,6 +107,7 @@ export class AnswerGraderService {
     private readonly ai: AiGateway,
     private readonly storage: StorageService,
     private readonly scoring: AttemptScoringService,
+    private readonly notifications: AttemptNotificationsService,
   ) {}
 
   /** Có giới hạn tốc độ gọi Gemini (15 lượt/phút) hay không: dùng dữ liệu mẫu thì không cần */
@@ -129,6 +131,7 @@ export class AnswerGraderService {
     const { type } = assessment.attemptAnswer.examQuestion.question;
     if (type !== QuestionType.WRITTEN_RESPONSE && type !== QuestionType.SPOKEN_RESPONSE) return;
 
+    const attemptId = assessment.attemptAnswer.attempt.id;
     const tries = assessment.tries + 1;
     await this.prisma.answerAssessment.update({
       where: { id: assessment.id },
@@ -155,7 +158,7 @@ export class AnswerGraderService {
           gradedAt: new Date(),
         },
       });
-      await this.scoring.refresh(assessment.attemptAnswer.attempt.id);
+      if (await this.scoring.refresh(attemptId)) await this.notifications.graded(attemptId);
     } catch (error) {
       const resetAt = quotaResetAt(error);
       if (resetAt) {
@@ -173,7 +176,7 @@ export class AnswerGraderService {
         `Chấm phiếu ${assessment.id} lỗi (lần ${tries}${last ? ', dừng' : ''}): ${(error as Error).message}`,
       );
       if (!last) throw error;
-      await this.prisma.answerAssessment.updateMany({
+      const { count } = await this.prisma.answerAssessment.updateMany({
         where: { id: assessment.id, status: AssessmentStatus.PENDING },
         data: {
           status: AssessmentStatus.FAILED,
@@ -183,6 +186,7 @@ export class AnswerGraderService {
               : 'Lỗi hệ thống khi chấm bài, vui lòng chấm lại sau',
         },
       });
+      if (count > 0) await this.notifications.gradingFailed(attemptId);
     }
   }
 
