@@ -12861,7 +12861,7 @@
             }
           },
           "404": {
-            "description": "Lỗi, error.code thuộc: ASSESSMENT_NOT_FOUND",
+            "description": "Lỗi, error.code thuộc: ASSESSMENT_NOT_FOUND, ASSESSMENT_RECORDING_MISSING",
             "content": {
               "application/json": {
                 "schema": {
@@ -12876,6 +12876,17 @@
                       "error": {
                         "code": "ASSESSMENT_NOT_FOUND",
                         "message": "Không tìm thấy kết quả chấm của câu này"
+                      }
+                    }
+                  },
+                  "ASSESSMENT_RECORDING_MISSING": {
+                    "summary": "ASSESSMENT_RECORDING_MISSING: Không tìm thấy bài nói để chấm (có thể đã quá thời hạn lưu)",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "ASSESSMENT_RECORDING_MISSING",
+                        "message": "Không tìm thấy bài nói để chấm (có thể đã quá thời hạn lưu)"
                       }
                     }
                   }
@@ -18726,7 +18737,13 @@
           "recordingUrl": {
             "type": "string",
             "nullable": true,
-            "description": "URL ký để nghe lại bài nói (Speaking); null khi chưa ghi âm"
+            "description": "URL ký để nghe lại bài nói (Speaking); null khi chưa ghi âm hoặc bài nói đã tự xóa (recordingDeletedAt)"
+          },
+          "recordingDeletedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true,
+            "description": "Speaking: thời điểm bài nói bị xóa vì quá hạn lưu (mặc định 30 ngày sau khi nộp); điểm, transcript vẫn giữ"
           },
           "isFlagged": {
             "type": "boolean"
@@ -18768,6 +18785,7 @@
           "selectedOptionId",
           "textAnswer",
           "recordingUrl",
+          "recordingDeletedAt",
           "isFlagged",
           "explanation",
           "sampleAnswer",

@@ -2320,8 +2320,10 @@ export type ReviewQuestion = {
   selectedOptionId: string | null;
   /** Bài viết (Writing) */
   textAnswer: string | null;
-  /** URL ký để nghe lại bài nói (Speaking); null khi chưa ghi âm */
+  /** URL ký để nghe lại bài nói (Speaking); null khi chưa ghi âm hoặc bài nói đã tự xóa (recordingDeletedAt) */
   recordingUrl: string | null;
+  /** Speaking: thời điểm bài nói bị xóa vì quá hạn lưu (mặc định 30 ngày sau khi nộp); điểm, transcript vẫn giữ */
+  recordingDeletedAt: string | null;
   isFlagged: boolean;
   /** Giải thích đáp án (trắc nghiệm) hoặc gợi ý cách làm (câu trả lời mở) */
   explanation: string | null;

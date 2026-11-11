@@ -4,6 +4,8 @@ import type { App } from 'supertest/types.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { RoleCode } from '../src/common/constants/roles.js';
 import type { PrismaService } from '../src/infra/prisma/prisma.service.js';
+import { StorageService } from '../src/infra/storage/storage.service.js';
+import { RecordingCleanupService } from '../src/modules/attempts/recording-cleanup.service.js';
 import type { QuestionAssessment } from '../src/modules/assessments/assessments.types.js';
 import type {
   AttemptDetail,
@@ -193,6 +195,80 @@ describe('Chấm Speaking bằng AI (e2e, FakeAiProvider)', () => {
     expect(graded.scaledScore).not.toBeNull();
     const [, after] = await reviewQuestions(attemptId);
     expect(after.outcome).toBe('SCORED');
+  });
+
+  /** Dời cả lúc bắt đầu, hết giờ, nộp bài về quá khứ (giả lập bài nộp từ days ngày trước) */
+  const submittedDaysAgo = (attemptId: string, days: number) => prisma.$executeRaw`
+    UPDATE exam_attempts
+    SET started_at = started_at - make_interval(days => ${days}::int),
+        expires_at = expires_at - make_interval(days => ${days}::int),
+        submitted_at = submitted_at - make_interval(days => ${days}::int)
+    WHERE id = ${attemptId}::uuid`;
+
+  const audioKeys = async (attemptId: string) =>
+    (
+      await prisma.attemptAnswer.findMany({
+        where: { attemptId },
+        select: { audioKey: true, audioDeletedAt: true },
+      })
+    ).map((answer) => answer.audioKey);
+
+  it('bài nói quá 30 ngày: job xóa tệp, giữ điểm và transcript, câu vẫn là đã trả lời', async () => {
+    const storage = app.get(StorageService);
+    const oldId = await startAndRecord(await createSpeakingSwExam(prisma, teacherId), FULL_SECONDS);
+    await submit(oldId);
+    await waitForResult(oldId, (result) => result.status === 'GRADED');
+    const recentId = await startAndRecord(
+      await createSpeakingSwExam(prisma, teacherId),
+      FULL_SECONDS,
+    );
+    await submit(recentId);
+    const inProgressId = await startAndRecord(
+      await createSpeakingSwExam(prisma, teacherId),
+      FULL_SECONDS,
+    );
+
+    const oldKeys = await audioKeys(oldId);
+    await submittedDaysAgo(oldId, 31);
+    // Bài nộp 29 ngày trước chưa tới hạn
+    await submittedDaysAgo(recentId, 29);
+    expect(await app.get(RecordingCleanupService).cleanup()).toBeGreaterThanOrEqual(2);
+
+    for (const key of oldKeys) expect(await storage.get(key as string)).toBeNull();
+    expect(await audioKeys(oldId)).toEqual([null, null]);
+    expect((await audioKeys(recentId)).every(Boolean)).toBe(true);
+    expect((await audioKeys(inProgressId)).every(Boolean)).toBe(true);
+
+    // Điểm, phiếu chấm, transcript giữ nguyên; chỉ mất nút nghe lại
+    const result = data<AttemptDetail>(await student.get(`/attempts/${oldId}`))
+      .result as AttemptResult;
+    expect(result.scaledScore).toBe(200);
+    const [readAloud] = await reviewQuestions(oldId);
+    expect(readAloud).toMatchObject({ outcome: 'SCORED', recordingUrl: null });
+    expect(readAloud.recordingDeletedAt).toBeTruthy();
+    expect((readAloud.assessment as QuestionAssessment).transcript).toBeTruthy();
+
+    // Chạy lại không xóa thêm gì của bài cũ
+    await app.get(RecordingCleanupService).cleanup();
+    expect(await audioKeys(oldId)).toEqual([null, null]);
+  });
+
+  it('chấm lại câu lỗi khi bài nói đã tự xóa: báo ASSESSMENT_RECORDING_MISSING, không mất lượt', async () => {
+    const attemptId = await startAndRecord(await createSpeakingSwExam(prisma, teacherId), [45, 1]);
+    await submit(attemptId);
+    await waitForResult(attemptId, (result) => result.grading?.failed === 1);
+    await submittedDaysAgo(attemptId, 31);
+    await app.get(RecordingCleanupService).cleanup();
+
+    const [, short] = await reviewQuestions(attemptId);
+    expect(short).toMatchObject({ outcome: 'FAILED', recordingUrl: null });
+    const assessment = short.assessment as QuestionAssessment;
+    const res = await student.post(`/attempts/${attemptId}/assessments/${assessment.id}/regrade`);
+    expect(res.status).toBe(404);
+    expect(errorOf(res).code).toBe('ASSESSMENT_RECORDING_MISSING');
+
+    const [, after] = await reviewQuestions(attemptId);
+    expect((after.assessment as QuestionAssessment).regradesLeft).toBe(2);
   });
 
   it('luyện riêng Part 3: tính phần trăm', async () => {

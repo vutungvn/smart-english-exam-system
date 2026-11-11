@@ -59,6 +59,16 @@ describe('reviewOutcome', () => {
     );
   });
 
+  it('câu Speaking: bài nói đã tự xóa vì quá hạn lưu vẫn là đã trả lời, theo phiếu chấm', () => {
+    const deleted = answer({ audioKey: null, audioDeletedAt: new Date() });
+    expect(reviewOutcome(SPOKEN_RESPONSE, deleted, null, AssessmentStatus.DONE)).toBe(
+      ReviewOutcome.SCORED,
+    );
+    expect(reviewOutcome(SPOKEN_RESPONSE, answer({ audioKey: null }), null)).toBe(
+      ReviewOutcome.SKIPPED,
+    );
+  });
+
   it('đếm kết quả theo từng loại', () => {
     const counts = emptyCounts();
     for (const outcome of [

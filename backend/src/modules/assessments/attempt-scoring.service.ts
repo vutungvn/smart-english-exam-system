@@ -44,13 +44,19 @@ export function normalizeSkills(value: unknown, status: AttemptStatus): SkillSco
   }));
 }
 
-/** Câu chưa trả lời: Writing chưa viết gì, Speaking chưa có bài nói */
+/**
+ * Câu chưa trả lời: Writing chưa viết gì, Speaking chưa có bài nói (bài nói đã tự xóa vì quá hạn lưu
+ * vẫn tính là đã trả lời)
+ */
 function isUnanswered(
   type: QuestionType,
-  answer: { textAnswer: string | null; audioKey: string | null } | undefined,
+  answer:
+    { textAnswer: string | null; audioKey: string | null; audioDeletedAt: Date | null } | undefined,
 ): boolean {
   if (!answer) return true;
-  return type === QuestionType.SPOKEN_RESPONSE ? !answer.audioKey : !answer.textAnswer?.trim();
+  return type === QuestionType.SPOKEN_RESPONSE
+    ? !answer.audioKey && !answer.audioDeletedAt
+    : !answer.textAnswer?.trim();
 }
 
 /**
@@ -85,6 +91,7 @@ export class AttemptScoringService {
         examQuestionId: true,
         textAnswer: true,
         audioKey: true,
+        audioDeletedAt: true,
         assessments: { select: { grader: true, status: true, score: true } },
       },
     });

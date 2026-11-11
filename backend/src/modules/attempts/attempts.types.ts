@@ -388,9 +388,18 @@ export class ReviewQuestion extends PaperQuestion {
   @ApiProperty({
     type: String,
     nullable: true,
-    description: 'URL ký để nghe lại bài nói (Speaking); null khi chưa ghi âm',
+    description:
+      'URL ký để nghe lại bài nói (Speaking); null khi chưa ghi âm hoặc bài nói đã tự xóa (recordingDeletedAt)',
   })
   recordingUrl: string | null;
+
+  @ApiProperty({
+    type: Date,
+    nullable: true,
+    description:
+      'Speaking: thời điểm bài nói bị xóa vì quá hạn lưu (mặc định 30 ngày sau khi nộp); điểm, transcript vẫn giữ',
+  })
+  recordingDeletedAt: Date | null;
 
   @ApiProperty()
   isFlagged: boolean;

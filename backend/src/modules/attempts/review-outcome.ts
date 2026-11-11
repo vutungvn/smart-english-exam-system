@@ -8,6 +8,8 @@ export interface OutcomeAnswer {
   isCorrect: boolean | null;
   /** Bài nói Speaking trong kho tệp */
   audioKey?: string | null;
+  /** Bài nói đã bị xóa vì quá hạn lưu: vẫn là câu đã trả lời */
+  audioDeletedAt?: Date | null;
 }
 
 const ASSESSMENT_OUTCOME: Record<AssessmentStatus, ReviewOutcome> = {
@@ -32,7 +34,9 @@ export function reviewOutcome(
     const correct = answer.isCorrect ?? answer.selectedOptionId === correctOptionId;
     return correct ? ReviewOutcome.CORRECT : ReviewOutcome.WRONG;
   }
-  if (!answer?.textAnswer?.trim() && !answer?.audioKey) return ReviewOutcome.SKIPPED;
+  if (!answer?.textAnswer?.trim() && !answer?.audioKey && !answer?.audioDeletedAt) {
+    return ReviewOutcome.SKIPPED;
+  }
   return assessment ? ASSESSMENT_OUTCOME[assessment] : ReviewOutcome.PENDING;
 }
 
