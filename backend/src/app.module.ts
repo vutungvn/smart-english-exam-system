@@ -20,6 +20,7 @@ import { QuestionImportModule } from './modules/question-import/question-import.
 import { ProgressModule } from './modules/progress/progress.module.js';
 import { AiModule } from './infra/ai/ai.module.js';
 import { AiExplanationsModule } from './modules/ai-explanations/ai-explanations.module.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { AiExplanationsModule } from './modules/ai-explanations/ai-explanations.
     AttemptsModule,
     ProgressModule,
     AiExplanationsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

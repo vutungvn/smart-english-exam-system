@@ -92,6 +92,9 @@ export const ErrorCode = {
   AI_QUOTA_EXCEEDED: 'AI_QUOTA_EXCEEDED',
   AI_UNAVAILABLE: 'AI_UNAVAILABLE',
   AI_EXPLANATION_NOT_SUPPORTED: 'AI_EXPLANATION_NOT_SUPPORTED',
+
+  // Thông báo
+  NOTIFICATION_NOT_FOUND: 'NOTIFICATION_NOT_FOUND',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -381,6 +384,12 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.AI_EXPLANATION_NOT_SUPPORTED]: {
     status: HttpStatus.UNPROCESSABLE_ENTITY,
     message: 'Chỉ giải thích bằng AI được câu trắc nghiệm (Listening, Reading)',
+  },
+
+  // Thông báo
+  [ErrorCode.NOTIFICATION_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy thông báo',
   },
 };
 

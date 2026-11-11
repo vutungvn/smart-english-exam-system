@@ -61,6 +61,12 @@ export class TokenService {
     }
   }
 
+  /** Thời điểm hết hạn của access token (đã verify trước đó); WebSocket ngắt kết nối đúng lúc này */
+  accessTokenExpiresAt(token: string): Date | null {
+    const payload = this.jwt.decode<{ exp?: number } | null>(token);
+    return payload?.exp ? new Date(payload.exp * 1000) : null;
+  }
+
   /** Tạo refresh token và mở phiên tương ứng trong Redis */
   async createRefreshToken(userId: string): Promise<string> {
     const jti = randomUUID();

@@ -1,5 +1,6 @@
-import { Bell, Menu, Search } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import { BrandLogo } from '@/components/brand/BrandLogo';
+import { NotificationBell } from '@/features/notifications/NotificationBell';
 import { LanguageMenu, ThemeMenu } from './TopbarPreferences';
 import { UserMenu } from './UserMenu';
 
@@ -42,15 +43,7 @@ export function AppTopbar({ homePath, searchPlaceholder, onOpenSidebar }: AppTop
         <LanguageMenu />
         <ThemeMenu />
 
-        {/* TẠM: chấm đỏ là dữ liệu mẫu, nối API thông báo sau */}
-        <button
-          type="button"
-          aria-label="Thông báo (có thông báo mới)"
-          className="relative flex size-10 items-center justify-center rounded-xl text-slate-600 hover:bg-accent hover:text-brand"
-        >
-          <Bell className="size-5" />
-          <span className="absolute top-2 right-2.5 size-2 rounded-full bg-destructive ring-2 ring-white" />
-        </button>
+        <NotificationBell />
 
         <span aria-hidden className="mx-2 hidden h-8 w-px bg-border sm:block" />
 

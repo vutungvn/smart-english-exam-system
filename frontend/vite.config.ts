@@ -16,6 +16,11 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      // Socket.IO (namespace /notifications): đường dẫn mặc định /socket.io, cần bật ws
+      '/socket.io': {
+        target: 'http://localhost:3000',
+        ws: true,
+      },
     },
   },
 });

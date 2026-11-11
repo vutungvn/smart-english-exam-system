@@ -167,6 +167,18 @@ enum AiCallStatus {
   @@map("ai_call_status")
 }
 
+/// Loại thông báo (SPRINT-56); loại mới (được duyệt giáo viên, giáo viên sửa điểm…) thêm khi làm tới
+enum NotificationType {
+  /// AI chấm xong câu Speaking/Writing cuối cùng, bài làm đã có điểm
+  ATTEMPT_GRADED
+  /// Hết giờ, hệ thống tự nộp bài
+  ATTEMPT_AUTO_SUBMITTED
+  /// Có câu Speaking/Writing AI chấm lỗi, học viên cần bấm "Chấm lại"
+  GRADING_FAILED
+
+  @@map("notification_type")
+}
+
 // ================================================================
 // Nhóm Người dùng và phân quyền
 // ================================================================
@@ -241,6 +253,7 @@ model User {
   aiUsageLogs         AiUsageLog[]
   /// Các câu giáo viên này đã chấm lại (SPRINT-91)
   reviewedAssessments AnswerAssessment[]
+  notifications       Notification[]
 
   @@index([roleId], map: "ix_users_role_id")
   @@index([status], map: "ix_users_status")
@@ -665,4 +678,28 @@ model AiExplanation {
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade, map: "fk_ai_explanations_question_id")
 
   @@map("ai_explanations")
+}
+
+// ================================================================
+// Nhóm Thông báo
+// ================================================================
+
+/// Thông báo gửi tới người dùng (SPRINT-56): phát ngay qua WebSocket và lưu lại để xem trong chuông khi
+/// người dùng không mở trang. Nội dung soạn sẵn tiếng Việt, không chứa dữ liệu nhạy cảm
+model Notification {
+  id        String           @id(map: "pk_notifications") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  title     String           @db.VarChar(200)
+  message   String           @db.VarChar(500)
+  /// Dữ liệu để giao diện dẫn tới trang liên quan, ví dụ { attemptId }
+  data      Json?
+  /// null: chưa đọc
+  readAt    DateTime?        @map("read_at") @db.Timestamptz(6)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_notifications_user_id")
+
+  @@index([userId, createdAt(sort: Desc)], map: "ix_notifications_user_created")
+  @@map("notifications")
 }
