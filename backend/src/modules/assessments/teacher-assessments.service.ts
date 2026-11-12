@@ -23,10 +23,19 @@ import {
   toReviewRequest,
 } from './assessments.service.js';
 import { AttemptScoringService } from './attempt-scoring.service.js';
-import type { GradeAnswerDto, TeacherAssessmentQueryDto } from './dto/teacher-assessment.dto.js';
+import type {
+  AgreementQueryDto,
+  CalibrationQueryDto,
+  GradeAnswerDto,
+  TeacherAssessmentQueryDto,
+} from './dto/teacher-assessment.dto.js';
 import { READ_ALOUD_SUB_SCORES, SPEAKING_CRITERIA } from './speaking-grading.js';
 import {
   ReviewReason,
+  type AgreementPair,
+  type AgreementRow,
+  type AgreementStats,
+  type CalibrationSample,
   type ReviewCriterionOption,
   type ReviewSubScoreOption,
   type TeacherReviewDetail,
@@ -58,7 +67,7 @@ const itemSelect = {
   examQuestion: {
     select: { orderIndex: true, section: { select: { skill: true, part: true } } },
   },
-  assessments: { select: assessmentViewSelect },
+  assessments: { select: { ...assessmentViewSelect, blindReview: true } },
 } satisfies Prisma.AttemptAnswerSelect;
 
 const detailSelect = {
@@ -109,6 +118,49 @@ const WAITING_WHERE = {
     { reviewRequestedAt: { not: null } },
   ],
 } satisfies Prisma.AttemptAnswerWhereInput;
+
+/**
+ * Câu để chấm đối chiếu: AI đã chấm xong, chưa giáo viên nào chấm, còn bài làm để chấm (bài nói đã
+ * tự xóa thì không nghe được nên bỏ qua)
+ */
+const CALIBRATION_WHERE = {
+  assessments: {
+    some: { grader: Grader.AI, status: AssessmentStatus.DONE },
+    none: { grader: Grader.TEACHER },
+  },
+  OR: [{ textAnswer: { not: null } }, { audioKey: { not: null } }],
+} satisfies Prisma.AttemptAnswerWhereInput;
+
+/** Số cặp điểm tối đa trả về trang độ lệch (đủ cho bộ 20–30 bài và xuất CSV) */
+const MAX_PAIRS = 1000;
+
+const round = (value: number, digits = 1) => Math.round(value * 10 ** digits) / 10 ** digits;
+
+/** Chỉ số độ lệch của một nhóm cặp điểm (điểm, và quy về % thang để so giữa các Part) */
+export function agreementRow(
+  pairs: Pick<AgreementPair, 'aiScore' | 'teacherScore' | 'maxScore'>[],
+  skill: Skill | null = null,
+  part: number | null = null,
+): AgreementRow {
+  const count = pairs.length;
+  const mean = (pick: (pair: (typeof pairs)[number]) => number) =>
+    count ? pairs.reduce((sum, pair) => sum + pick(pair), 0) / count : 0;
+  return {
+    skill,
+    part,
+    count,
+    mae: round(
+      mean((p) => Math.abs(p.aiScore - p.teacherScore)),
+      2,
+    ),
+    maePercent: round(mean((p) => (Math.abs(p.aiScore - p.teacherScore) / p.maxScore) * 100)),
+    biasPercent: round(mean((p) => ((p.aiScore - p.teacherScore) / p.maxScore) * 100)),
+    exactRate: round(mean((p) => (p.aiScore === p.teacherScore ? 100 : 0))),
+    withinOneRate: round(mean((p) => (Math.abs(p.aiScore - p.teacherScore) <= 1 ? 100 : 0))),
+    aiMeanPercent: round(mean((p) => (p.aiScore / p.maxScore) * 100)),
+    teacherMeanPercent: round(mean((p) => (p.teacherScore / p.maxScore) * 100)),
+  };
+}
 
 function criteriaOptions(skill: Skill): ReviewCriterionOption[] {
   const list = skill === Skill.SPEAKING ? SPEAKING_CRITERIA : WRITING_CRITERIA;
@@ -163,13 +215,100 @@ export class TeacherAssessmentsService {
     );
   }
 
-  async detail(answerId: string, user: AuthUser): Promise<TeacherReviewDetail> {
+  /** blind: chấm đối chiếu, ẩn bản AI khi giáo viên chưa chấm câu này */
+  async detail(answerId: string, user: AuthUser, blind = false): Promise<TeacherReviewDetail> {
     const row = await this.prisma.attemptAnswer.findFirst({
       where: { id: answerId, ...openAnswerWhere(user, 'ALL') },
       select: detailSelect,
     });
     if (!row) throw new AppException(ErrorCode.ASSESSMENT_NOT_FOUND);
-    return this.toDetail(row, user);
+    return this.toDetail(row, user, blind);
+  }
+
+  /** Chọn ngẫu nhiên một câu AI đã chấm, chưa giáo viên nào chấm, để chấm đối chiếu */
+  async nextCalibration(user: AuthUser, query: CalibrationQueryDto): Promise<CalibrationSample> {
+    const where: Prisma.AttemptAnswerWhereInput = {
+      ...openAnswerWhere(user, query.scope, query.skill),
+      ...CALIBRATION_WHERE,
+    };
+    const remaining = await this.prisma.attemptAnswer.count({ where });
+    if (remaining === 0) return { answerId: null, remaining };
+    const [row] = await this.prisma.attemptAnswer.findMany({
+      where,
+      select: { id: true },
+      orderBy: { id: 'asc' },
+      skip: Math.floor(Math.random() * remaining),
+      take: 1,
+    });
+    return { answerId: row?.id ?? null, remaining };
+  }
+
+  /**
+   * Độ lệch điểm AI so với giáo viên (SPRINT-90) trên các câu có cả hai bản đã chấm xong. Mặc định
+   * chỉ tính câu chấm đối chiếu (giáo viên không thấy điểm AI) để mẫu không bị lệch
+   */
+  async agreement(user: AuthUser, query: AgreementQueryDto): Promise<AgreementStats> {
+    const rows = await this.prisma.attemptAnswer.findMany({
+      where: {
+        ...openAnswerWhere(user, query.scope),
+        AND: [
+          { assessments: { some: { grader: Grader.AI, status: AssessmentStatus.DONE } } },
+          {
+            assessments: {
+              some: {
+                ...TEACHER_DONE,
+                ...(query.sample === 'BLIND' ? { blindReview: true } : {}),
+              },
+            },
+          },
+        ],
+      },
+      select: itemSelect,
+    });
+    const pairs: AgreementPair[] = [];
+    for (const row of rows) {
+      const ai = row.assessments.find((item) => item.grader === Grader.AI);
+      const teacher = row.assessments.find((item) => item.grader === Grader.TEACHER);
+      if (!ai || !teacher) continue;
+      const { skill, part } = row.examQuestion.section;
+      const aiScore = Number(ai.score);
+      const teacherScore = Number(teacher.score);
+      pairs.push({
+        answerId: row.id,
+        examTitle: row.attempt.exam.title,
+        skill,
+        part,
+        questionNumber: row.examQuestion.orderIndex + 1,
+        aiScore,
+        teacherScore,
+        maxScore: Number(teacher.maxScore),
+        diff: aiScore - teacherScore,
+        blindReview: teacher.blindReview,
+        reviewerName: teacher.reviewer?.fullName ?? null,
+        reviewedAt: teacher.gradedAt,
+      });
+    }
+
+    const groups = new Map<string, AgreementPair[]>();
+    const bySkill = new Map<Skill, AgreementPair[]>();
+    for (const pair of pairs) {
+      const key = `${pair.skill}:${pair.part}`;
+      groups.set(key, [...(groups.get(key) ?? []), pair]);
+      bySkill.set(pair.skill, [...(bySkill.get(pair.skill) ?? []), pair]);
+    }
+    const skillOrder = (skill: Skill | null) => (skill === Skill.SPEAKING ? 0 : 1);
+    return {
+      overall: agreementRow(pairs),
+      bySkill: [...bySkill.entries()]
+        .map(([skill, list]) => agreementRow(list, skill))
+        .sort((a, b) => skillOrder(a.skill) - skillOrder(b.skill)),
+      byPart: [...groups.values()]
+        .map((list) => agreementRow(list, list[0].skill, list[0].part))
+        .sort((a, b) => skillOrder(a.skill) - skillOrder(b.skill) || (a.part ?? 0) - (b.part ?? 0)),
+      pairs: pairs
+        .sort((a, b) => Math.abs(b.diff) / b.maxScore - Math.abs(a.diff) / a.maxScore)
+        .slice(0, MAX_PAIRS),
+    };
   }
 
   /** Chấm hoặc sửa bản đã chấm; tính lại điểm bài làm và báo cho học viên */
@@ -217,13 +356,19 @@ export class TeacherAssessmentsService {
           id: existing.id,
           updatedAt: dto.updatedAt ? new Date(dto.updatedAt) : new Date(0),
         },
-        data,
+        // Sửa lại sau khi đã thấy điểm AI: không còn là mẫu chấm đối chiếu
+        data: { ...data, blindReview: false },
       });
       if (count === 0) throw this.conflict(existing.reviewer?.fullName);
     } else {
       try {
         await this.prisma.answerAssessment.create({
-          data: { ...data, attemptAnswerId: row.id, grader: Grader.TEACHER },
+          data: {
+            ...data,
+            attemptAnswerId: row.id,
+            grader: Grader.TEACHER,
+            blindReview: dto.blind === true,
+          },
         });
       } catch (error) {
         // Giáo viên khác vừa chấm cùng câu (unique attempt_answer_id + grader)
@@ -287,15 +432,20 @@ export class TeacherAssessmentsService {
       teacherScore: teacher?.score == null ? null : Number(teacher.score),
       reviewerName: teacher?.reviewer?.fullName ?? null,
       reviewedAt: teacher?.gradedAt ?? null,
+      blindReview: teacher?.blindReview ?? false,
     };
   }
 
-  private toDetail(row: DetailRow, user: AuthUser): TeacherReviewDetail {
+  private toDetail(row: DetailRow, user: AuthUser, blind: boolean): TeacherReviewDetail {
     const { question, section } = row.examQuestion;
-    const ai = row.assessments.find((item) => item.grader === Grader.AI);
     const teacher = row.assessments.find((item) => item.grader === Grader.TEACHER);
+    // Chấm đối chiếu: ẩn bản AI tới khi giáo viên lưu (đã chấm rồi thì hiện bình thường)
+    const hidden = blind && !teacher;
+    const ai = hidden ? undefined : row.assessments.find((item) => item.grader === Grader.AI);
     return {
       ...this.toItem(row, user),
+      ...(hidden ? { aiStatus: null, aiScore: null } : {}),
+      blind: hidden,
       question: {
         type: question.type,
         content: question.content,

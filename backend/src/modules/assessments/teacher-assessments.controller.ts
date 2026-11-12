@@ -9,9 +9,20 @@ import { ApiEnvelope, ApiPaginatedEnvelope } from '../../common/swagger/api-enve
 import { ApiErrors } from '../../common/swagger/api-errors.decorator.js';
 import type { WithMeta } from '../../common/types/api-response.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
-import { GradeAnswerDto, TeacherAssessmentQueryDto } from './dto/teacher-assessment.dto.js';
+import {
+  AgreementQueryDto,
+  CalibrationQueryDto,
+  GradeAnswerDto,
+  TeacherAssessmentDetailQueryDto,
+  TeacherAssessmentQueryDto,
+} from './dto/teacher-assessment.dto.js';
 import { TeacherAssessmentsService } from './teacher-assessments.service.js';
-import { TeacherReviewDetail, TeacherReviewItem } from './teacher-assessments.types.js';
+import {
+  AgreementStats,
+  CalibrationSample,
+  TeacherReviewDetail,
+  TeacherReviewItem,
+} from './teacher-assessments.types.js';
 
 // Giáo viên xem lại và sửa điểm AI chấm Speaking/Writing (SPRINT-91). Mọi giáo viên chấm được mọi
 // đề (tổ chấm chung); SPRINT-67 đổi sang quyền assessments.UPDATE
@@ -37,15 +48,50 @@ export class TeacherAssessmentsController {
     return this.assessments.list(user, query);
   }
 
+  // Route tĩnh khai báo trước :answerId
+  @Get('calibration/next')
+  @ApiOperation({
+    summary: 'Câu tiếp theo để chấm đối chiếu (SPRINT-90)',
+    description:
+      'Chọn ngẫu nhiên một câu AI đã chấm xong mà chưa giáo viên nào chấm. Mở bằng ' +
+      'GET /teacher/assessments/{answerId}?blind=true để ẩn điểm AI, lưu kèm blind: true.',
+  })
+  @ApiEnvelope(CalibrationSample)
+  getNextCalibration(
+    @CurrentUser() user: AuthUser,
+    @Query() query: CalibrationQueryDto,
+  ): Promise<CalibrationSample> {
+    return this.assessments.nextCalibration(user, query);
+  }
+
+  @Get('agreement')
+  @ApiOperation({
+    summary: 'Độ lệch điểm AI so với giáo viên (SPRINT-90)',
+    description:
+      'Trên các câu có cả bản AI và bản giáo viên: độ lệch tuyệt đối trung bình (MAE), độ lệch có ' +
+      'dấu, tỉ lệ khớp, lệch ≤ 1 điểm; toàn bộ, theo kỹ năng, theo Part, kèm danh sách cặp điểm.',
+  })
+  @ApiEnvelope(AgreementStats)
+  getAssessmentAgreement(
+    @CurrentUser() user: AuthUser,
+    @Query() query: AgreementQueryDto,
+  ): Promise<AgreementStats> {
+    return this.assessments.agreement(user, query);
+  }
+
   @Get(':answerId')
-  @ApiOperation({ summary: 'Chi tiết một câu để chấm: đề, bài làm, bản AI, bản giáo viên' })
+  @ApiOperation({
+    summary: 'Chi tiết một câu để chấm: đề, bài làm, bản AI, bản giáo viên',
+    description: 'blind=true (chấm đối chiếu): ẩn bản AI khi giáo viên chưa chấm câu này.',
+  })
   @ApiEnvelope(TeacherReviewDetail)
   @ApiErrors(ErrorCode.ASSESSMENT_NOT_FOUND)
   getTeacherAssessment(
     @Param('answerId', UuidParam(ErrorCode.ASSESSMENT_NOT_FOUND)) answerId: string,
+    @Query() query: TeacherAssessmentDetailQueryDto,
     @CurrentUser() user: AuthUser,
   ): Promise<TeacherReviewDetail> {
-    return this.assessments.detail(answerId, user);
+    return this.assessments.detail(answerId, user, query.blind === 'true');
   }
 
   @Put(':answerId')

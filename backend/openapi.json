@@ -13426,8 +13426,351 @@
         ]
       }
     },
+    "/api/v1/teacher/assessments/calibration/next": {
+      "get": {
+        "description": "Chọn ngẫu nhiên một câu AI đã chấm xong mà chưa giáo viên nào chấm. Mở bằng GET /teacher/assessments/{answerId}?blind=true để ẩn điểm AI, lưu kèm blind: true.",
+        "operationId": "getNextCalibration",
+        "parameters": [
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "ALL",
+              "type": "string",
+              "enum": [
+                "ALL",
+                "MINE"
+              ]
+            }
+          },
+          {
+            "name": "skill",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Skill"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CalibrationSample"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "scope",
+                            "message": "scope không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Câu tiếp theo để chấm đối chiếu (SPRINT-90)",
+        "tags": [
+          "Teacher Assessments"
+        ]
+      }
+    },
+    "/api/v1/teacher/assessments/agreement": {
+      "get": {
+        "description": "Trên các câu có cả bản AI và bản giáo viên: độ lệch tuyệt đối trung bình (MAE), độ lệch có dấu, tỉ lệ khớp, lệch ≤ 1 điểm; toàn bộ, theo kỹ năng, theo Part, kèm danh sách cặp điểm.",
+        "operationId": "getAssessmentAgreement",
+        "parameters": [
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "ALL",
+              "type": "string",
+              "enum": [
+                "ALL",
+                "MINE"
+              ]
+            }
+          },
+          {
+            "name": "sample",
+            "required": false,
+            "in": "query",
+            "description": "BLIND: chỉ câu chấm đối chiếu (không thấy điểm AI, mẫu không lệch) · ALL: mọi câu có cả bản AI và giáo viên",
+            "schema": {
+              "default": "BLIND",
+              "type": "string",
+              "enum": [
+                "BLIND",
+                "ALL"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AgreementStats"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "scope",
+                            "message": "scope không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Độ lệch điểm AI so với giáo viên (SPRINT-90)",
+        "tags": [
+          "Teacher Assessments"
+        ]
+      }
+    },
     "/api/v1/teacher/assessments/{answerId}": {
       "get": {
+        "description": "blind=true (chấm đối chiếu): ẩn bản AI khi giáo viên chưa chấm câu này.",
         "operationId": "getTeacherAssessment",
         "parameters": [
           {
@@ -13436,6 +13779,19 @@
             "in": "path",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "blind",
+            "required": false,
+            "in": "query",
+            "description": "true: chấm đối chiếu, ẩn bản AI (điểm, tiêu chí, transcript) khi giáo viên chưa chấm câu này",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
             }
           }
         ],
@@ -20133,6 +20489,10 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "blindReview": {
+            "type": "boolean",
+            "description": "Bản giáo viên chấm đối chiếu (chưa thấy điểm AI khi chấm)"
           }
         },
         "required": [
@@ -20151,7 +20511,194 @@
           "maxScore",
           "teacherScore",
           "reviewerName",
+          "reviewedAt",
+          "blindReview"
+        ]
+      },
+      "CalibrationSample": {
+        "type": "object",
+        "properties": {
+          "answerId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "null: không còn câu nào AI đã chấm mà giáo viên chưa chấm"
+          },
+          "remaining": {
+            "type": "integer",
+            "description": "Số câu còn có thể chấm đối chiếu"
+          }
+        },
+        "required": [
+          "answerId",
+          "remaining"
+        ]
+      },
+      "AgreementRow": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "nullable": true,
+            "description": "null: toàn bộ",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "integer",
+            "nullable": true,
+            "description": "null: cả kỹ năng"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Số câu có cả điểm AI và điểm giáo viên"
+          },
+          "mae": {
+            "type": "number",
+            "description": "Độ lệch tuyệt đối trung bình |AI − GV| (điểm)"
+          },
+          "maePercent": {
+            "type": "number",
+            "description": "Như mae nhưng quy về % thang của câu"
+          },
+          "biasPercent": {
+            "type": "number",
+            "description": "Độ lệch có dấu trung bình (AI − GV, % thang): dương là AI chấm cao hơn"
+          },
+          "exactRate": {
+            "type": "number",
+            "description": "% câu AI cho đúng bằng điểm giáo viên"
+          },
+          "withinOneRate": {
+            "type": "number",
+            "description": "% câu lệch không quá 1 điểm"
+          },
+          "aiMeanPercent": {
+            "type": "number",
+            "description": "Điểm AI trung bình (% thang)"
+          },
+          "teacherMeanPercent": {
+            "type": "number",
+            "description": "Điểm giáo viên trung bình (% thang)"
+          }
+        },
+        "required": [
+          "skill",
+          "part",
+          "count",
+          "mae",
+          "maePercent",
+          "biasPercent",
+          "exactRate",
+          "withinOneRate",
+          "aiMeanPercent",
+          "teacherMeanPercent"
+        ]
+      },
+      "AgreementPair": {
+        "type": "object",
+        "properties": {
+          "answerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "examTitle": {
+            "type": "string"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "integer"
+          },
+          "questionNumber": {
+            "type": "integer"
+          },
+          "aiScore": {
+            "type": "number"
+          },
+          "teacherScore": {
+            "type": "number"
+          },
+          "maxScore": {
+            "type": "number"
+          },
+          "diff": {
+            "type": "number",
+            "description": "AI − GV (điểm)"
+          },
+          "blindReview": {
+            "type": "boolean"
+          },
+          "reviewerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "reviewedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "answerId",
+          "examTitle",
+          "skill",
+          "part",
+          "questionNumber",
+          "aiScore",
+          "teacherScore",
+          "maxScore",
+          "diff",
+          "blindReview",
+          "reviewerName",
           "reviewedAt"
+        ]
+      },
+      "AgreementStats": {
+        "type": "object",
+        "properties": {
+          "overall": {
+            "description": "Toàn bộ mẫu",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AgreementRow"
+              }
+            ]
+          },
+          "bySkill": {
+            "description": "Theo kỹ năng (part = null)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgreementRow"
+            }
+          },
+          "byPart": {
+            "description": "Theo kỹ năng và Part",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgreementRow"
+            }
+          },
+          "pairs": {
+            "description": "Mọi cặp điểm, lệch nhiều nhất trước (xem lại prompt, xuất CSV cho báo cáo)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgreementPair"
+            }
+          }
+        },
+        "required": [
+          "overall",
+          "bySkill",
+          "byPart",
+          "pairs"
         ]
       },
       "ReviewQuestionContent": {
@@ -20346,6 +20893,10 @@
             "format": "date-time",
             "nullable": true
           },
+          "blindReview": {
+            "type": "boolean",
+            "description": "Bản giáo viên chấm đối chiếu (chưa thấy điểm AI khi chấm)"
+          },
           "question": {
             "$ref": "#/components/schemas/ReviewQuestionContent"
           },
@@ -20381,6 +20932,10 @@
               }
             ]
           },
+          "blind": {
+            "type": "boolean",
+            "description": "Đang chấm đối chiếu: bản AI bị ẩn (aiAssessment, aiScore, aiStatus null) tới khi giáo viên lưu"
+          },
           "criteriaOptions": {
             "description": "Tiêu chí 0–5 của kỹ năng",
             "type": "array",
@@ -20413,11 +20968,13 @@
           "teacherScore",
           "reviewerName",
           "reviewedAt",
+          "blindReview",
           "question",
           "answer",
           "reviewRequest",
           "aiAssessment",
           "teacherAssessment",
+          "blind",
           "criteriaOptions",
           "subScoreOptions"
         ]
@@ -20472,6 +21029,10 @@
             "minLength": 5,
             "maxLength": 2000,
             "description": "Nhận xét cho học viên"
+          },
+          "blind": {
+            "type": "boolean",
+            "description": "Chấm đối chiếu (chưa xem điểm AI); chỉ có tác dụng khi chấm lần đầu, sửa lại thì bỏ cờ này"
           },
           "updatedAt": {
             "type": "string",

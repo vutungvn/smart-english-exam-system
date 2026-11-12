@@ -630,6 +630,9 @@ model AnswerAssessment {
   nextRunAt       DateTime?        @map("next_run_at") @db.Timestamptz(6)
   /// Giáo viên chấm (grader = TEACHER)
   reviewedBy      String?          @map("reviewed_by") @db.Uuid
+  /// Bản giáo viên chấm đối chiếu (SPRINT-90): chấm khi chưa thấy điểm AI, dùng đo độ lệch AI. Sửa
+  /// lại sau đó (đã thấy điểm AI) thì về false
+  blindReview     Boolean          @default(false) @map("blind_review")
   gradedAt        DateTime?        @map("graded_at") @db.Timestamptz(6)
   createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)

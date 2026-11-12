@@ -68,6 +68,9 @@ export class TeacherReviewItem {
 
   @ApiProperty({ type: String, format: 'date-time', nullable: true })
   reviewedAt: Date | null;
+
+  @ApiProperty({ description: 'Bản giáo viên chấm đối chiếu (chưa thấy điểm AI khi chấm)' })
+  blindReview: boolean;
 }
 
 /** Tiêu chí giáo viên có thể chấm (0–5) theo kỹ năng */
@@ -156,6 +159,12 @@ export class TeacherReviewDetail extends TeacherReviewItem {
   })
   teacherAssessment: QuestionAssessment | null;
 
+  @ApiProperty({
+    description:
+      'Đang chấm đối chiếu: bản AI bị ẩn (aiAssessment, aiScore, aiStatus null) tới khi giáo viên lưu',
+  })
+  blind: boolean;
+
   @ApiProperty({ type: [ReviewCriterionOption], description: 'Tiêu chí 0–5 của kỹ năng' })
   criteriaOptions: ReviewCriterionOption[];
 
@@ -164,4 +173,111 @@ export class TeacherReviewDetail extends TeacherReviewItem {
     description: 'Speaking Part 1: chấm 2 điểm con thay cho điểm câu; câu khác rỗng',
   })
   subScoreOptions: ReviewSubScoreOption[];
+}
+
+/** Câu tiếp theo để chấm đối chiếu */
+export class CalibrationSample {
+  @ApiProperty({
+    type: String,
+    format: 'uuid',
+    nullable: true,
+    description: 'null: không còn câu nào AI đã chấm mà giáo viên chưa chấm',
+  })
+  answerId: string | null;
+
+  @ApiProperty({ type: 'integer', description: 'Số câu còn có thể chấm đối chiếu' })
+  remaining: number;
+}
+
+/** Chỉ số độ lệch giữa điểm AI và điểm giáo viên của một nhóm câu */
+export class AgreementRow {
+  @ApiProperty({ enum: Skill, enumName: 'Skill', nullable: true, description: 'null: toàn bộ' })
+  skill: Skill | null;
+
+  @ApiProperty({ type: 'integer', nullable: true, description: 'null: cả kỹ năng' })
+  part: number | null;
+
+  @ApiProperty({ type: 'integer', description: 'Số câu có cả điểm AI và điểm giáo viên' })
+  count: number;
+
+  @ApiProperty({ type: 'number', description: 'Độ lệch tuyệt đối trung bình |AI − GV| (điểm)' })
+  mae: number;
+
+  @ApiProperty({ type: 'number', description: 'Như mae nhưng quy về % thang của câu' })
+  maePercent: number;
+
+  @ApiProperty({
+    type: 'number',
+    description: 'Độ lệch có dấu trung bình (AI − GV, % thang): dương là AI chấm cao hơn',
+  })
+  biasPercent: number;
+
+  @ApiProperty({ type: 'number', description: '% câu AI cho đúng bằng điểm giáo viên' })
+  exactRate: number;
+
+  @ApiProperty({ type: 'number', description: '% câu lệch không quá 1 điểm' })
+  withinOneRate: number;
+
+  @ApiProperty({ type: 'number', description: 'Điểm AI trung bình (% thang)' })
+  aiMeanPercent: number;
+
+  @ApiProperty({ type: 'number', description: 'Điểm giáo viên trung bình (% thang)' })
+  teacherMeanPercent: number;
+}
+
+/** Một câu có cả điểm AI và điểm giáo viên */
+export class AgreementPair {
+  @ApiProperty({ format: 'uuid' })
+  answerId: string;
+
+  @ApiProperty()
+  examTitle: string;
+
+  @ApiProperty({ enum: Skill, enumName: 'Skill' })
+  skill: Skill;
+
+  @ApiProperty({ type: 'integer' })
+  part: number;
+
+  @ApiProperty({ type: 'integer' })
+  questionNumber: number;
+
+  @ApiProperty({ type: 'number' })
+  aiScore: number;
+
+  @ApiProperty({ type: 'number' })
+  teacherScore: number;
+
+  @ApiProperty({ type: 'number' })
+  maxScore: number;
+
+  @ApiProperty({ type: 'number', description: 'AI − GV (điểm)' })
+  diff: number;
+
+  @ApiProperty()
+  blindReview: boolean;
+
+  @ApiProperty({ type: String, nullable: true })
+  reviewerName: string | null;
+
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  reviewedAt: Date | null;
+}
+
+/** Độ lệch AI chấm so với giáo viên (SPRINT-90) */
+export class AgreementStats {
+  @ApiProperty({ type: AgreementRow, description: 'Toàn bộ mẫu' })
+  overall: AgreementRow;
+
+  @ApiProperty({ type: [AgreementRow], description: 'Theo kỹ năng (part = null)' })
+  bySkill: AgreementRow[];
+
+  @ApiProperty({ type: [AgreementRow], description: 'Theo kỹ năng và Part' })
+  byPart: AgreementRow[];
+
+  @ApiProperty({
+    type: [AgreementPair],
+    description: 'Mọi cặp điểm, lệch nhiều nhất trước (xem lại prompt, xuất CSV cho báo cáo)',
+  })
+  pairs: AgreementPair[];
 }

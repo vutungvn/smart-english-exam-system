@@ -6,6 +6,8 @@ import { RoleCode } from '../src/common/constants/roles.js';
 import type { PrismaService } from '../src/infra/prisma/prisma.service.js';
 import type { QuestionAssessment } from '../src/modules/assessments/assessments.types.js';
 import type {
+  AgreementStats,
+  CalibrationSample,
   TeacherReviewDetail,
   TeacherReviewItem,
 } from '../src/modules/assessments/teacher-assessments.types.js';
@@ -60,8 +62,9 @@ describe('Giáo viên chấm lại Speaking/Writing (e2e, FakeAiProvider)', () =
   async function speakingAttempt(
     seconds: number[],
     done: (result: AttemptResult) => boolean,
+    examAuthorId = authorId,
   ): Promise<{ attemptId: string; part1: string; part3: string }> {
-    const exam = await createSpeakingSwExam(prisma, authorId);
+    const exam = await createSpeakingSwExam(prisma, examAuthorId);
     const attempt = data<AttemptDetail>(
       await student.post(`/exams/${exam.examId}/attempts`, { mode: 'FULL' }),
     );
@@ -261,8 +264,89 @@ describe('Giáo viên chấm lại Speaking/Writing (e2e, FakeAiProvider)', () =
     expect(errorOf(regrade).code).toBe('ASSESSMENT_TEACHER_REVIEWED');
   });
 
+  it('chấm đối chiếu: ẩn điểm AI tới khi lưu, đo độ lệch AI so với giáo viên', async () => {
+    // Giáo viên tác giả đề riêng: lọc "đề của tôi" để không lẫn dữ liệu các test khác
+    const author = await createUser(prisma, RoleCode.TEACHER);
+    const calibrator = api(app, await login(app, author.email));
+    const { part1, part3 } = await speakingAttempt(
+      [45, 15],
+      (r) => r.status === 'GRADED',
+      author.id,
+    );
+
+    const next = data<CalibrationSample>(
+      await calibrator.get('/teacher/assessments/calibration/next?scope=MINE'),
+    );
+    expect(next.remaining).toBe(2);
+    expect([part1, part3]).toContain(next.answerId);
+
+    // Mở ở chế độ chấm đối chiếu: không lộ điểm, tiêu chí, transcript của AI
+    const blind = data<TeacherReviewDetail>(
+      await calibrator.get(`/teacher/assessments/${part3}?blind=true`),
+    );
+    expect(blind).toMatchObject({ blind: true, aiAssessment: null, aiScore: null, aiStatus: null });
+    // Không có blind thì vẫn xem được bản AI như bình thường
+    const normal = data<TeacherReviewDetail>(await calibrator.get(`/teacher/assessments/${part3}`));
+    expect(normal).toMatchObject({ blind: false, aiScore: 3 });
+
+    // Lưu kèm blind: lần đầu chấm thì là mẫu đối chiếu; phản hồi hiện lại bản AI để so
+    const saved = data<TeacherReviewDetail>(
+      await calibrator.put(`/teacher/assessments/${part3}`, {
+        score: 2,
+        feedback: 'Trả lời đúng ý nhưng thiếu chi tiết.',
+        blind: true,
+      }),
+    );
+    expect(saved).toMatchObject({ blind: false, blindReview: true, aiScore: 3, teacherScore: 2 });
+    await calibrator.put(`/teacher/assessments/${part1}`, {
+      subScores: { pronunciation: 3, intonation: 3 },
+      feedback: 'Đọc rõ ràng, ngữ điệu tự nhiên.',
+      blind: true,
+    });
+    expect(
+      data<CalibrationSample>(
+        await calibrator.get('/teacher/assessments/calibration/next?scope=MINE'),
+      ),
+    ).toEqual({ answerId: null, remaining: 0 });
+
+    // Part 3: AI 3, GV 2 (lệch 1 = 33,3% thang) · Part 1: AI 6, GV 6
+    const stats = data<AgreementStats>(
+      await calibrator.get('/teacher/assessments/agreement?scope=MINE'),
+    );
+    expect(stats.overall).toMatchObject({
+      count: 2,
+      mae: 0.5,
+      maePercent: 16.7,
+      biasPercent: 16.7,
+      exactRate: 50,
+      withinOneRate: 100,
+    });
+    expect(stats.bySkill.map((row) => [row.skill, row.count])).toEqual([['SPEAKING', 2]]);
+    expect(stats.byPart.map((row) => [row.part, row.count, row.exactRate])).toEqual([
+      [1, 1, 100],
+      [3, 1, 0],
+    ]);
+    expect(stats.pairs[0]).toMatchObject({ answerId: part3, diff: 1, blindReview: true });
+
+    // Sửa lại sau khi đã thấy điểm AI: không còn là mẫu đối chiếu
+    await calibrator.put(`/teacher/assessments/${part3}`, {
+      score: 3,
+      feedback: 'Xem lại thì đủ ý.',
+      updatedAt: (saved.teacherAssessment as QuestionAssessment).updatedAt,
+    });
+    const blindOnly = data<AgreementStats>(
+      await calibrator.get('/teacher/assessments/agreement?scope=MINE'),
+    );
+    expect(blindOnly.overall.count).toBe(1);
+    const all = data<AgreementStats>(
+      await calibrator.get('/teacher/assessments/agreement?scope=MINE&sample=ALL'),
+    );
+    expect(all.overall).toMatchObject({ count: 2, exactRate: 100 });
+  });
+
   it('chỉ giáo viên vào được; câu không tồn tại 404', async () => {
     expect((await student.get('/teacher/assessments')).status).toBe(403);
+    expect((await student.get('/teacher/assessments/agreement')).status).toBe(403);
     const missing = await teacher.get('/teacher/assessments/00000000-0000-4000-8000-000000000000');
     expect(missing.status).toBe(404);
     expect(errorOf(missing).code).toBe('ASSESSMENT_NOT_FOUND');

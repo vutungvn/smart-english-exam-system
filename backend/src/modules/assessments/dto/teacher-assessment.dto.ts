@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsDateString,
   IsIn,
   IsInt,
@@ -44,6 +45,48 @@ export class TeacherAssessmentQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsIn(OPEN_SKILLS, { message: 'skill chỉ nhận SPEAKING hoặc WRITING' })
   skill?: (typeof OPEN_SKILLS)[number];
+}
+
+export class TeacherAssessmentDetailQueryDto {
+  @ApiPropertyOptional({
+    enum: ['true', 'false'],
+    description:
+      'true: chấm đối chiếu, ẩn bản AI (điểm, tiêu chí, transcript) khi giáo viên chưa chấm câu này',
+  })
+  @IsOptional()
+  @IsIn(['true', 'false'], { message: 'blind chỉ nhận true hoặc false' })
+  blind?: 'true' | 'false';
+}
+
+export class CalibrationQueryDto {
+  @ApiPropertyOptional({ enum: REVIEW_SCOPES, default: 'ALL' })
+  @IsOptional()
+  @IsIn(REVIEW_SCOPES, { message: 'scope chỉ nhận ALL hoặc MINE' })
+  scope: (typeof REVIEW_SCOPES)[number] = 'ALL';
+
+  @ApiPropertyOptional({ enum: OPEN_SKILLS, enumName: 'Skill' })
+  @IsOptional()
+  @IsIn(OPEN_SKILLS, { message: 'skill chỉ nhận SPEAKING hoặc WRITING' })
+  skill?: (typeof OPEN_SKILLS)[number];
+}
+
+export const AGREEMENT_SAMPLES = ['BLIND', 'ALL'] as const;
+
+export class AgreementQueryDto {
+  @ApiPropertyOptional({ enum: REVIEW_SCOPES, default: 'ALL' })
+  @IsOptional()
+  @IsIn(REVIEW_SCOPES, { message: 'scope chỉ nhận ALL hoặc MINE' })
+  scope: (typeof REVIEW_SCOPES)[number] = 'ALL';
+
+  @ApiPropertyOptional({
+    enum: AGREEMENT_SAMPLES,
+    default: 'BLIND',
+    description:
+      'BLIND: chỉ câu chấm đối chiếu (không thấy điểm AI, mẫu không lệch) · ALL: mọi câu có cả bản AI và giáo viên',
+  })
+  @IsOptional()
+  @IsIn(AGREEMENT_SAMPLES, { message: 'sample chỉ nhận BLIND hoặc ALL' })
+  sample: (typeof AGREEMENT_SAMPLES)[number] = 'BLIND';
 }
 
 /** Speaking Part 1: phát âm 0–3 + ngữ điệu 0–3 */
@@ -101,6 +144,14 @@ export class GradeAnswerDto {
     message: `Nhận xét dài từ 5 đến ${TEACHER_FEEDBACK_MAX} ký tự`,
   })
   feedback: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Chấm đối chiếu (chưa xem điểm AI); chỉ có tác dụng khi chấm lần đầu, sửa lại thì bỏ cờ này',
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'blind phải là true hoặc false' })
+  blind?: boolean;
 
   @ApiPropertyOptional({
     type: String,
