@@ -8,6 +8,7 @@ import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import type {
   AssessmentCorrection,
   AssessmentCriterion,
+  AssessmentReviewRequest,
   AssessmentSubScore,
   GradingProgress,
   QuestionAssessment,
@@ -48,6 +49,8 @@ export const assessmentViewSelect = {
   nextRunAt: true,
   regradeCount: true,
   gradedAt: true,
+  updatedAt: true,
+  reviewer: { select: { fullName: true } },
 } satisfies Prisma.AnswerAssessmentSelect;
 
 type AssessmentRow = Prisma.AnswerAssessmentGetPayload<{ select: typeof assessmentViewSelect }>;
@@ -59,6 +62,8 @@ export function toQuestionAssessment(row: AssessmentRow): QuestionAssessment {
   const subScores = (criteria.subScores ?? {}) as Record<string, unknown>;
   return {
     id: row.id,
+    grader: row.grader,
+    reviewerName: row.reviewer?.fullName ?? null,
     status: row.status,
     score: row.score === null ? null : Number(row.score),
     maxScore: Number(row.maxScore),
@@ -83,8 +88,9 @@ export function toQuestionAssessment(row: AssessmentRow): QuestionAssessment {
     improvedAnswer: row.improvedAnswer,
     errorMessage: row.status === AssessmentStatus.FAILED ? row.errorMessage : null,
     nextRunAt: row.status === AssessmentStatus.PENDING ? row.nextRunAt : null,
-    regradesLeft: Math.max(0, MAX_REGRADES - row.regradeCount),
+    regradesLeft: row.grader === Grader.AI ? Math.max(0, MAX_REGRADES - row.regradeCount) : 0,
     gradedAt: row.gradedAt,
+    updatedAt: row.updatedAt,
   };
 }
 
@@ -96,7 +102,17 @@ export function effectiveAssessment(rows: AssessmentRow[]): AssessmentRow | unde
   return teacher ?? rows.find((row) => row.grader === Grader.AI);
 }
 
-/** Tiến độ chấm, chấm lại câu lỗi của học viên (SPRINT-86) */
+/** Yêu cầu chấm lại đang lưu trên câu trả lời; null khi chưa yêu cầu */
+export function toReviewRequest(answer: {
+  reviewRequestedAt: Date | null;
+  reviewRequestNote: string | null;
+}): AssessmentReviewRequest | null {
+  return answer.reviewRequestedAt
+    ? { requestedAt: answer.reviewRequestedAt, note: answer.reviewRequestNote ?? '' }
+    : null;
+}
+
+/** Tiến độ chấm, chấm lại câu lỗi (SPRINT-86), yêu cầu giáo viên chấm lại (SPRINT-91) của học viên */
 @Injectable()
 export class AssessmentsService {
   constructor(
@@ -104,13 +120,32 @@ export class AssessmentsService {
     private readonly queue: GradingQueueService,
   ) {}
 
-  /** null khi bài làm không có câu nào cần AI chấm */
+  /**
+   * null khi bài làm không có câu nào cần AI chấm. Câu giáo viên đã chấm lại tính là đã chấm xong dù
+   * bản AI lỗi
+   */
   async progress(attemptId: string): Promise<GradingProgress | null> {
-    const rows = await this.prisma.answerAssessment.findMany({
+    const found = await this.prisma.answerAssessment.findMany({
       where: { grader: Grader.AI, attemptAnswer: { attemptId } },
-      select: { status: true, nextRunAt: true },
+      select: {
+        status: true,
+        nextRunAt: true,
+        attemptAnswer: {
+          select: {
+            assessments: {
+              where: { grader: Grader.TEACHER, status: AssessmentStatus.DONE },
+              select: { id: true },
+            },
+          },
+        },
+      },
     });
-    if (rows.length === 0) return null;
+    if (found.length === 0) return null;
+    const rows = found.map((row) =>
+      row.attemptAnswer.assessments.length > 0
+        ? { status: AssessmentStatus.DONE, nextRunAt: null }
+        : row,
+    );
     const count = (status: AssessmentStatus) => rows.filter((row) => row.status === status).length;
     const waiting = rows
       .filter((row) => row.status === AssessmentStatus.PENDING && row.nextRunAt)
@@ -136,9 +171,24 @@ export class AssessmentsService {
         grader: Grader.AI,
         attemptAnswer: { attemptId, attempt: { studentId: user.id } },
       },
-      select: { ...assessmentViewSelect, attemptAnswer: { select: { audioDeletedAt: true } } },
+      select: {
+        ...assessmentViewSelect,
+        attemptAnswer: {
+          select: {
+            audioDeletedAt: true,
+            assessments: {
+              where: { grader: Grader.TEACHER, status: AssessmentStatus.DONE },
+              select: { id: true },
+            },
+          },
+        },
+      },
     });
     if (!row) throw new AppException(ErrorCode.ASSESSMENT_NOT_FOUND);
+    // Giáo viên đã chấm câu này: điểm giáo viên là điểm chính thức, không cần AI chấm lại
+    if (row.attemptAnswer.assessments.length > 0) {
+      throw new AppException(ErrorCode.ASSESSMENT_TEACHER_REVIEWED);
+    }
     if (row.status !== AssessmentStatus.FAILED)
       throw new AppException(ErrorCode.ASSESSMENT_NOT_FAILED);
     if (row.regradeCount >= MAX_REGRADES) {
@@ -171,5 +221,55 @@ export class AssessmentsService {
       select: assessmentViewSelect,
     });
     return toQuestionAssessment(updated);
+  }
+
+  /**
+   * Học viên yêu cầu giáo viên chấm lại một câu AI đã chấm xong (mỗi câu một lần). Câu vào hàng đợi
+   * "Bài cần chấm lại" của giáo viên; câu chấm lỗi đã tự vào hàng đợi nên không cần yêu cầu
+   */
+  async requestReview(
+    attemptId: string,
+    assessmentId: string,
+    user: AuthUser,
+    note: string,
+  ): Promise<AssessmentReviewRequest> {
+    const row = await this.prisma.answerAssessment.findFirst({
+      where: {
+        id: assessmentId,
+        grader: Grader.AI,
+        attemptAnswer: { attemptId, attempt: { studentId: user.id } },
+      },
+      select: {
+        status: true,
+        attemptAnswer: {
+          select: {
+            id: true,
+            reviewRequestedAt: true,
+            assessments: {
+              where: { grader: Grader.TEACHER, status: AssessmentStatus.DONE },
+              select: { id: true },
+            },
+          },
+        },
+      },
+    });
+    if (!row) throw new AppException(ErrorCode.ASSESSMENT_NOT_FOUND);
+    const answer = row.attemptAnswer;
+    if (answer.assessments.length > 0)
+      throw new AppException(ErrorCode.ASSESSMENT_TEACHER_REVIEWED);
+    if (row.status !== AssessmentStatus.DONE)
+      throw new AppException(ErrorCode.ASSESSMENT_NOT_GRADED);
+    if (answer.reviewRequestedAt) {
+      throw new AppException(ErrorCode.ASSESSMENT_REVIEW_ALREADY_REQUESTED);
+    }
+
+    const requestedAt = new Date();
+    // Điều kiện trong WHERE: bấm hai lần cùng lúc chỉ một lần được ghi
+    const { count } = await this.prisma.attemptAnswer.updateMany({
+      where: { id: answer.id, reviewRequestedAt: null },
+      data: { reviewRequestedAt: requestedAt, reviewRequestNote: note },
+    });
+    if (count === 0) throw new AppException(ErrorCode.ASSESSMENT_REVIEW_ALREADY_REQUESTED);
+    return { requestedAt, note };
   }
 }

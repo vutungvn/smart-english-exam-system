@@ -6,7 +6,11 @@ import {
   ScoringScale,
   Skill,
 } from '../../generated/prisma/enums.js';
-import { GradingProgress, QuestionAssessment } from '../assessments/assessments.types.js';
+import {
+  AssessmentReviewRequest,
+  GradingProgress,
+  QuestionAssessment,
+} from '../assessments/assessments.types.js';
 import { ExamPaper, PaperGroup, PaperOption, PaperQuestion } from '../exams/exams.types.js';
 
 const REMAINING_NOTE =
@@ -417,9 +421,24 @@ export class ReviewQuestion extends PaperQuestion {
   @ApiProperty({
     type: QuestionAssessment,
     nullable: true,
-    description: 'Kết quả AI chấm câu Speaking/Writing; null với câu trắc nghiệm, câu bỏ trống',
+    description:
+      'Kết quả chấm câu Speaking/Writing (bản giáo viên nếu đã chấm lại, không thì bản AI); null với câu trắc nghiệm, câu bỏ trống',
   })
   assessment: QuestionAssessment | null;
+
+  @ApiProperty({
+    type: QuestionAssessment,
+    nullable: true,
+    description: 'Bản AI chấm để đối chiếu khi giáo viên đã chấm lại (assessment là bản giáo viên)',
+  })
+  aiAssessment: QuestionAssessment | null;
+
+  @ApiProperty({
+    type: AssessmentReviewRequest,
+    nullable: true,
+    description: 'Học viên đã yêu cầu giáo viên chấm lại câu này',
+  })
+  reviewRequest: AssessmentReviewRequest | null;
 }
 
 export class ReviewGroup extends PaperGroup {

@@ -149,6 +149,8 @@ describe('Hiển thị phiếu chấm Speaking', () => {
     nextRunAt: null,
     regradeCount: 0,
     gradedAt: new Date(),
+    updatedAt: new Date(),
+    reviewer: null,
   };
 
   it('6 tiêu chí theo thứ tự cố định, điểm con Part 1, transcript', () => {

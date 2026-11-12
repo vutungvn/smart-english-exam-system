@@ -127,14 +127,16 @@ export class AttemptScoringService {
   }
 
   /**
-   * Tổng hợp lại điểm câu mở của lượt làm bài (gọi sau mỗi câu AI chấm xong). Khóa dòng bài làm nên
-   * hai câu chấm xong cùng lúc chỉ một lần chuyển GRADED. Trả true khi lượt làm vừa chấm xong
+   * Tổng hợp lại điểm câu mở của lượt làm bài: sau mỗi câu AI chấm xong, hoặc giáo viên chấm lại một
+   * câu (SPRINT-91, kể cả bài đã GRADED: điểm bài đổi theo). Khóa dòng bài làm nên hai câu chấm xong
+   * cùng lúc chỉ một lần chuyển GRADED. Trả true khi lượt làm vừa chuyển SUBMITTED → GRADED
    */
   async refresh(attemptId: string): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
       const [locked] = await tx.$queryRaw<{ status: AttemptStatus }[]>`
         SELECT status FROM exam_attempts WHERE id = ${attemptId}::uuid FOR UPDATE`;
-      if (locked?.status !== AttemptStatus.SUBMITTED) return false;
+      const status = locked?.status;
+      if (status !== AttemptStatus.SUBMITTED && status !== AttemptStatus.GRADED) return false;
 
       const attempt = await tx.examAttempt.findUniqueOrThrow({
         where: { id: attemptId },
@@ -189,13 +191,15 @@ export class AttemptScoringService {
         }
         open.set(question.skill, entry);
       }
-      const skills = normalizeSkills(attempt.skillScores, AttemptStatus.SUBMITTED).map((skill) => ({
+      const skills = normalizeSkills(attempt.skillScores, status).map((skill) => ({
         ...skill,
         ...open.get(skill.skill),
       }));
 
       const strategy = strategyFor(attempt.exam.scoringScale, attempt.mode);
       const { skills: scored, total, pendingOpen } = scoreSkills(strategy, skills);
+      // Bài đã có điểm thì không quay lại trạng thái chờ chấm (giáo viên chỉ thêm điểm, không bớt)
+      if (pendingOpen && status === AttemptStatus.GRADED) return false;
       await tx.examAttempt.update({
         where: { id: attemptId },
         data: {
@@ -203,8 +207,9 @@ export class AttemptScoringService {
           ...(pendingOpen ? {} : { status: AttemptStatus.GRADED, scaledScore: total ?? 0 }),
         },
       });
-      if (!pendingOpen) this.logger.log(`Bài làm ${attemptId} đã chấm xong`);
-      return !pendingOpen;
+      if (pendingOpen || status === AttemptStatus.GRADED) return false;
+      this.logger.log(`Bài làm ${attemptId} đã chấm xong`);
+      return true;
     });
   }
 }

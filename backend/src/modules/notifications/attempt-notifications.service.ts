@@ -98,6 +98,26 @@ export class AttemptNotificationsService {
     });
   }
 
+  /** Giáo viên chấm lại một câu (SPRINT-91): điểm câu và điểm bài sau khi tính lại */
+  teacherReviewed(
+    attemptId: string,
+    question: { skill: Skill; part: number; score: number; maxScore: number },
+  ): Promise<void> {
+    return this.safely(attemptId, async () => {
+      const info = await this.load(attemptId);
+      if (!info) return;
+      const total = info.score ? ` Điểm bài: ${info.score}.` : '';
+      await this.notifications.notify(info.studentId, {
+        type: NotificationType.TEACHER_REVIEWED,
+        title: 'Giáo viên đã chấm lại bài làm',
+        message:
+          `${info.name}: câu ${SKILL_LABELS[question.skill]} Part ${question.part} được ` +
+          `${question.score}/${question.maxScore} điểm.${total}`,
+        data: { attemptId },
+      });
+    });
+  }
+
   private async safely(attemptId: string, send: () => Promise<void>): Promise<void> {
     try {
       await send();

@@ -9,6 +9,7 @@ import {
   Clock,
   RotateCw,
   TriangleAlert,
+  UserCheck,
 } from 'lucide-react';
 import { toApiError } from '@/api/errors';
 import {
@@ -28,6 +29,7 @@ const TYPE_ICONS: Record<NotificationType, { icon: typeof Bell; className: strin
   ATTEMPT_GRADED: { icon: CircleCheck, className: 'bg-success-soft text-success' },
   ATTEMPT_AUTO_SUBMITTED: { icon: Clock, className: 'bg-accent text-primary' },
   GRADING_FAILED: { icon: TriangleAlert, className: 'bg-danger-soft text-destructive' },
+  TEACHER_REVIEWED: { icon: UserCheck, className: 'bg-violet-50 text-violet-700' },
 };
 
 /** Chuông ở thanh trên: chấm đỏ số chưa đọc, bấm mở danh sách thông báo mới nhất */

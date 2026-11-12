@@ -9,6 +9,7 @@ import {
   RotateCcw,
   SpellCheck2,
   TriangleAlert,
+  UserCheck,
   WandSparkles,
 } from 'lucide-react';
 import { toApiError } from '@/api/errors';
@@ -25,6 +26,8 @@ interface AssessmentPanelProps {
   attemptId: string;
   assessment: QuestionAssessment;
   kind: AssessmentKind;
+  /** Bản AI để đối chiếu khi assessment là bản giáo viên chấm lại (SPRINT-91) */
+  aiAssessment?: QuestionAssessment | null;
 }
 
 const KIND_TEXT: Record<AssessmentKind, { rubric: string; improved: string; answer: string }> = {
@@ -49,10 +52,17 @@ const LEVEL_TONE = {
 /**
  * Kết quả AI chấm một câu Speaking/Writing (SPRINT-86): điểm câu (Speaking Part 1 kèm 2 điểm con),
  * điểm tiêu chí, nhận xét, lời nói AI nghe được (Speaking), câu sửa (Writing), bài làm gợi ý; đang
- * chấm thì báo chờ, chấm lỗi thì có nút "Chấm lại" (tối đa 2 lần)
+ * chấm thì báo chờ, chấm lỗi thì có nút "Chấm lại" (tối đa 2 lần). Giáo viên đã chấm lại thì hiện bản
+ * giáo viên (điểm chính thức), bản AI thu gọn bên dưới để đối chiếu
  */
-export function AssessmentPanel({ attemptId, assessment, kind }: AssessmentPanelProps) {
+export function AssessmentPanel({
+  attemptId,
+  assessment,
+  kind,
+  aiAssessment,
+}: AssessmentPanelProps) {
   const text = KIND_TEXT[kind];
+  const byTeacher = assessment.grader === 'TEACHER';
   if (assessment.status === 'PENDING') {
     return <PendingNote assessment={assessment} answer={text.answer} />;
   }
@@ -64,8 +74,11 @@ export function AssessmentPanel({ attemptId, assessment, kind }: AssessmentPanel
   const level = scoreLevel(score, assessment.maxScore);
   return (
     <section
-      aria-label="Kết quả AI chấm"
-      className="mt-4 space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-4"
+      aria-label={byTeacher ? 'Kết quả giáo viên chấm' : 'Kết quả AI chấm'}
+      className={cn(
+        'mt-4 space-y-4 rounded-2xl border p-4',
+        byTeacher ? 'border-violet-200 bg-violet-50/40' : 'border-sky-200 bg-sky-50/40',
+      )}
     >
       <div className="flex flex-wrap items-center gap-3">
         <span
@@ -78,11 +91,25 @@ export function AssessmentPanel({ attemptId, assessment, kind }: AssessmentPanel
           <span className="text-sm">/ {assessment.maxScore}</span>
         </span>
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
-            <Bot className="size-4 text-sky-600" />
-            Điểm ước lượng do AI chấm
-          </p>
-          <p className="text-xs text-subtle">{text.rubric}</p>
+          {byTeacher ? (
+            <>
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+                <UserCheck className="size-4 text-violet-600" />
+                {assessment.reviewerName
+                  ? `Giáo viên ${assessment.reviewerName} đã chấm lại`
+                  : 'Giáo viên đã chấm lại'}
+              </p>
+              <p className="text-xs text-subtle">Điểm chính thức, thay cho điểm AI ước lượng</p>
+            </>
+          ) : (
+            <>
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+                <Bot className="size-4 text-sky-600" />
+                Điểm ước lượng do AI chấm
+              </p>
+              <p className="text-xs text-subtle">{text.rubric}</p>
+            </>
+          )}
         </div>
       </div>
 
@@ -186,6 +213,33 @@ export function AssessmentPanel({ attemptId, assessment, kind }: AssessmentPanel
           <p className="mt-2 leading-relaxed wrap-break-word whitespace-pre-line text-slate-700">
             {assessment.improvedAnswer}
           </p>
+        </details>
+      )}
+
+      {byTeacher && aiAssessment && (
+        <details className="group rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-border">
+          <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold text-slate-800 select-none [&::-webkit-details-marker]:hidden">
+            <Bot className="size-4 text-sky-600" />
+            Bản AI chấm (để đối chiếu)
+            {aiAssessment.score !== null && (
+              <span className="text-xs font-medium text-subtle tabular-nums">
+                {aiAssessment.score}/{aiAssessment.maxScore}
+              </span>
+            )}
+            <span className="ml-auto text-xs font-medium text-primary group-open:hidden">Xem</span>
+            <span className="ml-auto hidden text-xs font-medium text-primary group-open:inline">
+              Thu gọn
+            </span>
+          </summary>
+          {aiAssessment.status === 'DONE' ? (
+            <AssessmentPanel attemptId={attemptId} assessment={aiAssessment} kind={kind} />
+          ) : (
+            <p className="mt-2 text-slate-600">
+              {aiAssessment.status === 'FAILED'
+                ? `AI chưa chấm được câu này: ${aiAssessment.errorMessage ?? 'kết quả không hợp lệ'}.`
+                : 'AI chưa chấm xong câu này.'}
+            </p>
+          )}
         </details>
       )}
     </section>

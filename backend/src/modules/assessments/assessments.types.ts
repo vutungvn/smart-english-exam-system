@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { AssessmentStatus } from '../../generated/prisma/enums.js';
+import { AssessmentStatus, Grader } from '../../generated/prisma/enums.js';
 
 /** Một tiêu chí chấm (thang 0–5), dùng để chẩn đoán điểm mạnh/yếu, không cộng vào điểm câu */
 export class AssessmentCriterion {
@@ -48,6 +48,20 @@ export class AssessmentCorrection {
 export class QuestionAssessment {
   @ApiProperty({ format: 'uuid' })
   id: string;
+
+  @ApiProperty({
+    enum: Grader,
+    enumName: 'Grader',
+    description: 'AI: điểm ước lượng do AI chấm · TEACHER: giáo viên đã chấm lại (điểm chính thức)',
+  })
+  grader: Grader;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Tên giáo viên chấm (grader = TEACHER)',
+  })
+  reviewerName: string | null;
 
   @ApiProperty({ enum: AssessmentStatus, enumName: 'AssessmentStatus' })
   status: AssessmentStatus;
@@ -106,6 +120,22 @@ export class QuestionAssessment {
 
   @ApiProperty({ type: String, format: 'date-time', nullable: true })
   gradedAt: Date | null;
+
+  @ApiProperty({
+    type: String,
+    format: 'date-time',
+    description: 'Khóa lạc quan khi giáo viên sửa lại bản chấm của mình',
+  })
+  updatedAt: Date;
+}
+
+/** Học viên đã yêu cầu giáo viên chấm lại câu này (SPRINT-91) */
+export class AssessmentReviewRequest {
+  @ApiProperty({ type: String, format: 'date-time' })
+  requestedAt: Date;
+
+  @ApiProperty({ example: 'Em nghĩ bài nói đã trả lời đủ ý nhưng AI cho điểm thấp.' })
+  note: string;
 }
 
 /** Tiến độ chấm Speaking/Writing của một lượt làm bài */

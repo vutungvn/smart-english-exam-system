@@ -9,6 +9,7 @@ export const addTagTypes = [
   'Exams',
   'Exam Catalog',
   'Attempts',
+  'Teacher Assessments',
   'Notifications',
   'Progress',
   'AI Explanations',
@@ -515,6 +516,51 @@ const injectedRtkApi = api
           method: 'POST',
         }),
         invalidatesTags: ['Attempts'],
+      }),
+      requestAssessmentReview: build.mutation<
+        RequestAssessmentReviewApiResponse,
+        RequestAssessmentReviewApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/attempts/${queryArg.id}/assessments/${queryArg.assessmentId}/review-request`,
+          method: 'POST',
+          body: queryArg.requestReviewDto,
+        }),
+        invalidatesTags: ['Attempts'],
+      }),
+      listTeacherAssessments: build.query<
+        ListTeacherAssessmentsApiResponse,
+        ListTeacherAssessmentsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/assessments`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+            tab: queryArg.tab,
+            scope: queryArg.scope,
+            skill: queryArg.skill,
+          },
+        }),
+        providesTags: ['Teacher Assessments'],
+      }),
+      getTeacherAssessment: build.query<
+        GetTeacherAssessmentApiResponse,
+        GetTeacherAssessmentApiArg
+      >({
+        query: (queryArg) => ({ url: `/api/v1/teacher/assessments/${queryArg}` }),
+        providesTags: ['Teacher Assessments'],
+      }),
+      gradeTeacherAssessment: build.mutation<
+        GradeTeacherAssessmentApiResponse,
+        GradeTeacherAssessmentApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/assessments/${queryArg.answerId}`,
+          method: 'PUT',
+          body: queryArg.gradeAnswerDto,
+        }),
+        invalidatesTags: ['Teacher Assessments'],
       }),
       listNotifications: build.query<ListNotificationsApiResponse, ListNotificationsApiArg>({
         query: (queryArg) => ({
@@ -1138,6 +1184,46 @@ export type RegradeAssessmentApiArg = {
   id: string;
   assessmentId: string;
 };
+export type RequestAssessmentReviewApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AssessmentReviewRequest;
+};
+export type RequestAssessmentReviewApiArg = {
+  id: string;
+  assessmentId: string;
+  requestReviewDto: RequestReviewDto;
+};
+export type ListTeacherAssessmentsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: TeacherReviewItem[];
+  meta: PaginationMetaDto;
+};
+export type ListTeacherAssessmentsApiArg = {
+  page?: number;
+  limit?: number;
+  /** WAITING: chờ chấm (AI lỗi, học viên yêu cầu) · REVIEWED: giáo viên đã chấm */
+  tab?: 'WAITING' | 'REVIEWED';
+  /** ALL: mọi đề · MINE: chỉ đề do tôi soạn */
+  scope?: 'ALL' | 'MINE';
+  skill?: Skill;
+};
+export type GetTeacherAssessmentApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: TeacherReviewDetail;
+};
+export type GetTeacherAssessmentApiArg = string;
+export type GradeTeacherAssessmentApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: TeacherReviewDetail;
+};
+export type GradeTeacherAssessmentApiArg = {
+  answerId: string;
+  gradeAnswerDto: GradeAnswerDto;
+};
 export type ListNotificationsApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
@@ -1271,6 +1357,10 @@ export type ErrorCode =
   | 'ASSESSMENT_NOT_FAILED'
   | 'ASSESSMENT_REGRADE_LIMIT'
   | 'ASSESSMENT_RECORDING_MISSING'
+  | 'ASSESSMENT_TEACHER_REVIEWED'
+  | 'ASSESSMENT_NOT_GRADED'
+  | 'ASSESSMENT_REVIEW_ALREADY_REQUESTED'
+  | 'ASSESSMENT_SCORE_OUT_OF_RANGE'
   | 'AI_QUOTA_EXCEEDED'
   | 'AI_UNAVAILABLE'
   | 'AI_EXPLANATION_NOT_SUPPORTED'
@@ -2253,6 +2343,7 @@ export type ReviewOption = {
   isCorrect: boolean;
 };
 export type ReviewOutcome = 'CORRECT' | 'WRONG' | 'SKIPPED' | 'PENDING' | 'SCORED' | 'FAILED';
+export type Grader = 'AI' | 'TEACHER';
 export type AssessmentStatus = 'PENDING' | 'DONE' | 'FAILED';
 export type AssessmentCriterion = {
   /** Writing: grammar · vocabulary · coherence · task; Speaking: pronunciation · intonation · fluency · grammar · vocabulary · task */
@@ -2274,6 +2365,10 @@ export type AssessmentCorrection = {
 };
 export type QuestionAssessment = {
   id: string;
+  /** AI: điểm ước lượng do AI chấm · TEACHER: giáo viên đã chấm lại (điểm chính thức) */
+  grader: Grader;
+  /** Tên giáo viên chấm (grader = TEACHER) */
+  reviewerName: string | null;
   status: AssessmentStatus;
   /** Điểm câu theo thang của dạng câu */
   score: number | null;
@@ -2298,6 +2393,12 @@ export type QuestionAssessment = {
   /** Số lần học viên còn được bấm "Chấm lại" */
   regradesLeft: number;
   gradedAt: string | null;
+  /** Khóa lạc quan khi giáo viên sửa lại bản chấm của mình */
+  updatedAt: string;
+};
+export type AssessmentReviewRequest = {
+  requestedAt: string;
+  note: string;
 };
 export type ReviewQuestion = {
   /** Số câu liên tục trong cả đề: 1, 2, 3… */
@@ -2329,8 +2430,12 @@ export type ReviewQuestion = {
   explanation: string | null;
   /** Câu trả lời mẫu (Speaking/Writing) */
   sampleAnswer: string | null;
-  /** Kết quả AI chấm câu Speaking/Writing; null với câu trắc nghiệm, câu bỏ trống */
+  /** Kết quả chấm câu Speaking/Writing (bản giáo viên nếu đã chấm lại, không thì bản AI); null với câu trắc nghiệm, câu bỏ trống */
   assessment: QuestionAssessment | null;
+  /** Bản AI chấm để đối chiếu khi giáo viên đã chấm lại (assessment là bản giáo viên) */
+  aiAssessment: QuestionAssessment | null;
+  /** Học viên đã yêu cầu giáo viên chấm lại câu này */
+  reviewRequest: AssessmentReviewRequest | null;
 };
 export type ReviewBlock = {
   group: ReviewGroup | null;
@@ -2407,7 +2512,118 @@ export type SyncAnswerItemDto = {
 export type SyncAnswersDto = {
   answers: SyncAnswerItemDto[];
 };
-export type NotificationType = 'ATTEMPT_GRADED' | 'ATTEMPT_AUTO_SUBMITTED' | 'GRADING_FAILED';
+export type RequestReviewDto = {
+  note: string;
+};
+export type ReviewReason = 'AI_FAILED' | 'STUDENT_REQUEST';
+export type TeacherReviewItem = {
+  /** Id câu trả lời (attempt_answers) */
+  answerId: string;
+  examTitle: string;
+  /** Đề do chính giáo viên đang xem soạn */
+  isMyExam: boolean;
+  skill: Skill;
+  part: number;
+  /** Số thứ tự câu trong Part (theo đề gốc) */
+  questionNumber: number;
+  /** Mã ẩn danh của học viên (không lộ tên, email) */
+  studentCode: string;
+  submittedAt: string;
+  /** AI_FAILED: AI chấm lỗi · STUDENT_REQUEST: học viên yêu cầu chấm lại */
+  reasons: ReviewReason[];
+  /** Lý do học viên ghi khi yêu cầu */
+  requestNote: string | null;
+  aiStatus: AssessmentStatus | null;
+  aiScore: number | null;
+  maxScore: number;
+  /** Điểm giáo viên (đã chấm lại) */
+  teacherScore: number | null;
+  reviewerName: string | null;
+  reviewedAt: string | null;
+};
+export type ReviewQuestionContent = {
+  type: QuestionType;
+  content: string;
+  /** Ảnh của câu (Writing P1, Speaking P2) */
+  imageUrl: string | null;
+  /** Đoạn văn, bảng thông tin của nhóm */
+  passage: string | null;
+  /** Ảnh của nhóm (Speaking P4) */
+  groupImageUrl: string | null;
+  sampleAnswer: string | null;
+  responseSeconds: number | null;
+};
+export type ReviewStudentAnswer = {
+  /** Bài viết (Writing) */
+  textAnswer: string | null;
+  /** URL ký để nghe bài nói; null khi đã tự xóa sau thời hạn lưu */
+  recordingUrl: string | null;
+  recordingDeletedAt: string | null;
+};
+export type ReviewCriterionOption = {
+  key: string;
+  label: string;
+};
+export type ReviewSubScoreOption = {
+  key: string;
+  label: string;
+  max: number;
+};
+export type TeacherReviewDetail = {
+  /** Id câu trả lời (attempt_answers) */
+  answerId: string;
+  examTitle: string;
+  /** Đề do chính giáo viên đang xem soạn */
+  isMyExam: boolean;
+  skill: Skill;
+  part: number;
+  /** Số thứ tự câu trong Part (theo đề gốc) */
+  questionNumber: number;
+  /** Mã ẩn danh của học viên (không lộ tên, email) */
+  studentCode: string;
+  submittedAt: string;
+  /** AI_FAILED: AI chấm lỗi · STUDENT_REQUEST: học viên yêu cầu chấm lại */
+  reasons: ReviewReason[];
+  /** Lý do học viên ghi khi yêu cầu */
+  requestNote: string | null;
+  aiStatus: AssessmentStatus | null;
+  aiScore: number | null;
+  maxScore: number;
+  /** Điểm giáo viên (đã chấm lại) */
+  teacherScore: number | null;
+  reviewerName: string | null;
+  reviewedAt: string | null;
+  question: ReviewQuestionContent;
+  answer: ReviewStudentAnswer;
+  reviewRequest: AssessmentReviewRequest | null;
+  /** Bản AI chấm */
+  aiAssessment: QuestionAssessment | null;
+  /** Bản giáo viên đã chấm (sửa lại thì gửi kèm updatedAt của bản này) */
+  teacherAssessment: QuestionAssessment | null;
+  /** Tiêu chí 0–5 của kỹ năng */
+  criteriaOptions: ReviewCriterionOption[];
+  /** Speaking Part 1: chấm 2 điểm con thay cho điểm câu; câu khác rỗng */
+  subScoreOptions: ReviewSubScoreOption[];
+};
+export type ReadAloudSubScoresDto = {
+  pronunciation: number;
+  intonation: number;
+};
+export type GradeAnswerDto = {
+  /** Điểm câu theo thang của dạng câu; Speaking Part 1 gửi subScores thay cho trường này */
+  score?: number;
+  subScores?: ReadAloudSubScoresDto;
+  /** Điểm tiêu chí 0–5 (không bắt buộc), khóa theo criteriaOptions của câu */
+  criteria?: {
+    [key: string]: number;
+  };
+  /** Nhận xét cho học viên */
+  feedback: string;
+  /** Bắt buộc khi sửa bản đã chấm: updatedAt của teacherAssessment lần đọc gần nhất */
+  updatedAt?: string;
+};
+export type NotificationType =
+  'ATTEMPT_GRADED' | 'ATTEMPT_AUTO_SUBMITTED' | 'GRADING_FAILED' | 'TEACHER_REVIEWED';
 export type NotificationData = {
   /** Bài làm liên quan (trang kết quả, xem lại) */
   attemptId?: string;
@@ -2631,6 +2847,10 @@ export const {
   useSubmitAttemptMutation,
   useCancelAttemptMutation,
   useRegradeAssessmentMutation,
+  useRequestAssessmentReviewMutation,
+  useListTeacherAssessmentsQuery,
+  useGetTeacherAssessmentQuery,
+  useGradeTeacherAssessmentMutation,
   useListNotificationsQuery,
   useGetUnreadNotificationCountQuery,
   useMarkAllNotificationsReadMutation,
