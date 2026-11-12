@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { NavLink } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { X, type LucideIcon } from 'lucide-react';
 import { BrandLogo } from '@/components/brand/BrandLogo';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,23 @@ export interface SidebarItem {
 
 /** Nhóm mục; nhóm sau có đường kẻ ngăn cách */
 export type SidebarSection = SidebarItem[];
+
+/** Mục khớp đường dẫn hiện tại: đúng đường dẫn, hoặc là trang con (trừ mục có end) */
+function matches(item: SidebarItem, pathname: string): boolean {
+  if (pathname === item.to) return true;
+  return !item.end && pathname.startsWith(`${item.to}/`);
+}
+
+/**
+ * Chỉ một mục sáng: mục khớp dài nhất. /teacher/assessments/agreement sáng "Độ lệch AI chấm" chứ
+ * không sáng cả "Chấm lại bài"; /teacher/assessments/<id> vẫn sáng "Chấm lại bài"
+ */
+function activeItemPath(sections: SidebarSection[], pathname: string): string | undefined {
+  return sections
+    .flat()
+    .filter((item) => !item.comingSoon && matches(item, pathname))
+    .sort((a, b) => b.to.length - a.to.length)[0]?.to;
+}
 
 interface AppSidebarProps extends SidebarSlotProps {
   homePath: string;
@@ -45,6 +62,8 @@ export function AppSidebar({
   onNavigate,
   onClose,
 }: AppSidebarProps) {
+  const { pathname } = useLocation();
+  const activePath = activeItemPath(sections, pathname);
   return (
     <aside className="flex h-full w-72 flex-col border-r border-border bg-white">
       <div className="flex h-18 shrink-0 items-center justify-between gap-2 border-b border-border px-5">
@@ -69,7 +88,7 @@ export function AppSidebar({
           >
             {items.map((item) => (
               <li key={item.to}>
-                <SidebarLink item={item} onNavigate={onNavigate} />
+                <SidebarLink item={item} active={item.to === activePath} onNavigate={onNavigate} />
               </li>
             ))}
           </ul>
@@ -81,7 +100,15 @@ export function AppSidebar({
   );
 }
 
-function SidebarLink({ item, onNavigate }: { item: SidebarItem; onNavigate?: () => void }) {
+function SidebarLink({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: SidebarItem;
+  active: boolean;
+  onNavigate?: () => void;
+}) {
   const Icon = item.icon;
 
   if (item.comingSoon) {
@@ -99,19 +126,17 @@ function SidebarLink({ item, onNavigate }: { item: SidebarItem; onNavigate?: () 
   }
 
   return (
-    <NavLink
+    <Link
       to={item.to}
-      end={item.end}
       onClick={onNavigate}
-      className={({ isActive }) =>
-        cn(
-          itemClass,
-          'transition-colors',
-          isActive
-            ? 'bg-accent font-semibold text-brand before:absolute before:inset-y-2 before:left-0 before:w-1 before:rounded-full before:bg-primary'
-            : 'text-slate-600 hover:bg-slate-50 hover:text-foreground',
-        )
-      }
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        itemClass,
+        'transition-colors',
+        active
+          ? 'bg-accent font-semibold text-brand before:absolute before:inset-y-2 before:left-0 before:w-1 before:rounded-full before:bg-primary'
+          : 'text-slate-600 hover:bg-slate-50 hover:text-foreground',
+      )}
     >
       <Icon className="size-5 shrink-0" />
       <span className="flex-1">{item.label}</span>
@@ -125,6 +150,6 @@ function SidebarLink({ item, onNavigate }: { item: SidebarItem; onNavigate?: () 
           {item.badge}
         </span>
       )}
-    </NavLink>
+    </Link>
   );
 }

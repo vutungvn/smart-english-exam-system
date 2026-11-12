@@ -126,10 +126,15 @@ export const enhancedApi = api.enhanceEndpoints({
 
     // Giáo viên chấm lại một câu: ghi ngay bản server trả về vào màn chấm (không nháy dữ liệu cũ),
     // hàng đợi tải lại theo tag
+    // (cả bản mở thường và bản chấm đối chiếu: lưu xong thì bản AI hiện lại để so)
     gradeTeacherAssessment: {
       onQueryStarted: async ({ answerId }, { dispatch, queryFulfilled }) => {
         const { data } = await queryFulfilled.catch(() => ({ data: null }));
-        if (data) dispatch(api.util.upsertQueryData('getTeacherAssessment', answerId, data));
+        if (!data) return;
+        dispatch(api.util.upsertQueryData('getTeacherAssessment', { answerId }, data));
+        dispatch(
+          api.util.upsertQueryData('getTeacherAssessment', { answerId, blind: 'true' }, data),
+        );
       },
     },
 

@@ -2,6 +2,7 @@ import type { ReviewReason, Skill } from '@/api/generated';
 
 export const GRADING_PATH = '/teacher/assessments';
 export const gradingDetailPath = (answerId: string) => `${GRADING_PATH}/${answerId}`;
+export const GRADING_AGREEMENT_PATH = `${GRADING_PATH}/agreement`;
 
 export const GRADING_PAGE_SIZES = [10, 20, 50] as const;
 

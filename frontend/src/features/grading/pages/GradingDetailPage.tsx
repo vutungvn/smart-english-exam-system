@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { useParams } from 'react-router';
+import { useSearchParams, useParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  ArrowRight,
   Bot,
+  EyeOff,
+  Scale,
   FileText,
   Loader2,
   Mic,
@@ -35,17 +38,25 @@ import { ErrorState, SuccessBanner } from '@/features/question-bank/components/L
 import { textareaClass } from '@/features/question-bank/form/styles';
 import { cn } from '@/lib/utils';
 import { GRADING_PATH, questionLabel, REASON_META } from '../grading-meta';
+import { useNextCalibration } from '../use-next-calibration';
 
 const FEEDBACK_MAX = 2000;
 const card = 'rounded-3xl border border-border bg-white p-5 shadow-2xs';
 
-/** Màn chấm một câu Speaking/Writing của giáo viên (SPRINT-91): đề, bài làm, bản AI, form chấm */
+/**
+ * Màn chấm một câu Speaking/Writing của giáo viên (SPRINT-91): đề, bài làm, bản AI, form chấm.
+ * ?blind=1: chấm đối chiếu (SPRINT-90), ẩn điểm AI tới khi lưu rồi hiện độ lệch AI và giáo viên
+ */
 export function GradingDetailPage() {
   const { answerId = '' } = useParams();
-  const { data, error, isLoading, refetch, isFetching } = useGetTeacherAssessmentQuery(answerId, {
-    refetchOnMountOrArgChange: true,
-  });
+  const [params] = useSearchParams();
+  const blindMode = params.get('blind') === '1';
+  const { data, error, isLoading, refetch, isFetching } = useGetTeacherAssessmentQuery(
+    blindMode ? { answerId, blind: 'true' } : { answerId },
+    { refetchOnMountOrArgChange: true },
+  );
   const [saved, setSaved] = useState(false);
+  const next = useNextCalibration();
 
   if (isLoading) return <div className="h-96 animate-pulse rounded-3xl bg-white" aria-hidden />;
   if (error && !data) {
@@ -72,6 +83,26 @@ export function GradingDetailPage() {
         <SuccessBanner
           message="Đã lưu điểm. Điểm bài làm đã tính lại và học viên đã nhận thông báo."
           onClose={() => setSaved(false)}
+        />
+      )}
+
+      {detail.blind && (
+        <p className="flex items-start gap-2.5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <EyeOff className="mt-0.5 size-4 shrink-0" />
+          <span>
+            <span className="font-semibold">Chấm đối chiếu:</span> điểm, nhận xét và lời nói AI nghe
+            được đang ẩn để bạn chấm độc lập. Lưu xong sẽ hiện điểm AI để so, kết quả dùng đo độ
+            lệch AI chấm.
+          </span>
+        </p>
+      )}
+
+      {blindMode && !detail.blind && detail.blindReview && (
+        <CalibrationResult
+          detail={detail}
+          loading={next.loading}
+          message={next.message}
+          onNext={() => void next.start({ skill: detail.skill as 'SPEAKING' | 'WRITING' })}
         />
       )}
 
@@ -143,13 +174,15 @@ export function GradingDetailPage() {
             </section>
           )}
 
-          <section aria-label="Bản AI chấm" className={card}>
-            <h2 className="flex items-center gap-2 font-bold text-foreground">
-              <Bot className="size-5 text-sky-600" />
-              Bản AI chấm
-            </h2>
-            <AiCopy assessment={detail.aiAssessment} speaking={speaking} />
-          </section>
+          {!detail.blind && (
+            <section aria-label="Bản AI chấm" className={card}>
+              <h2 className="flex items-center gap-2 font-bold text-foreground">
+                <Bot className="size-5 text-sky-600" />
+                Bản AI chấm
+              </h2>
+              <AiCopy assessment={detail.aiAssessment} speaking={speaking} />
+            </section>
+          )}
         </div>
 
         <aside className={cn(card, 'lg:sticky lg:top-24')}>
@@ -188,6 +221,56 @@ export function GradingDetailPage() {
         </aside>
       </div>
     </div>
+  );
+}
+
+/** Sau khi lưu bản chấm đối chiếu: so điểm AI với điểm giáo viên, mở câu tiếp theo */
+function CalibrationResult({
+  detail,
+  loading,
+  message,
+  onNext,
+}: {
+  detail: TeacherReviewDetail;
+  loading: boolean;
+  message?: string;
+  onNext: () => void;
+}) {
+  const ai = detail.aiScore;
+  const teacher = detail.teacherScore;
+  const diff = ai !== null && teacher !== null ? ai - teacher : null;
+  return (
+    <section
+      aria-label="Kết quả chấm đối chiếu"
+      className="rounded-3xl border border-violet-200 bg-violet-50/60 p-5"
+    >
+      <h2 className="flex items-center gap-2 font-bold text-foreground">
+        <Scale className="size-5 text-violet-600" />
+        Kết quả chấm đối chiếu
+      </h2>
+      <dl className="mt-3 grid grid-cols-3 gap-3 text-center">
+        {[
+          { label: 'AI chấm', value: ai === null ? '—' : `${ai}/${detail.maxScore}` },
+          { label: 'Bạn chấm', value: teacher === null ? '—' : `${teacher}/${detail.maxScore}` },
+          {
+            label: 'Lệch (AI − bạn)',
+            value: diff === null ? '—' : diff === 0 ? 'Khớp' : `${diff > 0 ? '+' : ''}${diff}`,
+          },
+        ].map(({ label, value }) => (
+          <div key={label} className="rounded-2xl bg-white px-3 py-2 ring-1 ring-border">
+            <dt className="text-xs text-subtle">{label}</dt>
+            <dd className="text-lg font-bold text-foreground tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <Button type="button" onClick={onNext} disabled={loading} className="h-10 rounded-xl px-4">
+          {loading ? <Loader2 className="animate-spin" /> : <ArrowRight />}
+          Chấm câu tiếp theo
+        </Button>
+        {message && <p className="text-sm text-muted-foreground">{message}</p>}
+      </div>
+    </section>
   );
 }
 
@@ -350,6 +433,7 @@ function GradeForm({
           criteria,
           feedback: values.feedback,
           updatedAt: detail.teacherAssessment?.updatedAt,
+          blind: detail.blind,
         },
       }).unwrap();
       onSaved();

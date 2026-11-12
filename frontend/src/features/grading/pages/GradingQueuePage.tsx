@@ -1,14 +1,26 @@
 import { Link, useSearchParams } from 'react-router';
-import { ChevronRight, ClipboardCheck, Inbox, UserCheck } from 'lucide-react';
+import {
+  ChartColumn,
+  ChevronRight,
+  ClipboardCheck,
+  EyeOff,
+  Inbox,
+  Loader2,
+  UserCheck,
+} from 'lucide-react';
 import { toApiError } from '@/api/errors';
 import { useListTeacherAssessmentsQuery, type TeacherReviewItem } from '@/api/generated';
+import { ButtonLink } from '@/components/ButtonLink';
 import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/Pagination';
 import { formatDateTime } from '@/features/practice/practice-meta';
 import { FilterSelect, SegmentedControl } from '@/features/question-bank/components/FilterControls';
 import { EmptyState, ErrorState } from '@/features/question-bank/components/ListStates';
+import { FormAlert } from '@/components/form/FormAlert';
 import { cn } from '@/lib/utils';
 import {
+  GRADING_AGREEMENT_PATH,
   GRADING_PAGE_SIZES,
   gradingDetailPath,
   questionLabel,
@@ -18,6 +30,7 @@ import {
   type GradingTab,
   type OpenSkill,
 } from '../grading-meta';
+import { useNextCalibration } from '../use-next-calibration';
 
 /** Bộ lọc nằm trên URL: tải lại trang, quay lại từ màn chấm vẫn giữ nguyên */
 function useGradingFilters() {
@@ -58,6 +71,7 @@ export function GradingQueuePage() {
   const items = data?.data ?? [];
   const meta = data?.meta;
   const waiting = filters.tab === 'WAITING';
+  const next = useNextCalibration();
 
   return (
     <div className="space-y-6">
@@ -65,7 +79,31 @@ export function GradingQueuePage() {
       <PageHeader
         title="Chấm lại bài"
         description="Câu Speaking/Writing AI chấm lỗi hoặc học viên yêu cầu giáo viên chấm lại. Điểm giáo viên là điểm chính thức, thay cho điểm AI."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink
+              to={GRADING_AGREEMENT_PATH}
+              variant="secondary"
+              className="h-10 w-auto rounded-xl px-4"
+            >
+              <ChartColumn className="size-4" />
+              Độ lệch AI chấm
+            </ButtonLink>
+            <Button
+              type="button"
+              onClick={() => void next.start({ scope: filters.scope, skill: filters.skill })}
+              disabled={next.loading}
+              title="Chấm ngẫu nhiên một câu AI đã chấm mà chưa thấy điểm AI, để đo độ lệch"
+              className="h-10 rounded-xl px-4"
+            >
+              {next.loading ? <Loader2 className="animate-spin" /> : <EyeOff />}
+              Chấm đối chiếu
+            </Button>
+          </div>
+        }
       />
+
+      {next.message && <FormAlert message={next.message} onClose={next.clearMessage} />}
 
       <section
         aria-label="Bộ lọc"

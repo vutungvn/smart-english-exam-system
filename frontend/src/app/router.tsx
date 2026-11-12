@@ -13,6 +13,7 @@ import { ChangePasswordPage } from '@/features/profile/ChangePasswordPage';
 import { ExamBuilderPage } from '@/features/exams/pages/ExamBuilderPage';
 import { ExamPreviewPage } from '@/features/exams/pages/ExamPreviewPage';
 import { ExamsPage } from '@/features/exams/pages/ExamsPage';
+import { AgreementPage } from '@/features/grading/pages/AgreementPage';
 import { GradingDetailPage } from '@/features/grading/pages/GradingDetailPage';
 import { GradingQueuePage } from '@/features/grading/pages/GradingQueuePage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
@@ -130,6 +131,7 @@ export const router = createBrowserRouter([
               { path: 'exams/:id', element: <ExamBuilderPage /> },
               { path: 'exams/:id/preview', element: <ExamPreviewPage /> },
               { path: 'assessments', element: <GradingQueuePage /> },
+              { path: 'assessments/agreement', element: <AgreementPage /> },
               { path: 'assessments/:answerId', element: <GradingDetailPage /> },
               { path: 'profile', element: <ProfilePage /> },
               { path: 'profile/password', element: <ChangePasswordPage /> },

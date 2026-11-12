@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import {
+  ChartColumn,
   ChevronRight,
   ClipboardCheck,
   FileText,
@@ -20,6 +21,7 @@ const SECTIONS: SidebarSection[] = [
     { to: '/teacher/import', label: 'Nhập từ tệp', icon: FileUp },
     { to: '/teacher/exams', label: 'Đề thi', icon: FileText },
     { to: '/teacher/assessments', label: 'Chấm lại bài', icon: ClipboardCheck },
+    { to: '/teacher/assessments/agreement', label: 'Độ lệch AI chấm', icon: ChartColumn },
   ],
   [{ to: '/teacher/profile', label: 'Hồ sơ cá nhân', icon: UserRound }],
 ];

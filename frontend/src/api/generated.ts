@@ -544,11 +544,39 @@ const injectedRtkApi = api
         }),
         providesTags: ['Teacher Assessments'],
       }),
+      getNextCalibration: build.query<GetNextCalibrationApiResponse, GetNextCalibrationApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/assessments/calibration/next`,
+          params: {
+            scope: queryArg.scope,
+            skill: queryArg.skill,
+          },
+        }),
+        providesTags: ['Teacher Assessments'],
+      }),
+      getAssessmentAgreement: build.query<
+        GetAssessmentAgreementApiResponse,
+        GetAssessmentAgreementApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/assessments/agreement`,
+          params: {
+            scope: queryArg.scope,
+            sample: queryArg.sample,
+          },
+        }),
+        providesTags: ['Teacher Assessments'],
+      }),
       getTeacherAssessment: build.query<
         GetTeacherAssessmentApiResponse,
         GetTeacherAssessmentApiArg
       >({
-        query: (queryArg) => ({ url: `/api/v1/teacher/assessments/${queryArg}` }),
+        query: (queryArg) => ({
+          url: `/api/v1/teacher/assessments/${queryArg.answerId}`,
+          params: {
+            blind: queryArg.blind,
+          },
+        }),
         providesTags: ['Teacher Assessments'],
       }),
       gradeTeacherAssessment: build.mutation<
@@ -1209,12 +1237,35 @@ export type ListTeacherAssessmentsApiArg = {
   scope?: 'ALL' | 'MINE';
   skill?: Skill;
 };
+export type GetNextCalibrationApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: CalibrationSample;
+};
+export type GetNextCalibrationApiArg = {
+  scope?: 'ALL' | 'MINE';
+  skill?: Skill;
+};
+export type GetAssessmentAgreementApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AgreementStats;
+};
+export type GetAssessmentAgreementApiArg = {
+  scope?: 'ALL' | 'MINE';
+  /** BLIND: chỉ câu chấm đối chiếu (không thấy điểm AI, mẫu không lệch) · ALL: mọi câu có cả bản AI và giáo viên */
+  sample?: 'BLIND' | 'ALL';
+};
 export type GetTeacherAssessmentApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
   data: TeacherReviewDetail;
 };
-export type GetTeacherAssessmentApiArg = string;
+export type GetTeacherAssessmentApiArg = {
+  answerId: string;
+  /** true: chấm đối chiếu, ẩn bản AI (điểm, tiêu chí, transcript) khi giáo viên chưa chấm câu này */
+  blind?: 'true' | 'false';
+};
 export type GradeTeacherAssessmentApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
@@ -2540,6 +2591,61 @@ export type TeacherReviewItem = {
   teacherScore: number | null;
   reviewerName: string | null;
   reviewedAt: string | null;
+  /** Bản giáo viên chấm đối chiếu (chưa thấy điểm AI khi chấm) */
+  blindReview: boolean;
+};
+export type CalibrationSample = {
+  /** null: không còn câu nào AI đã chấm mà giáo viên chưa chấm */
+  answerId: string | null;
+  /** Số câu còn có thể chấm đối chiếu */
+  remaining: number;
+};
+export type AgreementRow = {
+  /** null: toàn bộ */
+  skill: Skill | null;
+  /** null: cả kỹ năng */
+  part: number | null;
+  /** Số câu có cả điểm AI và điểm giáo viên */
+  count: number;
+  /** Độ lệch tuyệt đối trung bình |AI − GV| (điểm) */
+  mae: number;
+  /** Như mae nhưng quy về % thang của câu */
+  maePercent: number;
+  /** Độ lệch có dấu trung bình (AI − GV, % thang): dương là AI chấm cao hơn */
+  biasPercent: number;
+  /** % câu AI cho đúng bằng điểm giáo viên */
+  exactRate: number;
+  /** % câu lệch không quá 1 điểm */
+  withinOneRate: number;
+  /** Điểm AI trung bình (% thang) */
+  aiMeanPercent: number;
+  /** Điểm giáo viên trung bình (% thang) */
+  teacherMeanPercent: number;
+};
+export type AgreementPair = {
+  answerId: string;
+  examTitle: string;
+  skill: Skill;
+  part: number;
+  questionNumber: number;
+  aiScore: number;
+  teacherScore: number;
+  maxScore: number;
+  /** AI − GV (điểm) */
+  diff: number;
+  blindReview: boolean;
+  reviewerName: string | null;
+  reviewedAt: string | null;
+};
+export type AgreementStats = {
+  /** Toàn bộ mẫu */
+  overall: AgreementRow;
+  /** Theo kỹ năng (part = null) */
+  bySkill: AgreementRow[];
+  /** Theo kỹ năng và Part */
+  byPart: AgreementRow[];
+  /** Mọi cặp điểm, lệch nhiều nhất trước (xem lại prompt, xuất CSV cho báo cáo) */
+  pairs: AgreementPair[];
 };
 export type ReviewQuestionContent = {
   type: QuestionType;
@@ -2593,6 +2699,8 @@ export type TeacherReviewDetail = {
   teacherScore: number | null;
   reviewerName: string | null;
   reviewedAt: string | null;
+  /** Bản giáo viên chấm đối chiếu (chưa thấy điểm AI khi chấm) */
+  blindReview: boolean;
   question: ReviewQuestionContent;
   answer: ReviewStudentAnswer;
   reviewRequest: AssessmentReviewRequest | null;
@@ -2600,6 +2708,8 @@ export type TeacherReviewDetail = {
   aiAssessment: QuestionAssessment | null;
   /** Bản giáo viên đã chấm (sửa lại thì gửi kèm updatedAt của bản này) */
   teacherAssessment: QuestionAssessment | null;
+  /** Đang chấm đối chiếu: bản AI bị ẩn (aiAssessment, aiScore, aiStatus null) tới khi giáo viên lưu */
+  blind: boolean;
   /** Tiêu chí 0–5 của kỹ năng */
   criteriaOptions: ReviewCriterionOption[];
   /** Speaking Part 1: chấm 2 điểm con thay cho điểm câu; câu khác rỗng */
@@ -2619,6 +2729,8 @@ export type GradeAnswerDto = {
   };
   /** Nhận xét cho học viên */
   feedback: string;
+  /** Chấm đối chiếu (chưa xem điểm AI); chỉ có tác dụng khi chấm lần đầu, sửa lại thì bỏ cờ này */
+  blind?: boolean;
   /** Bắt buộc khi sửa bản đã chấm: updatedAt của teacherAssessment lần đọc gần nhất */
   updatedAt?: string;
 };
@@ -2849,6 +2961,8 @@ export const {
   useRegradeAssessmentMutation,
   useRequestAssessmentReviewMutation,
   useListTeacherAssessmentsQuery,
+  useGetNextCalibrationQuery,
+  useGetAssessmentAgreementQuery,
   useGetTeacherAssessmentQuery,
   useGradeTeacherAssessmentMutation,
   useListNotificationsQuery,
