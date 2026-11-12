@@ -1,5 +1,14 @@
 import { Link } from 'react-router';
-import { ChevronRight, FileText, FileUp, Layers, ListChecks, UserRound } from 'lucide-react';
+import {
+  ChartColumn,
+  ChevronRight,
+  ClipboardCheck,
+  FileText,
+  FileUp,
+  Layers,
+  ListChecks,
+  UserRound,
+} from 'lucide-react';
 import { useMyBankCounts } from '@/features/question-bank/hooks/use-question-counts';
 import { AppShell, type SidebarSlotProps } from '../shared/AppShell';
 import { AppSidebar, type SidebarSection } from '../shared/AppSidebar';
@@ -11,6 +20,8 @@ const SECTIONS: SidebarSection[] = [
     { to: '/teacher/question-groups', label: 'Nhóm câu hỏi', icon: Layers },
     { to: '/teacher/import', label: 'Nhập từ tệp', icon: FileUp },
     { to: '/teacher/exams', label: 'Đề thi', icon: FileText },
+    { to: '/teacher/assessments', label: 'Chấm lại bài', icon: ClipboardCheck },
+    { to: '/teacher/assessments/agreement', label: 'Độ lệch AI chấm', icon: ChartColumn },
   ],
   [{ to: '/teacher/profile', label: 'Hồ sơ cá nhân', icon: UserRound }],
 ];

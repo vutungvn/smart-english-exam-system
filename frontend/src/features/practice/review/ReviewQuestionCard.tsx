@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { countWords } from '../practice-meta';
 import { AiExplanationPanel } from './AiExplanationPanel';
 import { AssessmentPanel } from './AssessmentPanel';
+import { ReviewRequestBox } from './ReviewRequestBox';
 import { OUTCOME_META } from './review-meta';
 
 interface ReviewQuestionCardProps {
@@ -90,9 +91,11 @@ export function ReviewQuestionCard({ attemptId, question }: ReviewQuestionCardPr
             <AssessmentPanel
               attemptId={attemptId}
               assessment={question.assessment}
+              aiAssessment={question.aiAssessment}
               kind={question.type === 'WRITTEN_RESPONSE' ? 'writing' : 'speaking'}
             />
           )}
+          <ReviewRequestBox attemptId={attemptId} question={question} />
         </>
       )}
 

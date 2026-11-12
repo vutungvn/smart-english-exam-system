@@ -87,6 +87,10 @@ export const ErrorCode = {
   ASSESSMENT_NOT_FAILED: 'ASSESSMENT_NOT_FAILED',
   ASSESSMENT_REGRADE_LIMIT: 'ASSESSMENT_REGRADE_LIMIT',
   ASSESSMENT_RECORDING_MISSING: 'ASSESSMENT_RECORDING_MISSING',
+  ASSESSMENT_TEACHER_REVIEWED: 'ASSESSMENT_TEACHER_REVIEWED',
+  ASSESSMENT_NOT_GRADED: 'ASSESSMENT_NOT_GRADED',
+  ASSESSMENT_REVIEW_ALREADY_REQUESTED: 'ASSESSMENT_REVIEW_ALREADY_REQUESTED',
+  ASSESSMENT_SCORE_OUT_OF_RANGE: 'ASSESSMENT_SCORE_OUT_OF_RANGE',
 
   // AI
   AI_QUOTA_EXCEEDED: 'AI_QUOTA_EXCEEDED',
@@ -370,6 +374,22 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.ASSESSMENT_RECORDING_MISSING]: {
     status: HttpStatus.NOT_FOUND,
     message: 'Không tìm thấy bài nói để chấm (có thể đã quá thời hạn lưu)',
+  },
+  [ErrorCode.ASSESSMENT_TEACHER_REVIEWED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Giáo viên đã chấm lại câu này',
+  },
+  [ErrorCode.ASSESSMENT_NOT_GRADED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Chỉ yêu cầu chấm lại được câu AI đã chấm xong',
+  },
+  [ErrorCode.ASSESSMENT_REVIEW_ALREADY_REQUESTED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Bạn đã gửi yêu cầu giáo viên chấm lại câu này',
+  },
+  [ErrorCode.ASSESSMENT_SCORE_OUT_OF_RANGE]: {
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    message: 'Điểm nằm ngoài thang điểm của dạng câu',
   },
 
   // AI

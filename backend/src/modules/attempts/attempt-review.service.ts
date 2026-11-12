@@ -5,13 +5,14 @@ import type { WithMeta } from '../../common/types/api-response.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
 import { paginate, toPrismaPage } from '../../common/utils/pagination.js';
 import type { Prisma } from '../../generated/prisma/client.js';
-import { AttemptStatus } from '../../generated/prisma/enums.js';
+import { AttemptStatus, Grader } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import {
   AssessmentsService,
   assessmentViewSelect,
   effectiveAssessment,
   toQuestionAssessment,
+  toReviewRequest,
 } from '../assessments/assessments.service.js';
 import { MediaUrlService } from '../media/media-url.service.js';
 import { findPartRule } from '../questions/toeic-parts.js';
@@ -134,6 +135,8 @@ export class AttemptReviewService {
           isCorrect: true,
           audioKey: true,
           audioDeletedAt: true,
+          reviewRequestedAt: true,
+          reviewRequestNote: true,
           assessments: { select: assessmentViewSelect },
         },
       }),
@@ -157,6 +160,11 @@ export class AttemptReviewService {
         const answer = answerOf.get(item.id);
         const correctOptionId = question.options.find((option) => option.isCorrect)?.id ?? null;
         const assessment = effectiveAssessment(answer?.assessments ?? []);
+        // Giáo viên đã chấm lại: kèm bản AI để học viên đối chiếu
+        const aiCopy =
+          assessment?.grader === Grader.TEACHER
+            ? answer?.assessments.find((row) => row.grader === Grader.AI)
+            : undefined;
         const outcome = reviewOutcome(question.type, answer, correctOptionId, assessment?.status);
         addOutcome(counts, outcome);
 
@@ -173,6 +181,8 @@ export class AttemptReviewService {
           explanation,
           sampleAnswer,
           assessment: assessment ? toQuestionAssessment(assessment) : null,
+          aiAssessment: aiCopy ? toQuestionAssessment(aiCopy) : null,
+          reviewRequest: answer ? toReviewRequest(answer) : null,
         });
 
         // Các câu liền nhau cùng nhóm gom vào một khối (đoạn văn, lời thoại hiện một lần)

@@ -15,8 +15,8 @@ export function notificationLink(
   const attemptId = item.data?.attemptId;
   // Trang kết quả, xem lại bài làm chỉ có ở khu vực học viên
   if (!attemptId || role !== 'STUDENT') return null;
-  // Câu chấm lỗi: nút "Chấm lại" nằm ở trang xem lại
-  return item.type === 'GRADING_FAILED'
+  // Câu chấm lỗi (nút "Chấm lại"), giáo viên chấm lại (điểm, nhận xét từng câu): trang xem lại
+  return item.type === 'GRADING_FAILED' || item.type === 'TEACHER_REVIEWED'
     ? attemptReviewPath(attemptId)
     : attemptResultPath(attemptId);
 }
