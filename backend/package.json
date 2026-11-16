@@ -27,6 +27,7 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed/index.ts",
+    "user:create": "tsx prisma/seed/create-user.ts",
     "openapi:export": "nest build && node dist/openapi-export.js"
   },
   "dependencies": {
