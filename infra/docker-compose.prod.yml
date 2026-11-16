@@ -1,0 +1,162 @@
+# Production/staging trên 1 máy (SPRINT-80, SPRINT-81). Chạy từ thư mục gốc repo:
+#   docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod up -d --build
+# Lần đầu phải cấp chứng chỉ HTTPS trước: infra/scripts/init-ssl.sh (xem infra/README.md).
+# Chỉ Nginx mở cổng ra ngoài (80, 443); Postgres, Redis, RustFS, backend nằm trong mạng nội bộ Docker.
+name: smart-exam-prod
+
+x-logging: &logging
+  # Giới hạn log mỗi container 30 MB để không đầy ổ
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# Biến dùng chung cho backend và migrate: URL nội bộ ghép từ mật khẩu trong .env.prod
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  REDIS_URL: redis://redis:6379
+  S3_ENDPOINT: http://rustfs:9000
+  S3_FORCE_PATH_STYLE: "true"
+  NODE_ENV: production
+
+services:
+  # Nginx: HTTPS, file tĩnh React, chuyển /api và /socket.io sang backend
+  web:
+    build:
+      context: ../frontend
+    image: smart-exam-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+    volumes:
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      - letsencrypt:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+    # Reload mỗi 6 giờ để nhận chứng chỉ certbot vừa gia hạn
+    command:
+      - /bin/sh
+      - -c
+      - while :; do sleep 6h & wait $$!; nginx -s reload; done & exec /docker-entrypoint.sh nginx -g 'daemon off;'
+    logging: *logging
+
+  # Gia hạn chứng chỉ Let's Encrypt (còn dưới 30 ngày thì xin lại), thử mỗi 12 giờ
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint:
+      - /bin/sh
+      - -c
+      - trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $$!; done
+    logging: *logging
+
+  backend:
+    build:
+      context: ../backend
+      target: runtime
+    image: smart-exam-backend
+    restart: unless-stopped
+    env_file: .env.prod
+    environment: *backend-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/api/v1').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging: *logging
+
+  # Chạy mỗi lần deploy rồi thoát: áp migration mới, seed vai trò, admin, chương trình thi (idempotent).
+  # Dùng image stage build (có prisma CLI, tsx); cũng dùng để chạy lệnh quản trị:
+  #   docker compose ... run --rm migrate npm run user:create -- --role TEACHER --email ... --name ...
+  migrate:
+    build:
+      context: ../backend
+      target: build
+    image: smart-exam-backend-tools
+    restart: "no"
+    env_file: .env.prod
+    environment: *backend-env
+    command: ["sh", "-c", "npx prisma migrate deploy && npm run db:seed"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: *logging
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    logging: *logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    logging: *logging
+
+  rustfs:
+    image: rustfs/rustfs:1.0.1
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY}
+      RUSTFS_CONSOLE_ENABLE: "true"
+    # Giao diện quản lý chỉ nghe ở 127.0.0.1 của máy chủ, xem qua SSH tunnel:
+    #   ssh -L 9001:127.0.0.1:9001 ubuntu@<host>  rồi mở http://localhost:9001
+    ports:
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - rustfs-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    logging: *logging
+
+volumes:
+  postgres-data:
+  redis-data:
+  rustfs-data:
+  # Chứng chỉ HTTPS: KHÔNG xóa (xin lại nhiều lần sẽ bị Let's Encrypt giới hạn)
+  letsencrypt:
+  certbot-www:

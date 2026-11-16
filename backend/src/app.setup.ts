@@ -4,12 +4,18 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { OpenAPIObject } from '@nestjs/swagger';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import type { Express } from 'express';
 import { REFRESH_COOKIE_NAME } from './modules/auth/auth.constants.js';
 import { addCommonErrorResponses } from './common/swagger/common-error-responses.js';
 import { ErrorEnvelopeDto, PaginationMetaDto } from './common/swagger/envelope.schemas.js';
 
 // Dùng chung cho main.ts và test để route luôn là /api/v1/...
 export function configureApp(app: INestApplication): void {
+  // Sau Nginx (production) hoặc Vite proxy (dev): tin X-Forwarded-For từ máy cùng mạng nội bộ để
+  // req.ip là IP người dùng (lịch sử đăng nhập, giới hạn đăng nhập sai), không phải IP của proxy.
+  // Request đến thẳng từ Internet không được tin header này
+  (app.getHttpAdapter().getInstance() as Express).set('trust proxy', 'loopback, uniquelocal');
+
   app.setGlobalPrefix('api');
   app.enableVersioning({
     type: VersioningType.URI,

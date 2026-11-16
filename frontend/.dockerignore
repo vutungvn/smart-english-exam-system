@@ -1,0 +1,7 @@
+# Ngữ cảnh build image frontend: chỉ mã nguồn và lockfile
+node_modules
+dist
+*.tsbuildinfo
+.env
+.env.*
+npm-debug.log*
