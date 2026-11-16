@@ -77,7 +77,7 @@ export function AuthBanner() {
 
         <div className="max-w-2xl space-y-3">
           <h2 className="text-4xl leading-tight font-extrabold tracking-tight tall:xl:text-5xl">
-            Chinh phục TOEIC <br />
+            Chinh phục TOEIC (990+ LR và 400+ SW) <br />
             <span className="font-black text-highlight drop-shadow-sm">đủ 4 kỹ năng</span> cùng trợ
             lý AI
           </h2>
