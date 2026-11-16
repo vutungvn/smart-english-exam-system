@@ -83,7 +83,7 @@ export function LandingFooter() {
         </div>
 
         <div className="flex flex-col gap-2 border-t border-white/10 py-6 text-xs text-white/50 sm:flex-row sm:justify-between">
-          <p>© 2026 Smart English Exam </p>
+          <p>© 2026 Smart English Exam - Tùng dev 2k4 </p>
           <p>Luyện thi TOEIC 4 kỹ năng cùng AI</p>
         </div>
       </div>

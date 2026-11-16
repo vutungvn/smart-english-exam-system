@@ -93,14 +93,38 @@ người), nên luôn thử `--staging` trước và **không xóa volume `letse
 ```bash
 bash infra/scripts/deploy.sh
 ```
-Lần đầu build mất khoảng 5–10 phút. Service `migrate` áp migration và seed (vai trò, admin, chương
-trình TOEIC) xong thì backend mới chạy. Kiểm tra:
+Script pull Docker images từ GHCR theo `IMAGE_TAG`, chạy migration và seed (vai trò, admin, chương
+trình TOEIC) xong thì backend mới chạy. Deploy thủ công tag cụ thể:
+```bash
+bash infra/scripts/deploy.sh <commit-sha>
+```
+Kiểm tra:
 ```bash
 curl -I https://<hostname>/api/v1
 docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod ps
 docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod logs -f backend
 ```
-Các lần sau: merge vào `main` → SSH vào máy → `bash infra/scripts/deploy.sh`.
+CD tự động chạy sau khi workflow CI thành công trên `main`. Workflow SSH vào máy, checkout đúng
+commit vừa merge, pull image tương ứng từ GHCR và chạy script deploy. Deploy thủ công vẫn dùng được
+khi cần rollback hoặc xử lý sự cố.
+
+### Cấu hình GitHub Actions cho CD
+
+Tạo GitHub Environment `production` và thêm các secrets:
+
+```text
+PROD_HOST          # hostname hoặc IP production
+PROD_USER          # user SSH, ví dụ ubuntu
+PROD_APP_DIR       # ví dụ /opt/smart-english-exam
+PROD_SSH_PRIVATE_KEY
+PROD_KNOWN_HOSTS  # kết quả ssh-keyscan, không dùng -o StrictHostKeyChecking=no
+```
+
+Server production cần đăng nhập GHCR một lần bằng token chỉ có quyền `read:packages`:
+```bash
+echo "$GHCR_READ_TOKEN" | docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
+```
+Giữ `infra/.env.prod` trên server với `IMAGE_REGISTRY` và `IMAGE_REPOSITORY`; không commit file này.
 
 ## 7. Tài khoản giáo viên
 Chưa có màn admin quản lý người dùng (SPRINT-66) nên tạo giáo viên bằng lệnh; mật khẩu in ra một lần,

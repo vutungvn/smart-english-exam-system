@@ -22,9 +22,7 @@ x-backend-env: &backend-env
 services:
   # Nginx: HTTPS, file tĩnh React, chuyển /api và /socket.io sang backend
   web:
-    build:
-      context: ../frontend
-    image: smart-exam-web
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-vutungvn/smart-english-exam-system}-web:${IMAGE_TAG:-main}
     restart: unless-stopped
     ports:
       - "80:80"
@@ -57,10 +55,7 @@ services:
     logging: *logging
 
   backend:
-    build:
-      context: ../backend
-      target: runtime
-    image: smart-exam-backend
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-vutungvn/smart-english-exam-system}-backend:${IMAGE_TAG:-main}
     restart: unless-stopped
     env_file: .env.prod
     environment: *backend-env
@@ -89,10 +84,7 @@ services:
   # Dùng image stage build (có prisma CLI, tsx); cũng dùng để chạy lệnh quản trị:
   #   docker compose ... run --rm migrate npm run user:create -- --role TEACHER --email ... --name ...
   migrate:
-    build:
-      context: ../backend
-      target: build
-    image: smart-exam-backend-tools
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-vutungvn/smart-english-exam-system}-backend-tools:${IMAGE_TAG:-main}
     restart: "no"
     env_file: .env.prod
     environment: *backend-env
