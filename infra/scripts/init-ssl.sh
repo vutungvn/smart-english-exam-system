@@ -50,7 +50,8 @@ fi
 echo "== Xóa chứng chỉ cũ (tạm hoặc bản thử) rồi xin chứng chỉ Let's Encrypt"
 certbot_sh "rm -rf /etc/letsencrypt/live/$DOMAIN /etc/letsencrypt/archive/$DOMAIN \
   /etc/letsencrypt/renewal/$DOMAIN.conf"
-compose run --rm certbot certonly --webroot -w /var/www/certbot \
+# Phải ghi đè entrypoint: service certbot có entrypoint là vòng lặp gia hạn, tham số truyền thêm sẽ bị bỏ qua
+compose run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot \
   -d "$DOMAIN" --email "$EMAIL" --agree-tos --no-eff-email --non-interactive "${EXTRA[@]}"
 
 echo "== Reload Nginx với chứng chỉ mới"
