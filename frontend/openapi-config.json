@@ -1,0 +1,11 @@
+{
+  "schemaFile": "../backend/openapi.json",
+  "apiFile": "./src/api/base-api.ts",
+  "apiImport": "baseApi",
+  "outputFile": "./src/api/generated.ts",
+  "exportName": "api",
+  "hooks": true,
+  "tag": true,
+  "flattenArg": true,
+  "prettierConfigFile": "./.prettierrc"
+}

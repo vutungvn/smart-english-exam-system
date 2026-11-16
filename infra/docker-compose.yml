@@ -1,0 +1,65 @@
+# Hạ tầng cho môi trường dev: chỉ dùng ở local, mật khẩu ở đây không dùng cho production.
+# Chạy từ root: docker compose -f infra/docker-compose.yml up -d
+# Đường dẫn tương đối bên dưới tính từ thư mục infra/.
+# Giữ name cố định để container và volume không đổi khi di chuyển file compose.
+name: smart-exam
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: smart_exam
+      POSTGRES_PASSWORD: smart_exam
+      POSTGRES_DB: smart_exam
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Kho tệp tương thích S3 (D21): ảnh đại diện, media câu hỏi, bài ghi âm Speaking.
+  # Bucket do backend tự tạo khi khởi động. Giao diện quản lý: http://localhost:9001
+  rustfs:
+    image: rustfs/rustfs:1.0.1
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: smart_exam
+      RUSTFS_SECRET_KEY: smart_exam_secret
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports:
+      - "127.0.0.1:9000:9000" # API S3: backend kết nối vào đây
+      - "127.0.0.1:9001:9001" # Giao diện web, đăng nhập bằng access key / secret key ở trên
+    volumes:
+      - rustfs-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres-data:
+  redis-data:
+  rustfs-data:

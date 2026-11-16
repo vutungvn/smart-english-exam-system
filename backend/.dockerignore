@@ -1,0 +1,10 @@
+# Ngữ cảnh build image backend: chỉ mã nguồn và lockfile, không kèm thứ sinh ra ở máy dev
+node_modules
+dist
+coverage
+src/generated
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+npm-debug.log*

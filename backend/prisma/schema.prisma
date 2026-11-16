@@ -1,0 +1,717 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ================================================================
+// ENUM
+// ================================================================
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  PENDING_APPROVAL
+  ACTIVE
+  LOCKED
+
+  @@map("user_status")
+}
+
+enum PermissionAction {
+  VIEW
+  CREATE
+  UPDATE
+  DELETE
+
+  @@map("permission_action")
+}
+
+enum Level {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+
+  @@map("level")
+}
+
+/// Chương trình thi (D16, D17): chỉ làm TOEIC, IELTS để sẵn giá trị
+enum SubjectCategory {
+  TOEIC
+  IELTS
+
+  @@map("subject_category")
+}
+
+/// 4 kỹ năng TOEIC (D17)
+enum Skill {
+  LISTENING
+  READING
+  SPEAKING
+  WRITING
+
+  @@map("skill")
+}
+
+/// D11: LR dùng SINGLE_CHOICE; Speaking, Writing là câu trả lời mở chấm bằng AI.
+/// MULTIPLE_CHOICE giữ trong enum nhưng chưa Part nào dùng; bỏ FILL_IN_BLANK
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  SPOKEN_RESPONSE
+  WRITTEN_RESPONSE
+
+  @@map("question_type")
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+
+  @@map("difficulty")
+}
+
+/// DRAFT: đang soạn · ACTIVE: được đưa vào đề · INACTIVE: ngừng dùng nhưng đề cũ vẫn tham chiếu
+enum QuestionStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+
+  @@map("question_status")
+}
+
+/// Thang điểm của đề (D17): TOEIC_990 đề Listening + Reading; TOEIC_SW đề Speaking và/hoặc Writing
+/// (0–200 mỗi kỹ năng); PERCENT luyện theo Part, bộ luyện tập AI
+enum ScoringScale {
+  TOEIC_990
+  TOEIC_SW
+  PERCENT
+
+  @@map("scoring_scale")
+}
+
+/// D4: STANDARD do giáo viên soạn; AI_PRACTICE bộ luyện tập AI tạo cho học viên (Giai đoạn 3)
+enum ExamKind {
+  STANDARD
+  AI_PRACTICE
+
+  @@map("exam_kind")
+}
+
+/// DRAFT: đang soạn · PUBLISHED: học viên thấy và làm được · UNPUBLISHED: đã gỡ, giữ nguyên bài làm cũ
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+
+  @@map("exam_status")
+}
+
+/// FULL: làm cả đề, đếm giờ theo thời gian của đề · PART: luyện riêng một Part, không đếm giờ
+enum AttemptMode {
+  FULL
+  PART
+
+  @@map("attempt_mode")
+}
+
+/// IN_PROGRESS → SUBMITTED (đã nộp) → GRADED (đã chấm, SPRINT-52) · CANCELLED: học viên hủy để làm lại
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+  CANCELLED
+
+  @@map("attempt_status")
+}
+
+/// Tính năng gọi AI (Mục 7.4); tính năng mới (SW_GRADING, ANALYSIS, CHAT…) thêm giá trị khi làm tới
+enum AiFeature {
+  EXPLANATION
+  /// Chấm Speaking/Writing (SPRINT-86)
+  SW_GRADING
+
+  @@map("ai_feature")
+}
+
+/// PENDING: chờ hàng đợi chấm (kể cả đang chờ lượt AI ngày mới) · DONE: đã có điểm · FAILED: AI lỗi
+/// quá số lần thử, học viên bấm chấm lại hoặc giáo viên chấm tay
+enum AssessmentStatus {
+  PENDING
+  DONE
+  FAILED
+
+  @@map("assessment_status")
+}
+
+/// Người chấm: bản của giáo viên (SPRINT-91) ghi đè bản AI, bản AI vẫn giữ để đối chiếu
+enum Grader {
+  AI
+  TEACHER
+
+  @@map("grader")
+}
+
+/// SUCCESS: kết quả đúng cấu trúc · FAILED: Google báo lỗi, hết lượt hoặc quá thời gian chờ ·
+/// INVALID_OUTPUT: model trả về nhưng sai cấu trúc (Zod)
+enum AiCallStatus {
+  SUCCESS
+  FAILED
+  INVALID_OUTPUT
+
+  @@map("ai_call_status")
+}
+
+/// Loại thông báo (SPRINT-56); loại mới (được duyệt giáo viên, giáo viên sửa điểm…) thêm khi làm tới
+enum NotificationType {
+  /// AI chấm xong câu Speaking/Writing cuối cùng, bài làm đã có điểm
+  ATTEMPT_GRADED
+  /// Hết giờ, hệ thống tự nộp bài
+  ATTEMPT_AUTO_SUBMITTED
+  /// Có câu Speaking/Writing AI chấm lỗi, học viên cần bấm "Chấm lại"
+  GRADING_FAILED
+  /// Giáo viên chấm lại một câu Speaking/Writing (SPRINT-91)
+  TEACHER_REVIEWED
+
+  @@map("notification_type")
+}
+
+// ================================================================
+// Nhóm Người dùng và phân quyền
+// ================================================================
+
+model Role {
+  id          String   @id(map: "pk_roles") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String   @unique(map: "uq_roles_code") @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  users           User[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id        String           @id(map: "pk_permissions") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code      String           @unique(map: "uq_permissions_code") @db.VarChar(100)
+  module    String           @db.VarChar(50)
+  action    PermissionAction
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  rolePermissions RolePermission[]
+
+  @@unique([module, action], map: "uq_permissions_module_action")
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String   @map("role_id") @db.Uuid
+  permissionId String   @map("permission_id") @db.Uuid
+  grantedAt    DateTime @default(now()) @map("granted_at") @db.Timestamptz(6)
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade, map: "fk_role_permissions_role_id")
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, map: "fk_role_permissions_permission_id")
+
+  @@id([roleId, permissionId], map: "pk_role_permissions")
+  @@index([permissionId], map: "ix_role_permissions_permission_id")
+  @@map("role_permissions")
+}
+
+model User {
+  id                 String     @id(map: "pk_users") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roleId             String     @map("role_id") @db.Uuid
+  /// Luôn lưu chữ thường (D3), chuẩn hóa ở tầng Service trước khi ghi
+  email              String     @unique(map: "uq_users_email") @db.VarChar(255)
+  /// null khi tài khoản chỉ đăng nhập bằng Google; tạo mật khẩu qua luồng Quên mật khẩu
+  passwordHash       String?    @map("password_hash") @db.VarChar(255)
+  /// "sub" trong id_token của Google, cố định với mỗi tài khoản Google (email có thể đổi)
+  googleId           String?    @unique(map: "uq_users_google_id") @map("google_id") @db.VarChar(255)
+  fullName           String     @map("full_name") @db.VarChar(100)
+  avatarUrl          String?    @map("avatar_url") @db.VarChar(500)
+  status             UserStatus @default(PENDING_VERIFICATION)
+  /// Bổ sung theo Mục 5.2 kế hoạch: admin mặc định trong seed phải đổi mật khẩu lần đầu
+  mustChangePassword Boolean    @default(false) @map("must_change_password")
+  emailVerifiedAt    DateTime?  @map("email_verified_at") @db.Timestamptz(6)
+  /// Thời điểm đồng ý Điều khoản sử dụng và Chính sách xử lý dữ liệu cá nhân (Luật BVDLCN).
+  /// null với tài khoản do hệ thống tạo (admin trong seed).
+  termsAcceptedAt    DateTime?  @map("terms_accepted_at") @db.Timestamptz(6)
+  lastLoginAt        DateTime?  @map("last_login_at") @db.Timestamptz(6)
+  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  role                Role               @relation(fields: [roleId], references: [id], onDelete: Restrict, map: "fk_users_role_id")
+  student             Student?
+  teacher             Teacher?
+  admin               Admin?
+  loginHistories      LoginHistory[]
+  aiUsageLogs         AiUsageLog[]
+  /// Các câu giáo viên này đã chấm lại (SPRINT-91)
+  reviewedAssessments AnswerAssessment[]
+  notifications       Notification[]
+
+  @@index([roleId], map: "ix_users_role_id")
+  @@index([status], map: "ix_users_status")
+  @@map("users")
+}
+
+model Student {
+  userId         String    @id(map: "pk_students") @map("user_id") @db.Uuid
+  currentLevel   Level?    @map("current_level")
+  currentScore   Int?      @map("current_score")
+  targetScore    Int?      @map("target_score")
+  /// Lúc đồng ý cho hệ thống ghi âm và xử lý giọng nói (D19); null: chưa đồng ý, chưa làm được Speaking
+  voiceConsentAt DateTime? @map("voice_consent_at") @db.Timestamptz(6)
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_students_user_id")
+  attempts ExamAttempt[]
+
+  @@map("students")
+}
+
+model Teacher {
+  userId         String  @id(map: "pk_teachers") @map("user_id") @db.Uuid
+  organization   String  @db.VarChar(255)
+  specialization String  @db.VarChar(255)
+  isApproved     Boolean @default(false) @map("is_approved")
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_teachers_user_id")
+  questions      Question[]
+  questionGroups QuestionGroup[]
+  exams          Exam[]
+
+  @@map("teachers")
+}
+
+model Admin {
+  userId           String  @id(map: "pk_admins") @map("user_id") @db.Uuid
+  phone            String  @db.VarChar(20)
+  twoFactorEnabled Boolean @default(false) @map("two_factor_enabled")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_admins_user_id")
+
+  @@map("admins")
+}
+
+// ================================================================
+// Bảng bổ sung cho Auth
+// ================================================================
+
+/// Mỗi lượt đăng nhập (thành công hoặc thất bại) của một tài khoản có thật; phục vụ /me/login-history
+model LoginHistory {
+  id            String   @id(map: "pk_login_histories") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  success       Boolean
+  /// Mã lý do khi thất bại, ví dụ INVALID_PASSWORD, ACCOUNT_LOCKED
+  failureReason String?  @map("failure_reason") @db.VarChar(50)
+  ipAddress     String?  @map("ip_address") @db.VarChar(45)
+  userAgent     String?  @map("user_agent") @db.VarChar(500)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_login_histories_user_id")
+
+  @@index([userId, createdAt(sort: Desc)], map: "ix_login_histories_user_created")
+  @@map("login_histories")
+}
+
+// ================================================================
+// Nhóm Chương trình thi và ngân hàng câu hỏi
+// ================================================================
+
+/// Chương trình thi (TOEIC; IELTS sau này). Tên bảng giữ "subjects" như tài liệu CSDL
+model Subject {
+  id        String          @id(map: "pk_subjects") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code      String          @unique(map: "uq_subjects_code") @db.VarChar(50)
+  name      String          @db.VarChar(150)
+  category  SubjectCategory
+  isActive  Boolean         @default(true) @map("is_active")
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  topics Topic[]
+  exams  Exam[]
+
+  @@map("subjects")
+}
+
+/// Chủ đề theo dạng kỹ năng (Ke_hoach_soan_cau_hoi Mục 3.4), đơn vị thống kê điểm mạnh/yếu.
+/// Bổ sung so với tài liệu (D22): skill + parts để chặn gắn nhầm chủ đề Reading cho câu Listening
+model Topic {
+  id          String   @id(map: "pk_topics") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subjectId   String   @map("subject_id") @db.Uuid
+  skill       Skill
+  /// Các Part dùng được chủ đề này, ví dụ "P3/P4 – Chi tiết" là [3, 4]
+  parts       Int[]    @db.SmallInt
+  name        String   @db.VarChar(150)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade, map: "fk_topics_subject_id")
+  questions      Question[]
+  questionGroups QuestionGroup[]
+
+  @@unique([subjectId, name], map: "uq_topics_subject_name")
+  @@index([subjectId, skill], map: "ix_topics_subject_skill")
+  @@map("topics")
+}
+
+/// Nhóm câu dùng chung đoạn văn/audio/bảng thông tin (D15): Listening P3, P4; Reading P6, P7; Speaking P4
+model QuestionGroup {
+  id         String         @id(map: "pk_question_groups") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  topicId    String         @map("topic_id") @db.Uuid
+  authorId   String         @map("author_id") @db.Uuid
+  skill      Skill
+  part       Int            @db.SmallInt
+  /// Đoạn văn (Reading P6, P7) hoặc bảng thông tin (Speaking P4)
+  passage    String?
+  /// Lời thoại Listening P3, P4: chỉ hiện ở màn xem lại, không hiện khi đang làm bài
+  transcript String?
+  /// Key trong kho tệp (StorageService), gán khi làm chức năng tải media/nhập .zip
+  audioKey   String?        @map("audio_key") @db.VarChar(500)
+  imageKey   String?        @map("image_key") @db.VarChar(500)
+  status     QuestionStatus @default(DRAFT)
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime?      @map("deleted_at") @db.Timestamptz(6)
+
+  topic     Topic      @relation(fields: [topicId], references: [id], onDelete: Restrict, map: "fk_question_groups_topic_id")
+  author    Teacher    @relation(fields: [authorId], references: [userId], onDelete: Restrict, map: "fk_question_groups_author_id")
+  questions Question[]
+
+  @@index([topicId], map: "ix_question_groups_topic_id")
+  @@index([authorId], map: "ix_question_groups_author_id")
+  @@map("question_groups")
+}
+
+model Question {
+  id              String         @id(map: "pk_questions") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  topicId         String         @map("topic_id") @db.Uuid
+  authorId        String         @map("author_id") @db.Uuid
+  groupId         String?        @map("group_id") @db.Uuid
+  /// Mã câu trong tệp nhập (P5-001, S1-03-11), dùng đối chiếu khi nhập lại; câu tạo bằng form thì null.
+  /// Duy nhất trong các câu chưa xóa: chỉ mục unique một phần uq_questions_code viết tay trong migration
+  code            String?        @db.VarChar(50)
+  /// Thứ tự trong nhóm (1, 2, 3…); có khi và chỉ khi group_id có
+  orderInGroup    Int?           @map("order_in_group") @db.SmallInt
+  type            QuestionType
+  skill           Skill
+  /// LR 1–7; Speaking 1–5; Writing 1–3 (cặp skill–part hợp lệ kiểm tra ở Service theo TOEIC_PARTS, D17)
+  part            Int            @db.SmallInt
+  difficulty      Difficulty
+  content         String
+  explanation     String?
+  /// Câu trả lời mẫu cho Speaking/Writing: dùng ở màn xem lại và làm mốc khi AI chấm (D18)
+  sampleAnswer    String?        @map("sample_answer")
+  /// Thời gian chuẩn bị/trả lời của câu Speaking, tính bằng giây (D18)
+  prepSeconds     Int?           @map("prep_seconds") @db.SmallInt
+  responseSeconds Int?           @map("response_seconds") @db.SmallInt
+  audioKey        String?        @map("audio_key") @db.VarChar(500)
+  imageKey        String?        @map("image_key") @db.VarChar(500)
+  status          QuestionStatus @default(DRAFT)
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?      @map("deleted_at") @db.Timestamptz(6)
+
+  topic         Topic            @relation(fields: [topicId], references: [id], onDelete: Restrict, map: "fk_questions_topic_id")
+  author        Teacher          @relation(fields: [authorId], references: [userId], onDelete: Restrict, map: "fk_questions_author_id")
+  group         QuestionGroup?   @relation(fields: [groupId], references: [id], onDelete: Restrict, map: "fk_questions_group_id")
+  options       QuestionOption[]
+  examQuestions ExamQuestion[]
+  aiExplanation AiExplanation?
+
+  @@index([topicId], map: "ix_questions_topic_id")
+  @@index([authorId], map: "ix_questions_author_id")
+  @@index([groupId], map: "ix_questions_group_id")
+  /// Tìm theo từ khóa (ILIKE '%…%') dùng được chỉ mục trigram; extension pg_trgm tạo trong migration
+  @@index([content(ops: raw("gin_trgm_ops"))], type: Gin, map: "ix_questions_content_trgm")
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String  @id(map: "pk_question_options") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId String  @map("question_id") @db.Uuid
+  /// A, B, C, D
+  label      String  @db.VarChar(10)
+  content    String
+  isCorrect  Boolean @default(false) @map("is_correct")
+  orderIndex Int     @map("order_index") @db.SmallInt
+
+  question Question        @relation(fields: [questionId], references: [id], onDelete: Cascade, map: "fk_question_options_question_id")
+  answers  AttemptAnswer[]
+
+  @@unique([questionId, label], map: "uq_question_options_question_label")
+  @@map("question_options")
+}
+
+// ================================================================
+// Nhóm Đề thi
+// ================================================================
+
+model Exam {
+  id                String       @id(map: "pk_exams") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authorId          String       @map("author_id") @db.Uuid
+  /// Chương trình thi (D4): lọc đề theo TOEIC, sau này IELTS
+  subjectId         String       @map("subject_id") @db.Uuid
+  kind              ExamKind     @default(STANDARD)
+  title             String       @db.VarChar(255)
+  description       String?
+  scoringScale      ScoringScale @map("scoring_scale")
+  /// Thời gian làm bài toàn đề (phút); đồng hồ tính ở server khi bắt đầu làm bài
+  durationMinutes   Int          @map("duration_minutes")
+  /// null: không giới hạn số lần làm
+  maxAttempts       Int?         @map("max_attempts")
+  /// Cho phép học viên chọn làm riêng từng Part
+  allowPartPractice Boolean      @default(true) @map("allow_part_practice")
+  /// Đảo thứ tự câu (câu đơn, khối nhóm) trong từng Part theo từng lượt làm bài, chống chép bài
+  shuffleQuestions  Boolean      @default(true) @map("shuffle_questions")
+  status            ExamStatus   @default(DRAFT)
+  publishedAt       DateTime?    @map("published_at") @db.Timestamptz(6)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt         DateTime?    @map("deleted_at") @db.Timestamptz(6)
+
+  author   Teacher       @relation(fields: [authorId], references: [userId], onDelete: Restrict, map: "fk_exams_author_id")
+  subject  Subject       @relation(fields: [subjectId], references: [id], onDelete: Restrict, map: "fk_exams_subject_id")
+  sections ExamSection[]
+  attempts ExamAttempt[]
+
+  @@index([authorId], map: "ix_exams_author_id")
+  @@index([subjectId], map: "ix_exams_subject_id")
+  @@map("exams")
+}
+
+/// Mỗi phần thi là một Part TOEIC; một đề không có hai phần cùng Part
+model ExamSection {
+  id         String @id(map: "pk_exam_sections") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  examId     String @map("exam_id") @db.Uuid
+  skill      Skill
+  part       Int    @db.SmallInt
+  /// Thứ tự chuẩn của Part trong đề (L1…L4, R5…R7, S1…S5, W1…W3), tự tính khi thêm phần thi
+  orderIndex Int    @map("order_index") @db.SmallInt
+
+  exam      Exam           @relation(fields: [examId], references: [id], onDelete: Cascade, map: "fk_exam_sections_exam_id")
+  questions ExamQuestion[]
+  attempts  ExamAttempt[]
+
+  @@unique([examId, skill, part], map: "uq_exam_sections_exam_part")
+  @@index([examId, orderIndex], map: "ix_exam_sections_exam_order")
+  @@map("exam_sections")
+}
+
+/// Câu hỏi trong phần thi. Nhóm câu được thêm như một khối: các câu của nhóm nằm liền nhau
+model ExamQuestion {
+  id         String @id(map: "pk_exam_questions") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sectionId  String @map("section_id") @db.Uuid
+  questionId String @map("question_id") @db.Uuid
+  orderIndex Int    @map("order_index")
+
+  section  ExamSection     @relation(fields: [sectionId], references: [id], onDelete: Cascade, map: "fk_exam_questions_section_id")
+  question Question        @relation(fields: [questionId], references: [id], onDelete: Restrict, map: "fk_exam_questions_question_id")
+  answers  AttemptAnswer[]
+
+  @@unique([sectionId, questionId], map: "uq_exam_questions_section_question")
+  @@index([questionId], map: "ix_exam_questions_question_id")
+  @@map("exam_questions")
+}
+
+// ================================================================
+// Nhóm Làm bài
+// ================================================================
+
+/// Một lượt làm bài. Đồng hồ tính ở server: còn lại = expires_at - now (D25: bỏ remaining_seconds).
+/// Mỗi học viên chỉ có một lượt IN_PROGRESS cho mỗi đề: chỉ mục unique một phần uq_attempts_one_in_progress
+model ExamAttempt {
+  id           String        @id(map: "pk_exam_attempts") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId    String        @map("student_id") @db.Uuid
+  examId       String        @map("exam_id") @db.Uuid
+  mode         AttemptMode
+  /// Part đang luyện (chỉ có khi mode = PART)
+  sectionId    String?       @map("section_id") @db.Uuid
+  status       AttemptStatus @default(IN_PROGRESS)
+  startedAt    DateTime      @default(now()) @map("started_at") @db.Timestamptz(6)
+  /// Hạn nộp bài; NULL khi không đếm giờ (luyện theo Part)
+  expiresAt    DateTime?     @map("expires_at") @db.Timestamptz(6)
+  submittedAt  DateTime?     @map("submitted_at") @db.Timestamptz(6)
+  /// Kết quả chấm câu trắc nghiệm (ghi một lần khi nộp bài, SPRINT-52)
+  correctCount Int           @default(0) @map("correct_count")
+  wrongCount   Int           @default(0) @map("wrong_count")
+  skippedCount Int           @default(0) @map("skipped_count")
+  /// Số câu trắc nghiệm đúng
+  rawScore     Decimal?      @map("raw_score") @db.Decimal(7, 2)
+  /// Điểm theo thang của đề (TOEIC 10–990, %); NULL khi còn câu Speaking/Writing chờ AI chấm
+  scaledScore  Decimal?      @map("scaled_score") @db.Decimal(7, 2)
+  /// Điểm từng kỹ năng: [{ skill, correct, wrong, skipped, total, openCount, scaled }]
+  skillScores  Json?         @map("skill_scores")
+
+  student Student         @relation(fields: [studentId], references: [userId], onDelete: Restrict, map: "fk_exam_attempts_student_id")
+  exam    Exam            @relation(fields: [examId], references: [id], onDelete: Restrict, map: "fk_exam_attempts_exam_id")
+  section ExamSection?    @relation(fields: [sectionId], references: [id], onDelete: Restrict, map: "fk_exam_attempts_section_id")
+  answers AttemptAnswer[]
+
+  @@index([studentId, examId], map: "ix_exam_attempts_student_exam")
+  /// Lịch sử làm bài, biểu đồ điểm theo thời gian: bài đã nộp của một học viên, mới nhất trước
+  @@index([studentId, submittedAt(sort: Desc)], map: "ix_exam_attempts_student_submitted")
+  @@index([examId], map: "ix_exam_attempts_exam_id")
+  @@map("exam_attempts")
+}
+
+/// Câu trả lời của một câu trong lượt làm bài, ghi đè khi tự động lưu (upsert).
+/// D25: câu trắc nghiệm chỉ chọn một phương án nên lưu thẳng selected_option_id, không dùng bảng attempt_answer_options
+model AttemptAnswer {
+  id                String    @id(map: "pk_attempt_answers") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attemptId         String    @map("attempt_id") @db.Uuid
+  examQuestionId    String    @map("exam_question_id") @db.Uuid
+  selectedOptionId  String?   @map("selected_option_id") @db.Uuid
+  /// Câu Writing
+  textAnswer        String?   @map("text_answer")
+  /// Học viên đánh dấu để xem lại
+  isFlagged         Boolean   @default(false) @map("is_flagged")
+  /// Câu trắc nghiệm: đúng/sai khi nộp bài; NULL khi bỏ trống hoặc câu Speaking/Writing
+  isCorrect         Boolean?  @map("is_correct")
+  /// Bài nói Speaking đã chuẩn hóa (MP3 mono 16 kHz) trong kho tệp: recordings/<uuid>.mp3
+  audioKey          String?   @map("audio_key") @db.VarChar(500)
+  /// Thời điểm job dọn dẹp xóa bài nói quá hạn lưu (D19, mặc định 30 ngày sau khi nộp); khi đó
+  /// audio_key về NULL nhưng câu vẫn tính là đã trả lời (khác câu bỏ trống)
+  audioDeletedAt    DateTime? @map("audio_deleted_at") @db.Timestamptz(6)
+  /// Học viên yêu cầu giáo viên chấm lại câu AI đã chấm (SPRINT-91), mỗi câu một lần
+  reviewRequestedAt DateTime? @map("review_requested_at") @db.Timestamptz(6)
+  /// Lý do học viên ghi khi yêu cầu chấm lại
+  reviewRequestNote String?   @map("review_request_note") @db.VarChar(300)
+  /// Thời điểm học viên trả lời (đồng bộ sau mất mạng: bản có answered_at mới hơn được giữ)
+  answeredAt        DateTime  @map("answered_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  attempt        ExamAttempt        @relation(fields: [attemptId], references: [id], onDelete: Cascade, map: "fk_attempt_answers_attempt_id")
+  examQuestion   ExamQuestion       @relation(fields: [examQuestionId], references: [id], onDelete: Restrict, map: "fk_attempt_answers_exam_question_id")
+  selectedOption QuestionOption?    @relation(fields: [selectedOptionId], references: [id], onDelete: Restrict, map: "fk_attempt_answers_selected_option_id")
+  assessments    AnswerAssessment[]
+
+  @@unique([attemptId, examQuestionId], map: "uq_attempt_answers_attempt_question")
+  @@index([examQuestionId], map: "ix_attempt_answers_exam_question_id")
+  @@map("attempt_answers")
+}
+
+/// Kết quả chấm một câu trả lời mở (Speaking/Writing, D18): tạo PENDING lúc nộp bài cho câu đã trả
+/// lời, câu bỏ trống không có phiếu (0 điểm). Mỗi câu tối đa một bản của AI và một bản của giáo viên
+model AnswerAssessment {
+  id              String           @id(map: "pk_answer_assessments") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attemptAnswerId String           @map("attempt_answer_id") @db.Uuid
+  grader          Grader           @default(AI)
+  status          AssessmentStatus @default(PENDING)
+  /// Điểm theo thang của dạng câu (Writing P1 0–3, P2 0–4, P3 0–5); có khi DONE
+  score           Decimal?         @db.Decimal(5, 2)
+  /// Điểm tối đa của dạng câu lúc tạo phiếu
+  maxScore        Decimal          @map("max_score") @db.Decimal(5, 2)
+  /// Điểm tiêu chí 0–5: { grammar, vocabulary, coherence, task } (Writing)
+  criteria        Json?
+  /// Nhận xét tiếng Việt
+  feedback        String?
+  /// Lời nói nhận dạng được (Speaking)
+  transcript      String?
+  /// Writing: [{ original, corrected, explanation }]
+  corrections     Json?
+  /// Bài viết lại tốt hơn dựa trên bài của học viên
+  improvedAnswer  String?          @map("improved_answer")
+  model           String?          @db.VarChar(100)
+  /// Số lần đã gọi AI chấm (kể cả lần lỗi)
+  tries           Int              @default(0) @db.SmallInt
+  /// Số lần học viên bấm "Chấm lại" (tối đa 2)
+  regradeCount    Int              @default(0) @map("regrade_count") @db.SmallInt
+  /// Lý do lỗi gần nhất (FAILED), không chứa nội dung bài làm
+  errorMessage    String?          @map("error_message") @db.VarChar(500)
+  /// AI hết lượt trong ngày: chấm tiếp lúc này
+  nextRunAt       DateTime?        @map("next_run_at") @db.Timestamptz(6)
+  /// Giáo viên chấm (grader = TEACHER)
+  reviewedBy      String?          @map("reviewed_by") @db.Uuid
+  /// Bản giáo viên chấm đối chiếu (SPRINT-90): chấm khi chưa thấy điểm AI, dùng đo độ lệch AI. Sửa
+  /// lại sau đó (đã thấy điểm AI) thì về false
+  blindReview     Boolean          @default(false) @map("blind_review")
+  gradedAt        DateTime?        @map("graded_at") @db.Timestamptz(6)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  attemptAnswer AttemptAnswer @relation(fields: [attemptAnswerId], references: [id], onDelete: Cascade, map: "fk_answer_assessments_attempt_answer_id")
+  reviewer      User?         @relation(fields: [reviewedBy], references: [id], onDelete: SetNull, map: "fk_answer_assessments_reviewed_by")
+
+  @@unique([attemptAnswerId, grader], map: "uq_answer_assessments_answer_grader")
+  /// Quét phiếu PENDING bị kẹt (đưa lại vào hàng đợi)
+  @@index([status, updatedAt], map: "ix_answer_assessments_status_updated")
+  @@index([reviewedBy], map: "ix_answer_assessments_reviewed_by")
+  @@map("answer_assessments")
+}
+
+// ================================================================
+// Nhóm AI
+// ================================================================
+
+/// Mỗi lượt gọi model (kể cả lần thử lại): chỉ lưu số liệu, không lưu nội dung gửi và nhận
+model AiUsageLog {
+  id           String       @id(map: "pk_ai_usage_logs") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// null: hệ thống tự gọi (job) hoặc tài khoản đã xóa
+  userId       String?      @map("user_id") @db.Uuid
+  feature      AiFeature
+  model        String       @db.VarChar(100)
+  status       AiCallStatus
+  inputTokens  Int          @default(0) @map("input_tokens")
+  /// Gồm cả token "suy nghĩ" (tính tiền như đầu ra)
+  outputTokens Int          @default(0) @map("output_tokens")
+  latencyMs    Int          @map("latency_ms")
+  /// Mã HTTP Google trả về (429, 503…) hoặc TIMEOUT
+  errorCode    String?      @map("error_code") @db.VarChar(50)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull, map: "fk_ai_usage_logs_user_id")
+
+  @@index([userId, createdAt(sort: Desc)], map: "ix_ai_usage_logs_user_created")
+  @@index([createdAt], map: "ix_ai_usage_logs_created_at")
+  @@map("ai_usage_logs")
+}
+
+/// Giải thích đáp án bằng AI, dùng chung cho mọi học viên. content_hash khác nội dung câu hiện tại
+/// (giáo viên sửa câu, đổi đáp án) thì sinh lại
+model AiExplanation {
+  id          String   @id(map: "pk_ai_explanations") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId  String   @unique(map: "uq_ai_explanations_question_id") @map("question_id") @db.Uuid
+  /// SHA-256 của nội dung câu (và phiên bản prompt) lúc sinh
+  contentHash String   @map("content_hash") @db.Char(64)
+  /// { summary, options: [{ label, reason }], keyPoints: [{ term, note }], tip }
+  content     Json
+  model       String   @db.VarChar(100)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade, map: "fk_ai_explanations_question_id")
+
+  @@map("ai_explanations")
+}
+
+// ================================================================
+// Nhóm Thông báo
+// ================================================================
+
+/// Thông báo gửi tới người dùng (SPRINT-56): phát ngay qua WebSocket và lưu lại để xem trong chuông khi
+/// người dùng không mở trang. Nội dung soạn sẵn tiếng Việt, không chứa dữ liệu nhạy cảm
+model Notification {
+  id        String           @id(map: "pk_notifications") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  title     String           @db.VarChar(200)
+  message   String           @db.VarChar(500)
+  /// Dữ liệu để giao diện dẫn tới trang liên quan, ví dụ { attemptId }
+  data      Json?
+  /// null: chưa đọc
+  readAt    DateTime?        @map("read_at") @db.Timestamptz(6)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_notifications_user_id")
+
+  @@index([userId, createdAt(sort: Desc)], map: "ix_notifications_user_created")
+  @@map("notifications")
+}

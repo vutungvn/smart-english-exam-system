@@ -1,0 +1,150 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/inter';
+
+@custom-variant dark (&:is(.dark *));
+
+/* Theo chiều cao màn hình: mặc định gọn cho laptop thấp, `tall:` nới rộng khi đủ chỗ, `tiny:` ẩn bớt khi quá thấp */
+@custom-variant tall (@media (min-height: 821px));
+@custom-variant tiny (@media (max-height: 700px));
+
+/* Bảng màu theo Stitch (project "Hệ thống luyện thi tiếng anh", màn Đăng nhập). Chưa làm dark mode. */
+:root {
+  --radius: 0.75rem;
+  --background: #f8f9ff;
+  --foreground: #0b1c30;
+  --card: #ffffff;
+  --card-foreground: #0b1c30;
+  --popover: #ffffff;
+  --popover-foreground: #0b1c30;
+  --primary: #4263eb;
+  --primary-foreground: #ffffff;
+  --secondary: #eff4ff;
+  --secondary-foreground: #0b1c30;
+  --muted: #eff4ff;
+  --muted-foreground: #464555;
+  --accent: #edf2ff;
+  --accent-foreground: #3b5bdb;
+  --destructive: #ba1a1a;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #4c6ef5;
+
+  /* Token riêng của dự án */
+  --brand: #3b5bdb; /* link, chữ nhấn, đầu gradient */
+  --primary-light: #4c6ef5; /* cuối gradient banner */
+  --highlight: #38d9a9; /* chữ nhấn trên nền xanh đậm */
+  --subtle: #777587;
+  --success: #006c49;
+  --success-soft: #6ffbbe;
+  --danger-soft: rgb(255 218 214 / 0.4);
+  --on-danger-soft: #93000a;
+
+  /* Màu nhận diện 4 kỹ năng TOEIC, dùng chung cho landing, dashboard, kết quả */
+  --skill-listening: #12b886;
+  --skill-reading: #4263eb;
+  --skill-speaking: #7950f2;
+  --skill-writing: #fab005;
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-brand: var(--brand);
+  --color-primary-light: var(--primary-light);
+  --color-highlight: var(--highlight);
+  --color-subtle: var(--subtle);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-danger-soft: var(--danger-soft);
+  --color-on-danger-soft: var(--on-danger-soft);
+
+  --color-skill-listening: var(--skill-listening);
+  --color-skill-reading: var(--skill-reading);
+  --color-skill-speaking: var(--skill-speaking);
+  --color-skill-writing: var(--skill-writing);
+}
+
+/* Chuyển động dùng chung:
+   - `animate-heartbeat`: đập 2 nhịp rồi nghỉ, như nhịp tim
+   - `animate-shine`: vệt sáng lướt qua nút rồi nghỉ, đặt trong phần tử cha có overflow-hidden */
+@theme {
+  --animate-heartbeat: heartbeat 2.4s ease-in-out infinite;
+  --animate-shine: shine 3.5s ease-in-out infinite;
+
+  @keyframes shine {
+    0% {
+      transform: translateX(-120%) skewX(-20deg);
+    }
+    45%,
+    100% {
+      transform: translateX(420%) skewX(-20deg);
+    }
+  }
+
+  @keyframes heartbeat {
+    0%,
+    40%,
+    100% {
+      transform: scale(1);
+    }
+    10% {
+      transform: scale(1.18);
+    }
+    25% {
+      transform: scale(1.08);
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  /* Cuộn mượt khi bấm link neo (#tinh-nang...), tôn trọng người dùng tắt hiệu ứng chuyển động */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  /* Edge tự thêm nút xem mật khẩu và nút xóa vào ô nhập: ẩn đi để không trùng nút của PasswordInput */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}

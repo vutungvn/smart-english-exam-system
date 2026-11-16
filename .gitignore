@@ -69,6 +69,8 @@ web_modules/
 .env
 .env.*
 !.env.example
+# Mẫu biến môi trường production (infra/.env.prod thật vẫn bị bỏ qua)
+!.env.prod.example
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -141,3 +143,14 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Cấu hình Claude Code cá nhân không commit
+.claude/*
+
+backend/src/generated/
+
+doc/*
+
+.vscode/*
+
+infra/tts/*
