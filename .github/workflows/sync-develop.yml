@@ -1,0 +1,43 @@
+name: Sync develop
+
+# Merge PR develop → main tạo một commit merge chỉ có trên main, làm develop "N commits behind main".
+# Workflow này fast-forward develop lên đúng commit đó để hai nhánh luôn trùng nhau (không tạo commit
+# mới). Push bằng GITHUB_TOKEN không kích hoạt lại CI trên develop (commit này vừa chạy CI trên main).
+on:
+  push:
+    branches: [main]
+  # Chạy tay khi cần đồng bộ lại (Actions → Sync develop → Run workflow)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-develop
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Fast-forward develop to main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fast-forward develop
+        run: |
+          git fetch origin develop
+          main_sha="$(git rev-parse HEAD)"
+          develop_sha="$(git rev-parse origin/develop)"
+          if [[ "$main_sha" == "$develop_sha" ]]; then
+            echo "develop đã trùng main (${main_sha::7}), không cần làm gì"
+          elif git merge-base --is-ancestor origin/develop HEAD; then
+            # develop không có commit nào ngoài main: chỉ dời con trỏ develop lên main
+            git push origin HEAD:refs/heads/develop
+            echo "Đã fast-forward develop ${develop_sha::7} → ${main_sha::7}"
+          else
+            # develop có commit chưa lên main (feature vừa merge): không ghi đè, lần release sau đồng bộ
+            echo "::warning::develop có commit chưa lên main, bỏ qua để không ghi đè"
+          fi
