@@ -77,7 +77,7 @@ export function AuthBanner() {
 
         <div className="max-w-2xl space-y-3">
           <h2 className="text-4xl leading-tight font-extrabold tracking-tight tall:xl:text-5xl">
-            Chinh phục TOEIC (990+ LR và 400+ SW) <br />
+            Chinh phục TOEIC <br />
             <span className="font-black text-highlight drop-shadow-sm">đủ 4 kỹ năng</span> cùng trợ
             lý AI
           </h2>
@@ -89,7 +89,7 @@ export function AuthBanner() {
       </div>
 
       {/* Ảnh minh họa và thẻ báo cáo năng lực: chiếm phần cao còn lại, tối đa 340px */}
-      <div className="relative grid max-h-[340px] min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)] gap-5 tiny:hidden xl:grid-cols-12">
+      <div className="relative grid max-h-85 min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)] gap-5 tiny:hidden xl:grid-cols-12">
         <div className="flex min-h-0 flex-col gap-3.5 xl:col-span-7">
           <div className="group relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/25 bg-blue-900/30 shadow-2xl">
             <img
