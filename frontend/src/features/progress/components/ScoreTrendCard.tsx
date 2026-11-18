@@ -16,12 +16,15 @@ import { useGetScoreTrendQuery, type ScoreTrendPoint } from '@/api/generated';
 import { formatDateTime, PRACTICE_PATH } from '@/features/practice/practice-meta';
 import { cn } from '@/lib/utils';
 import {
+  formatMetric,
   formatPercent,
   formatShortDate,
   METRIC_LABEL,
+  METRIC_MAX,
   metricValue,
   modeLabel,
   RANGE_LABEL,
+  TREND_METRICS,
   type ProgressRange,
   type TrendMetric,
 } from '../progress-meta';
@@ -44,9 +47,17 @@ interface ChartRow {
   point: ScoreTrendPoint;
 }
 
+/** Vạch chia trục Y theo thang của thước đo */
+const Y_TICKS: Record<TrendMetric, number[]> = {
+  toeic: [0, 250, 500, 750, 990],
+  speaking: [0, 50, 100, 150, 200],
+  writing: [0, 50, 100, 150, 200],
+  percent: [0, 25, 50, 75, 100],
+};
+
 /**
- * Điểm các bài đã nộp theo thời gian. Hai thước đo, mỗi lần vẽ một đường (không vẽ chung hai thang):
- * tỉ lệ câu trắc nghiệm đúng (mọi bài) hoặc điểm TOEIC LR (chỉ bài làm cả đề TOEIC LR, có đường mục tiêu).
+ * Điểm các bài đã nộp theo thời gian, mỗi lần vẽ một thước đo (không vẽ chung hai thang): điểm TOEIC
+ * LR (có đường mục tiêu), điểm Speaking/Writing của đề TOEIC SW, hoặc % điểm đạt của mọi bài.
  */
 export function ScoreTrendCard({
   title,
@@ -59,10 +70,10 @@ export function ScoreTrendCard({
 }: ScoreTrendCardProps) {
   const { data, error, isLoading, refetch } = useGetScoreTrendQuery(range);
   const points = data?.data.points ?? [];
-  const hasToeic = points.some((point) => metricValue(point, 'toeic') !== null);
+  // Chỉ cho chọn thước đo có ít nhất một bài trong khoảng thời gian
+  const available = TREND_METRICS.filter((m) => points.some((p) => metricValue(p, m) !== null));
   const [picked, setPicked] = useState<TrendMetric>('toeic');
-  // Chưa có bài TOEIC LR nào trong khoảng thì chỉ còn tỉ lệ đúng
-  const metric: TrendMetric = hasToeic ? picked : 'percent';
+  const metric: TrendMetric = available.includes(picked) ? picked : (available[0] ?? 'percent');
 
   return (
     <section
@@ -86,14 +97,11 @@ export function ScoreTrendCard({
         )}
       </div>
 
-      {hasToeic && (
+      {available.length > 1 && (
         <Toggle
-          className="mt-4 self-start"
+          className="mt-4 max-w-full flex-wrap self-start"
           label="Thước đo"
-          options={(['toeic', 'percent'] as const).map((value) => ({
-            value,
-            label: METRIC_LABEL[value],
-          }))}
+          options={available.map((value) => ({ value, label: METRIC_LABEL[value] }))}
           value={metric}
           onChange={setPicked}
         />
@@ -165,11 +173,11 @@ function TrendPlot({
     );
   }
 
-  const toeic = metric === 'toeic';
-  const format = (value: number) => (toeic ? `${value}` : formatPercent(value));
+  const format = (value: number) => formatMetric(value, metric);
   const first = rows[0].value;
   const last = rows.at(-1)!.value;
-  const showTarget = toeic && targetScore !== null;
+  // Điểm mục tiêu của học viên là điểm TOEIC LR
+  const showTarget = metric === 'toeic' && targetScore !== null;
 
   return (
     <>
@@ -216,9 +224,9 @@ function TrendPlot({
               }
             />
             <YAxis
-              domain={toeic ? [0, 990] : [0, 100]}
-              ticks={toeic ? [0, 250, 500, 750, 990] : [0, 25, 50, 75, 100]}
-              tickFormatter={(value: number) => (toeic ? `${value}` : `${value}%`)}
+              domain={[0, METRIC_MAX[metric]]}
+              ticks={Y_TICKS[metric]}
+              tickFormatter={(value: number) => (metric === 'percent' ? `${value}%` : `${value}`)}
               tickLine={false}
               axisLine={false}
               tick={{ fill: 'var(--subtle)', fontSize: 12 }}
@@ -298,10 +306,12 @@ function TrendTooltip({
         {modeLabel(point)} · {formatDateTime(point.submittedAt)}
       </p>
       <p className="mt-1.5 text-sm font-bold text-foreground tabular-nums">
-        {metric === 'toeic' ? `${row.value} / 990` : formatPercent(row.value)}
+        {metric === 'percent' ? formatPercent(row.value) : `${row.value} / ${METRIC_MAX[metric]}`}
       </p>
       <p className="text-muted-foreground">
-        {point.correctCount}/{point.choiceTotal} câu trắc nghiệm đúng
+        {point.choiceTotal > 0
+          ? `${point.correctCount}/${point.choiceTotal} câu trắc nghiệm đúng`
+          : 'Speaking/Writing chấm bằng AI'}
         {point.scaledScore === null && ' · còn câu chờ AI chấm'}
       </p>
     </div>

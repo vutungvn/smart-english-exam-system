@@ -35,8 +35,10 @@ export class ProgressController {
   @ApiOperation({
     summary: 'Năng lực theo kỹ năng, Part, chủ đề',
     description:
-      'Tính trên câu trắc nghiệm của các bài đã nộp (câu bỏ trống tính là sai). Chủ đề yếu: đã làm ' +
-      '≥ 5 câu và đúng dưới 80%, yếu nhất trước, tối đa 5 chủ đề.',
+      'Trắc nghiệm (skills, parts, weakTopics): tính trên câu trắc nghiệm của các bài đã nộp (câu bỏ ' +
+      'trống tính là sai). Chủ đề yếu: đã làm ≥ 5 câu và đúng dưới 80%, yếu nhất trước, tối đa 5 ' +
+      'chủ đề. Speaking/Writing (openSkills, openParts): điểm chấm (giáo viên ưu tiên hơn AI) so với ' +
+      'điểm tối đa; câu bỏ trống 0 điểm, câu còn chờ chấm chưa tính.',
   })
   @ApiEnvelope(ProgressSkills)
   getProgressSkills(

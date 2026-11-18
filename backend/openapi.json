@@ -14852,7 +14852,7 @@
     },
     "/api/v1/me/progress/skills": {
       "get": {
-        "description": "Tính trên câu trắc nghiệm của các bài đã nộp (câu bỏ trống tính là sai). Chủ đề yếu: đã làm ≥ 5 câu và đúng dưới 80%, yếu nhất trước, tối đa 5 chủ đề.",
+        "description": "Trắc nghiệm (skills, parts, weakTopics): tính trên câu trắc nghiệm của các bài đã nộp (câu bỏ trống tính là sai). Chủ đề yếu: đã làm ≥ 5 câu và đúng dưới 80%, yếu nhất trước, tối đa 5 chủ đề. Speaking/Writing (openSkills, openParts): điểm chấm (giáo viên ưu tiên hơn AI) so với điểm tối đa; câu bỏ trống 0 điểm, câu còn chờ chấm chưa tính.",
         "operationId": "getProgressSkills",
         "parameters": [
           {
@@ -21384,6 +21384,118 @@
           "name"
         ]
       },
+      "OpenSkillProgress": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Số lượt câu Speaking/Writing (bỏ trống vẫn tính)"
+          },
+          "scored": {
+            "type": "integer",
+            "description": "Số câu đã có điểm (câu bỏ trống tính 0 điểm)"
+          },
+          "pending": {
+            "type": "integer",
+            "description": "Câu đã trả lời nhưng chưa có điểm (chờ AI chấm hoặc chấm lỗi), chưa tính vào điểm"
+          },
+          "earned": {
+            "type": "number",
+            "description": "Tổng điểm thô của các câu đã có điểm"
+          },
+          "max": {
+            "type": "number",
+            "description": "Tổng điểm tối đa của các câu đã có điểm"
+          },
+          "percent": {
+            "type": "number",
+            "nullable": true,
+            "description": "% điểm đạt (earned / max); null khi chưa có câu nào có điểm"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          }
+        },
+        "required": [
+          "total",
+          "scored",
+          "pending",
+          "earned",
+          "max",
+          "percent",
+          "skill"
+        ]
+      },
+      "OpenPartProgress": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Số lượt câu Speaking/Writing (bỏ trống vẫn tính)"
+          },
+          "scored": {
+            "type": "integer",
+            "description": "Số câu đã có điểm (câu bỏ trống tính 0 điểm)"
+          },
+          "pending": {
+            "type": "integer",
+            "description": "Câu đã trả lời nhưng chưa có điểm (chờ AI chấm hoặc chấm lỗi), chưa tính vào điểm"
+          },
+          "earned": {
+            "type": "number",
+            "description": "Tổng điểm thô của các câu đã có điểm"
+          },
+          "max": {
+            "type": "number",
+            "description": "Tổng điểm tối đa của các câu đã có điểm"
+          },
+          "percent": {
+            "type": "number",
+            "nullable": true,
+            "description": "% điểm đạt (earned / max); null khi chưa có câu nào có điểm"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "example": "Respond to a written request"
+          },
+          "maxScore": {
+            "type": "number",
+            "description": "Điểm tối đa một câu của dạng câu (Writing P1: 3…)"
+          },
+          "average": {
+            "type": "number",
+            "nullable": true,
+            "description": "Điểm trung bình một câu theo thang của dạng câu; null khi chưa có câu nào có điểm"
+          }
+        },
+        "required": [
+          "total",
+          "scored",
+          "pending",
+          "earned",
+          "max",
+          "percent",
+          "skill",
+          "part",
+          "name",
+          "maxScore",
+          "average"
+        ]
+      },
       "TopicProgress": {
         "type": "object",
         "properties": {
@@ -21475,6 +21587,20 @@
               "$ref": "#/components/schemas/PartProgress"
             }
           },
+          "openSkills": {
+            "description": "Speaking/Writing theo kỹ năng (chỉ kỹ năng đã làm), Speaking trước Writing",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpenSkillProgress"
+            }
+          },
+          "openParts": {
+            "description": "Speaking/Writing theo Part, thứ tự trong đề",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpenPartProgress"
+            }
+          },
           "weakTopics": {
             "description": "Chủ đề cần luyện thêm: đã làm ≥ minTopicQuestions câu và tỉ lệ đúng < weakAccuracy; yếu nhất trước, tối đa 5",
             "type": "array",
@@ -21497,6 +21623,8 @@
           "overview",
           "skills",
           "parts",
+          "openSkills",
+          "openParts",
           "weakTopics",
           "minTopicQuestions",
           "weakAccuracy"

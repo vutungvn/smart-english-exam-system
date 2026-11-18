@@ -12,6 +12,7 @@ import type {
   AttemptReview,
   ReviewQuestion,
 } from '../src/modules/attempts/attempts.types.js';
+import type { ProgressSkills } from '../src/modules/progress/progress.types.js';
 import {
   api,
   createTestApp,
@@ -53,8 +54,9 @@ describe('Chấm Writing bằng AI (e2e, FakeAiProvider)', () => {
     exam: WritingExamFixture,
     answers: (string | null)[],
     sectionId?: string,
+    client = student,
   ): Promise<string> {
-    const started = await student.post(
+    const started = await client.post(
       `/exams/${exam.examId}/attempts`,
       sectionId ? { mode: 'PART', sectionId } : { mode: 'FULL' },
     );
@@ -65,7 +67,7 @@ describe('Chấm Writing bằng AI (e2e, FakeAiProvider)', () => {
     );
     for (const [index, text] of answers.entries()) {
       if (text === null) continue;
-      const saved = await student.put(`/attempts/${attempt.id}/answers/${ids[index]}`, {
+      const saved = await client.put(`/attempts/${attempt.id}/answers/${ids[index]}`, {
         textAnswer: text,
         answeredAt: new Date().toISOString(),
       });
@@ -74,8 +76,8 @@ describe('Chấm Writing bằng AI (e2e, FakeAiProvider)', () => {
     return attempt.id;
   }
 
-  async function submit(attemptId: string): Promise<AttemptResult> {
-    const res = await student.post(`/attempts/${attemptId}/submit`);
+  async function submit(attemptId: string, client = student): Promise<AttemptResult> {
+    const res = await client.post(`/attempts/${attemptId}/submit`);
     expect(res.status).toBe(200);
     return data<AttemptResult>(res);
   }
@@ -85,10 +87,11 @@ describe('Chấm Writing bằng AI (e2e, FakeAiProvider)', () => {
     attemptId: string,
     done: (result: AttemptResult) => boolean,
     timeoutMs = 25_000,
+    client = student,
   ): Promise<AttemptResult> {
     const until = Date.now() + timeoutMs;
     for (;;) {
-      const result = data<AttemptDetail>(await student.get(`/attempts/${attemptId}`))
+      const result = data<AttemptDetail>(await client.get(`/attempts/${attemptId}`))
         .result as AttemptResult;
       if (done(result)) return result;
       if (Date.now() > until) throw new Error(`Hết thời gian chờ chấm: ${JSON.stringify(result)}`);
@@ -254,5 +257,33 @@ describe('Chấm Writing bằng AI (e2e, FakeAiProvider)', () => {
     const res = await otherStudent.get(`/attempts/${attemptId}/review`);
     expect(res.status).toBe(404);
     await waitForResult(attemptId, (result) => result.status === 'GRADED');
+  });
+
+  it('tiến độ: điểm Writing theo kỹ năng và Part, câu bỏ trống 0 điểm', async () => {
+    // Học viên riêng để số liệu tiến độ không lẫn bài của các test khác
+    const learner = api(app, await login(app, (await createUser(prisma, RoleCode.STUDENT)).email));
+    const exam = await createWritingExam(prisma, teacherId);
+    // Part 1, 3 viết đủ dài (FakeAi cho điểm tối đa), Part 2 bỏ trống
+    const attemptId = await startAndWrite(
+      exam,
+      [FULL_ANSWERS[0], null, FULL_ANSWERS[2]],
+      undefined,
+      learner,
+    );
+    await submit(attemptId, learner);
+    await waitForResult(attemptId, (result) => result.status === 'GRADED', 25_000, learner);
+
+    const res = await learner.get('/me/progress/skills');
+    expect(res.status).toBe(200);
+    const stats = data<ProgressSkills>(res);
+    expect(stats.skills).toEqual([]); // đề Writing không có câu trắc nghiệm
+    expect(stats.openSkills).toEqual([
+      { skill: 'WRITING', total: 3, scored: 3, pending: 0, earned: 8, max: 12, percent: 66.7 },
+    ]);
+    expect(stats.openParts.map((p) => [p.part, p.average, p.maxScore])).toEqual([
+      [1, 3, 3],
+      [2, 0, 4],
+      [3, 5, 5],
+    ]);
   });
 });

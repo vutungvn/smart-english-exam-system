@@ -172,6 +172,65 @@ export class ProgressOverview {
   latestToeicScore: number | null;
 }
 
+// ---------------------------------------------------------------
+// Speaking/Writing: điểm chấm (AI hoặc giáo viên) theo kỹ năng, Part
+// ---------------------------------------------------------------
+
+export class OpenScoreStat {
+  @ApiProperty({ type: 'integer', description: 'Số lượt câu Speaking/Writing (bỏ trống vẫn tính)' })
+  total: number;
+
+  @ApiProperty({ type: 'integer', description: 'Số câu đã có điểm (câu bỏ trống tính 0 điểm)' })
+  scored: number;
+
+  @ApiProperty({
+    type: 'integer',
+    description:
+      'Câu đã trả lời nhưng chưa có điểm (chờ AI chấm hoặc chấm lỗi), chưa tính vào điểm',
+  })
+  pending: number;
+
+  @ApiProperty({ type: 'number', description: 'Tổng điểm thô của các câu đã có điểm' })
+  earned: number;
+
+  @ApiProperty({ type: 'number', description: 'Tổng điểm tối đa của các câu đã có điểm' })
+  max: number;
+
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: '% điểm đạt (earned / max); null khi chưa có câu nào có điểm',
+  })
+  percent: number | null;
+}
+
+export class OpenSkillProgress extends OpenScoreStat {
+  @ApiProperty({ enum: Skill, enumName: 'Skill' })
+  skill: Skill;
+}
+
+export class OpenPartProgress extends OpenScoreStat {
+  @ApiProperty({ enum: Skill, enumName: 'Skill' })
+  skill: Skill;
+
+  @ApiProperty({ type: 'integer' })
+  part: number;
+
+  @ApiProperty({ example: 'Respond to a written request' })
+  name: string;
+
+  @ApiProperty({ type: 'number', description: 'Điểm tối đa một câu của dạng câu (Writing P1: 3…)' })
+  maxScore: number;
+
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description:
+      'Điểm trung bình một câu theo thang của dạng câu; null khi chưa có câu nào có điểm',
+  })
+  average: number | null;
+}
+
 export class ProgressSkills {
   @ApiProperty({ enum: PROGRESS_RANGES })
   range: ProgressRange;
@@ -187,6 +246,18 @@ export class ProgressSkills {
 
   @ApiProperty({ type: [PartProgress], description: 'Theo thứ tự Part trong đề (L1…L4, R5…R7)' })
   parts: PartProgress[];
+
+  @ApiProperty({
+    type: [OpenSkillProgress],
+    description: 'Speaking/Writing theo kỹ năng (chỉ kỹ năng đã làm), Speaking trước Writing',
+  })
+  openSkills: OpenSkillProgress[];
+
+  @ApiProperty({
+    type: [OpenPartProgress],
+    description: 'Speaking/Writing theo Part, thứ tự trong đề',
+  })
+  openParts: OpenPartProgress[];
 
   @ApiProperty({
     type: [TopicProgress],

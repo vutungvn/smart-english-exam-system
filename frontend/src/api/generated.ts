@@ -2820,6 +2820,42 @@ export type PartProgress = {
   part: number;
   name: string;
 };
+export type OpenSkillProgress = {
+  /** Số lượt câu Speaking/Writing (bỏ trống vẫn tính) */
+  total: number;
+  /** Số câu đã có điểm (câu bỏ trống tính 0 điểm) */
+  scored: number;
+  /** Câu đã trả lời nhưng chưa có điểm (chờ AI chấm hoặc chấm lỗi), chưa tính vào điểm */
+  pending: number;
+  /** Tổng điểm thô của các câu đã có điểm */
+  earned: number;
+  /** Tổng điểm tối đa của các câu đã có điểm */
+  max: number;
+  /** % điểm đạt (earned / max); null khi chưa có câu nào có điểm */
+  percent: number | null;
+  skill: Skill;
+};
+export type OpenPartProgress = {
+  /** Số lượt câu Speaking/Writing (bỏ trống vẫn tính) */
+  total: number;
+  /** Số câu đã có điểm (câu bỏ trống tính 0 điểm) */
+  scored: number;
+  /** Câu đã trả lời nhưng chưa có điểm (chờ AI chấm hoặc chấm lỗi), chưa tính vào điểm */
+  pending: number;
+  /** Tổng điểm thô của các câu đã có điểm */
+  earned: number;
+  /** Tổng điểm tối đa của các câu đã có điểm */
+  max: number;
+  /** % điểm đạt (earned / max); null khi chưa có câu nào có điểm */
+  percent: number | null;
+  skill: Skill;
+  part: number;
+  name: string;
+  /** Điểm tối đa một câu của dạng câu (Writing P1: 3…) */
+  maxScore: number;
+  /** Điểm trung bình một câu theo thang của dạng câu; null khi chưa có câu nào có điểm */
+  average: number | null;
+};
 export type TopicProgress = {
   /** Số lượt câu trắc nghiệm (một câu làm ở 2 bài tính 2) */
   total: number;
@@ -2843,6 +2879,10 @@ export type ProgressSkills = {
   skills: SkillProgress[];
   /** Theo thứ tự Part trong đề (L1…L4, R5…R7) */
   parts: PartProgress[];
+  /** Speaking/Writing theo kỹ năng (chỉ kỹ năng đã làm), Speaking trước Writing */
+  openSkills: OpenSkillProgress[];
+  /** Speaking/Writing theo Part, thứ tự trong đề */
+  openParts: OpenPartProgress[];
   /** Chủ đề cần luyện thêm: đã làm ≥ minTopicQuestions câu và tỉ lệ đúng < weakAccuracy; yếu nhất trước, tối đa 5 */
   weakTopics: TopicProgress[];
   minTopicQuestions: number;
