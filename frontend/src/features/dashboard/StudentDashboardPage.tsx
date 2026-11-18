@@ -17,8 +17,8 @@ const ROW = 'grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]';
 const CHART_RANGES: readonly ProgressRange[] = ['30d', '90d', 'all'];
 
 /**
- * Trang chủ học viên `/app` (theo Stitch, màn "Trang chủ học viên"). Điểm, bài làm dở, biểu đồ,
- * gợi ý luyện tập lấy từ API tiến độ; khóa học, flashcard còn dữ liệu mẫu (chưa có chức năng)
+ * Trang chủ học viên `/app` (theo Stitch, màn "Trang chủ học viên"). Điểm 4 kỹ năng, bài làm dở,
+ * biểu đồ, gợi ý luyện tập lấy từ API tiến độ; khóa học, flashcard còn dữ liệu mẫu (chưa có chức năng)
  */
 export function StudentDashboardPage() {
   const user = useAppSelector(selectCurrentUser);
@@ -59,6 +59,7 @@ export function StudentDashboardPage() {
           fullName={user?.fullName}
           trend={trend}
           overview={skills?.overview}
+          openSkills={skills?.openSkills}
           failed={failed}
         />
         <InProgressExamCard />

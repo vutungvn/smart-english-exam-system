@@ -1,11 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { Minus, Play, TrendingDown, TrendingUp } from 'lucide-react';
-import type { ProgressOverview, ScoreTrend } from '@/api/generated';
+import type { OpenSkillProgress, ProgressOverview, ScoreTrend } from '@/api/generated';
 import { BrandPattern } from '@/components/brand/BrandPattern';
-import { formatPercent, PROFILE_PATH, PROGRESS_PATH } from '@/features/progress/progress-meta';
+import {
+  formatPercent,
+  openTotal,
+  percentOf,
+  PROFILE_PATH,
+  PROGRESS_PATH,
+} from '@/features/progress/progress-meta';
 import { PRACTICE_PATH } from '@/features/practice/practice-meta';
-import { toeicSummary } from '../dashboard-progress';
+import { skillScaled, swSummary, toeicSummary } from '../dashboard-progress';
 
 // Lời chào theo giờ Việt Nam
 function getGreeting(): string {
@@ -32,11 +38,13 @@ interface WelcomeCardProps {
   /** undefined khi đang tải */
   trend?: ScoreTrend;
   overview?: ProgressOverview;
+  /** Điểm Speaking/Writing theo kỹ năng (tính tỉ lệ điểm khi chưa làm đề đầy đủ) */
+  openSkills?: OpenSkillProgress[];
   /** Không tải được số liệu: ẩn ô điểm thay vì để khung chờ mãi */
   failed?: boolean;
 }
 
-export function WelcomeCard({ fullName, trend, overview, failed }: WelcomeCardProps) {
+export function WelcomeCard({ fullName, trend, overview, openSkills, failed }: WelcomeCardProps) {
   // Tính một lần khi mở trang, không đổi theo từng lần render
   const [greeting] = useState(getGreeting);
   const target = trend?.targetScore ?? null;
@@ -88,23 +96,27 @@ export function WelcomeCard({ fullName, trend, overview, failed }: WelcomeCardPr
           </div>
         </div>
 
-        {!failed && <ScoreBox trend={trend} overview={overview} target={target} />}
+        {!failed && (
+          <ScoreBox trend={trend} overview={overview} openSkills={openSkills} target={target} />
+        )}
       </div>
     </section>
   );
 }
 
 /**
- * Có bài TOEIC LR: điểm gần nhất, tiến độ tới mục tiêu, tăng giảm so với lần trước. Chưa có (chỉ làm
- * đề luyện tập): tỉ lệ câu trắc nghiệm đúng. Chưa nộp bài nào: lời nhắc.
+ * Có bài TOEIC LR: điểm gần nhất, tiến độ tới mục tiêu, tăng giảm so với lần trước. Chỉ có đề TOEIC
+ * SW: điểm Speaking, Writing gần nhất. Chưa làm đề đầy đủ: % điểm đạt mọi câu. Chưa nộp: lời nhắc.
  */
 function ScoreBox({
   trend,
   overview,
+  openSkills = [],
   target,
 }: {
   trend?: ScoreTrend;
   overview?: ProgressOverview;
+  openSkills?: OpenSkillProgress[];
   target: number | null;
 }) {
   const box =
@@ -149,18 +161,47 @@ function ScoreBox({
     );
   }
 
+  const speaking = skillScaled(swSummary(trend.points, 'SPEAKING').latest, 'SPEAKING');
+  const writing = skillScaled(swSummary(trend.points, 'WRITING').latest, 'WRITING');
+  if (speaking !== null || writing !== null) {
+    const items = [
+      { label: 'Speaking', value: speaking },
+      { label: 'Writing', value: writing },
+    ];
+    return (
+      <div className={box}>
+        <p className="text-[11px] font-bold tracking-wider text-blue-100 uppercase">
+          Điểm TOEIC SW gần nhất
+        </p>
+        <dl className="mt-2 grid grid-cols-2 gap-3">
+          {items.map(({ label, value }) => (
+            <div key={label}>
+              <dt className="text-xs text-blue-100">{label}</dt>
+              <dd className="mt-0.5">
+                <span className="text-3xl font-extrabold tracking-tight">{value ?? '—'}</span>
+                <span className="text-sm font-medium text-blue-100"> / 200</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mt-3 text-xs text-blue-100">
+          Làm một đề TOEIC LR đầy đủ để có điểm Listening, Reading.
+        </p>
+      </div>
+    );
+  }
+
+  // Câu trắc nghiệm 1 điểm + câu Speaking/Writing theo thang của dạng câu
+  const open = openTotal(openSkills);
+  const percent = percentOf(overview.choiceCorrect + open.earned, overview.choiceTotal + open.max);
   return (
     <div className={box}>
-      <p className="text-[11px] font-bold tracking-wider text-blue-100 uppercase">
-        Tỉ lệ đúng trắc nghiệm
-      </p>
-      <p className="mt-1 text-4xl font-extrabold tracking-tight">
-        {formatPercent(overview.accuracy)}
-      </p>
+      <p className="text-[11px] font-bold tracking-wider text-blue-100 uppercase">Tỉ lệ điểm đạt</p>
+      <p className="mt-1 text-4xl font-extrabold tracking-tight">{formatPercent(percent)}</p>
       <p className="mt-2 text-xs text-blue-100">
         {overview.submittedCount === 0
           ? 'Nộp bài đầu tiên để bắt đầu theo dõi tiến độ.'
-          : `${overview.choiceCorrect}/${overview.choiceTotal} câu đúng qua ${overview.submittedCount} bài. Làm một đề TOEIC LR đầy đủ để có điểm quy đổi.`}
+          : `Qua ${overview.submittedCount} bài đã nộp. Làm một đề TOEIC đầy đủ để có điểm quy đổi.`}
       </p>
     </div>
   );

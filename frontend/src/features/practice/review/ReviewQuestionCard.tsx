@@ -69,7 +69,9 @@ export function ReviewQuestionCard({ attemptId, question }: ReviewQuestionCardPr
             question.imageUrl && question.audioUrl && 'sm:grid-cols-2',
           )}
         >
-          {question.imageUrl && <QuestionMedia kind="image" url={question.imageUrl} />}
+          {question.imageUrl && (
+            <QuestionMedia kind="image" url={question.imageUrl} openable={false} />
+          )}
           {question.audioUrl && <QuestionMedia kind="audio" url={question.audioUrl} />}
         </div>
       )}
