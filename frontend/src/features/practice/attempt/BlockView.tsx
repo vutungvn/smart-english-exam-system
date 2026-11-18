@@ -51,7 +51,7 @@ export function BlockView({ block, skill, part, answers, activeId, onChange }: B
           {first === last ? `Câu ${first}` : `Câu ${first}–${last}`} dùng chung nội dung sau
         </p>
         {group.audioUrl && <QuestionMedia kind="audio" url={group.audioUrl} label="Âm thanh" />}
-        {group.imageUrl && <QuestionMedia kind="image" url={group.imageUrl} />}
+        {group.imageUrl && <QuestionMedia kind="image" url={group.imageUrl} openable={false} />}
         {group.passage && (
           <div className="rounded-2xl bg-slate-50 p-4 sm:p-5">
             <PassageView text={group.passage} />

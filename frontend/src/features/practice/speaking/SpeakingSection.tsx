@@ -234,7 +234,9 @@ export function SpeakingSection({
         >
           {group && (
             <section className="space-y-4 rounded-3xl border border-border bg-white p-5 shadow-2xs sm:p-6">
-              {group.imageUrl && <QuestionMedia kind="image" url={group.imageUrl} />}
+              {group.imageUrl && (
+                <QuestionMedia kind="image" url={group.imageUrl} openable={false} />
+              )}
               {group.passage && (
                 <div className="rounded-2xl bg-slate-50 p-4 sm:p-5">
                   <PassageView text={group.passage} />
@@ -243,7 +245,9 @@ export function SpeakingSection({
             </section>
           )}
           <article className="space-y-4 rounded-3xl border border-border bg-white p-5 shadow-2xs sm:p-6">
-            {question.imageUrl && <QuestionMedia kind="image" url={question.imageUrl} />}
+            {question.imageUrl && (
+              <QuestionMedia kind="image" url={question.imageUrl} openable={false} />
+            )}
             <p className="text-base leading-relaxed font-semibold wrap-break-word whitespace-pre-line text-foreground">
               {question.content}
             </p>
