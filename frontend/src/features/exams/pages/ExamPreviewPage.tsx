@@ -11,6 +11,7 @@ import {
 import { ButtonLink } from '@/components/ButtonLink';
 import { PageHeader } from '@/components/PageHeader';
 import { QuestionMedia } from '@/components/QuestionMedia';
+import { blankNumbers, fillBlankNumbers, isTextCompletion } from '@/features/question-bank/blanks';
 import { PassageView } from '@/features/question-bank/components/GroupContent';
 import { EmptyState, ErrorState } from '@/features/question-bank/components/ListStates';
 import { SkillPill } from '@/features/question-bank/components/Pills';
@@ -191,6 +192,8 @@ function BlockPaper({ block, skill, part }: { block: PaperBlock; skill: Skill; p
   const group = block.group;
   const first = block.questions[0]?.number;
   const last = block.questions[block.questions.length - 1]?.number;
+  // Part 6: đổi [n] trong đoạn văn và câu hỏi sang số câu của đề
+  const blanks = group && isTextCompletion(skill, part) ? blankNumbers(block.questions) : undefined;
 
   return (
     <div className="py-5">
@@ -201,14 +204,18 @@ function BlockPaper({ block, skill, part }: { block: PaperBlock; skill: Skill; p
           </p>
           {skill === 'LISTENING' && <MediaSlot kind="audio" url={group.audioUrl} />}
           {group.imageUrl && <MediaSlot kind="image" url={group.imageUrl} />}
-          {group.passage && <PassageView text={group.passage} />}
+          {group.passage && <PassageView text={group.passage} blanks={blanks} />}
         </div>
       )}
       <ol className="space-y-5">
         {block.questions.map((question) => (
           <QuestionPaper
             key={question.examQuestionId}
-            question={question}
+            question={
+              blanks
+                ? { ...question, content: fillBlankNumbers(question.content, blanks) }
+                : question
+            }
             media={rule?.media}
             skill={skill}
             part={part}

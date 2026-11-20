@@ -1,6 +1,7 @@
 import { FileText, MessagesSquare } from 'lucide-react';
-import type { ReviewBlock, ReviewQuestion } from '@/api/generated';
+import type { ReviewBlock, ReviewQuestion, Skill } from '@/api/generated';
 import { QuestionMedia } from '@/components/QuestionMedia';
+import { blankNumbers, fillBlankNumbers, isTextCompletion } from '@/features/question-bank/blanks';
 import { PassageView, TranscriptView } from '@/features/question-bank/components/GroupContent';
 import { cn } from '@/lib/utils';
 import { ReviewQuestionCard } from './ReviewQuestionCard';
@@ -10,15 +11,40 @@ interface ReviewBlockViewProps {
   block: ReviewBlock;
   /** Câu còn hiện sau khi lọc (nhóm vẫn giữ nội dung dùng chung) */
   questions: ReviewQuestion[];
+  skill: Skill;
+  part: number;
 }
 
 /**
  * Giống bố cục lúc làm bài: nhóm câu có nội dung dùng chung bên trái (dính khi cuộn), các câu bên
  * phải. Màn xem lại có thêm lời thoại Listening (lúc làm bài bị ẩn).
  */
-export function ReviewBlockView({ attemptId, block, questions }: ReviewBlockViewProps) {
+export function ReviewBlockView({
+  attemptId,
+  block,
+  questions,
+  skill,
+  part,
+}: ReviewBlockViewProps) {
+  // Part 6: tính từ block.questions (đủ câu), không từ `questions` đã lọc, nếu không [n] lệch số
+  const blanks =
+    block.group && isTextCompletion(skill, part) ? blankNumbers(block.questions) : undefined;
+
   const cards = questions.map((question) => (
-    <ReviewQuestionCard key={question.examQuestionId} attemptId={attemptId} question={question} />
+    <ReviewQuestionCard
+      key={question.examQuestionId}
+      attemptId={attemptId}
+      question={
+        blanks
+          ? {
+              ...question,
+              content: fillBlankNumbers(question.content, blanks),
+              explanation: question.explanation && fillBlankNumbers(question.explanation, blanks),
+            }
+          : question
+      }
+      blanks={blanks}
+    />
   ));
   const group = block.group;
   if (!group) return <div className="space-y-4">{cards}</div>;
@@ -42,7 +68,7 @@ export function ReviewBlockView({ attemptId, block, questions }: ReviewBlockView
         {group.imageUrl && <QuestionMedia kind="image" url={group.imageUrl} openable={false} />}
         {group.passage && (
           <div className="rounded-2xl bg-slate-50 p-4 sm:p-5">
-            <PassageView text={group.passage} />
+            <PassageView text={group.passage} blanks={blanks} />
           </div>
         )}
         {group.transcript && (

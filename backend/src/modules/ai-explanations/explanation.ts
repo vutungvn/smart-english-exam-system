@@ -4,7 +4,16 @@ import { Skill } from '../../generated/prisma/enums.js';
 import { describePart, findPartRule } from '../questions/toeic-parts.js';
 
 /** Đổi prompt hoặc cấu trúc kết quả thì tăng số này: mọi lời giải thích cũ được sinh lại */
-export const EXPLANATION_VERSION = 1;
+export const EXPLANATION_VERSION = 2;
+
+/**
+ * Reading Part 6: đoạn văn đánh dấu chỗ trống [1]…[4] theo thứ tự trong nhóm; FE đổi [n] sang số câu
+ * của đề (131…). Lời giải thích dùng chung mọi đề nên AI phải giữ đúng dấu [n], không tự đánh số
+ */
+const TEXT_COMPLETION_NOTE =
+  'The passage marks each blank as [n] (n is the order of the blank in the passage); the question names the blank it asks about. ' +
+  'Whenever you mention a blank, write its marker exactly with square brackets, e.g. "chỗ trống [2]". ' +
+  'Never write a blank number without the brackets and never use question numbers.';
 
 /** Dữ liệu câu hỏi đưa vào prompt; không có gì về học viên */
 export interface ExplainSource {
@@ -85,6 +94,7 @@ export function explanationPrompt(source: ExplainSource, hasImage: boolean): str
   if (source.skill === Skill.LISTENING) {
     lines.push('This is a listening question: the text below was spoken in the audio.');
   }
+  if (source.skill === Skill.READING && source.part === 6) lines.push(TEXT_COMPLETION_NOTE);
   if (hasImage) lines.push('The photo or graphic of the question is attached.');
   if (source.group?.transcript) lines.push('', 'Audio transcript:', source.group.transcript);
   if (source.group?.passage) lines.push('', 'Passage:', source.group.passage);
