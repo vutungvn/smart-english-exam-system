@@ -13,6 +13,8 @@ import { redisKeys } from './auth.constants.js';
 interface AccessTokenPayload {
   sub: string;
   role: RoleCode;
+  /** Chỉ có khi tài khoản phải đổi mật khẩu */
+  mcp?: true;
 }
 
 interface RefreshTokenPayload {
@@ -41,7 +43,11 @@ export class TokenService {
   }
 
   signAccessToken(user: AuthUser): Promise<string> {
-    const payload: AccessTokenPayload = { sub: user.id, role: user.role };
+    const payload: AccessTokenPayload = {
+      sub: user.id,
+      role: user.role,
+      ...(user.mustChangePassword && { mcp: true }),
+    };
     return this.jwt.signAsync(payload, {
       secret: this.accessSecret,
       expiresIn: this.accessTokenTtl,
@@ -54,7 +60,7 @@ export class TokenService {
         secret: this.accessSecret,
         algorithms: ['HS256'], // chỉ chấp nhận đúng thuật toán đã ký, chặn token "alg: none"
       });
-      return { id: payload.sub, role: payload.role };
+      return { id: payload.sub, role: payload.role, mustChangePassword: payload.mcp === true };
     } catch {
       // Hết hạn, sai chữ ký, sai định dạng: đều trả 401 như nhau
       throw new AppException(ErrorCode.UNAUTHORIZED);

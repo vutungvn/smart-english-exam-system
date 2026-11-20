@@ -1331,6 +1331,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "404": {
             "description": "Lỗi, error.code thuộc: NOT_FOUND",
             "content": {
@@ -1486,7 +1509,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -1501,6 +1524,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ học viên mới đặt được điểm mục tiêu"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -1682,6 +1716,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
             "content": {
@@ -1777,7 +1834,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -1792,6 +1849,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ học viên mới làm bài Speaking"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -1990,6 +2058,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "404": {
             "description": "Lỗi, error.code thuộc: NOT_FOUND",
             "content": {
@@ -2161,6 +2252,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "404": {
             "description": "Lỗi, error.code thuộc: NOT_FOUND",
             "content": {
@@ -2314,6 +2428,29 @@
                       "error": {
                         "code": "UNAUTHORIZED",
                         "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -2808,7 +2945,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -2823,6 +2960,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -2962,7 +3110,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -2988,6 +3136,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ thêm câu vào nhóm do bạn tạo"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -3150,7 +3309,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -3165,6 +3324,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -3336,7 +3506,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -3362,6 +3532,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -3580,7 +3761,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -3606,6 +3787,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -3793,7 +3985,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -3808,6 +4000,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4011,7 +4214,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4026,6 +4229,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4165,7 +4379,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4180,6 +4394,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4319,7 +4544,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4334,6 +4559,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4505,7 +4741,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4531,6 +4767,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4749,7 +4996,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4775,6 +5022,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4973,7 +5231,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4988,6 +5246,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -5172,7 +5441,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -5187,6 +5456,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -5440,7 +5720,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -5455,6 +5735,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -5696,7 +5987,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -5711,6 +6002,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -5964,7 +6266,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -5979,6 +6281,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -6119,7 +6432,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -6134,6 +6447,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -6290,7 +6614,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -6305,6 +6629,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -6512,7 +6847,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -6527,6 +6862,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -6759,7 +7105,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -6774,6 +7120,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -6981,7 +7338,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -6996,6 +7353,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -7134,7 +7502,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -7149,6 +7517,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -7288,7 +7667,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -7303,6 +7682,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -7473,7 +7863,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -7488,6 +7878,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -7673,7 +8074,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -7688,6 +8089,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -7875,7 +8287,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -7890,6 +8302,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -8040,7 +8463,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -8055,6 +8478,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -8259,7 +8693,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -8274,6 +8708,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -8489,7 +8934,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -8504,6 +8949,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -8732,7 +9188,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -8747,6 +9203,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -8955,7 +9422,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -8970,6 +9437,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -9143,7 +9621,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -9158,6 +9636,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -9354,7 +9843,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -9369,6 +9858,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -9577,7 +10077,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -9592,6 +10092,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -9754,7 +10265,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -9769,6 +10280,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -9931,7 +10453,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -9946,6 +10468,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -10140,7 +10673,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -10155,6 +10688,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -10363,6 +10907,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
             "content": {
@@ -10487,6 +11054,29 @@
                       "error": {
                         "code": "UNAUTHORIZED",
                         "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -10690,7 +11280,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: VOICE_CONSENT_REQUIRED",
+            "description": "Lỗi, error.code thuộc: VOICE_CONSENT_REQUIRED, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -10705,6 +11295,17 @@
                       "error": {
                         "code": "VOICE_CONSENT_REQUIRED",
                         "message": "Bạn cần đồng ý cho hệ thống ghi âm và xử lý giọng nói trước khi làm phần Speaking"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -10893,7 +11494,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -10908,6 +11509,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -11099,7 +11711,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -11114,6 +11726,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -11254,7 +11877,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -11269,6 +11892,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -11466,7 +12100,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -11481,6 +12115,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -11662,7 +12307,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -11677,6 +12322,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -11935,7 +12591,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -11950,6 +12606,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -12214,7 +12881,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -12229,6 +12896,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -12426,7 +13104,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -12441,6 +13119,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -12629,7 +13318,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -12644,6 +13333,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -12838,7 +13538,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -12853,6 +13553,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -13090,7 +13801,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -13105,6 +13816,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -13369,7 +14091,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -13384,6 +14106,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -13537,7 +14270,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -13552,6 +14285,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -13711,7 +14455,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -13726,6 +14470,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -13879,7 +14634,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -13894,6 +14649,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14065,7 +14831,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -14080,6 +14846,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14307,6 +15084,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
             "content": {
@@ -14393,6 +15193,29 @@
                       "error": {
                         "code": "UNAUTHORIZED",
                         "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14488,6 +15311,29 @@
                       "error": {
                         "code": "UNAUTHORIZED",
                         "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14622,6 +15468,29 @@
                       "error": {
                         "code": "UNAUTHORIZED",
                         "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14793,7 +15662,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -14808,6 +15677,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14955,7 +15835,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -14970,6 +15850,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -15118,7 +16009,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -15133,6 +16024,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -15361,7 +16263,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -15376,6 +16278,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -15467,6 +16380,7 @@
           "AUTH_TOO_MANY_LOGIN_ATTEMPTS",
           "AUTH_CURRENT_PASSWORD_INCORRECT",
           "AUTH_PASSWORD_NOT_SET",
+          "AUTH_PASSWORD_CHANGE_REQUIRED",
           "AUTH_GOOGLE_DISABLED",
           "AUTH_GOOGLE_FAILED",
           "AUTH_GOOGLE_EMAIL_UNVERIFIED",

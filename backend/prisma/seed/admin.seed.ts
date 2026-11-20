@@ -7,7 +7,7 @@ import { hashPassword } from '../../src/modules/auth/password.js';
 // Production lấy email, mật khẩu từ SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD (bắt buộc)
 const DEFAULT_ADMIN = {
   email: 'admin@gmail.com',
-  password: '12345678',
+  password: 'Tung2004@',
   fullName: 'Quản trị viên',
   phone: '0123456789',
 };

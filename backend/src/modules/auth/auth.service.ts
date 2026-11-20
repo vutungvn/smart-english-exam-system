@@ -387,7 +387,11 @@ export class AuthService {
     const role = user.role.code as RoleCode;
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.tokens.signAccessToken({ id: user.id, role }),
+      this.tokens.signAccessToken({
+        id: user.id,
+        role,
+        mustChangePassword: user.mustChangePassword,
+      }),
       this.tokens.createRefreshToken(user.id),
     ]);
 

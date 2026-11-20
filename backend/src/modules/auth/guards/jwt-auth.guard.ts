@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ALLOW_PASSWORD_CHANGE_PENDING_KEY } from '../../../common/decorators/allow-password-change-pending.decorator.js';
 import { IS_PUBLIC_KEY } from '../../../common/decorators/public.decorator.js';
 import { AppException } from '../../../common/errors/app.exception.js';
 import { ErrorCode } from '../../../common/errors/error-codes.js';
@@ -28,6 +29,16 @@ export class JwtAuthGuard implements CanActivate {
 
     const payload = await this.tokens.verifyAccessToken(token);
     request.user = payload;
+
+    // Bị buộc đổi mật khẩu: chỉ gọi được route gắn @AllowPasswordChangePending() (xem hồ sơ, đổi
+    // mật khẩu). Chặn ở server để không lách được bằng cách gọi API trực tiếp, bỏ qua giao diện
+    if (payload.mustChangePassword) {
+      const allowed = this.reflector.getAllAndOverride<boolean | undefined>(
+        ALLOW_PASSWORD_CHANGE_PENDING_KEY,
+        [context.getHandler(), context.getClass()],
+      );
+      if (!allowed) throw new AppException(ErrorCode.AUTH_PASSWORD_CHANGE_REQUIRED);
+    }
     return true;
   }
 }
