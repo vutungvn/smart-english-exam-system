@@ -22,13 +22,15 @@ import { OUTCOME_META } from './review-meta';
 interface ReviewQuestionCardProps {
   attemptId: string;
   question: ReviewQuestion;
+  /** Reading Part 6: thứ tự chỗ trống → số câu của đề, để đổi [n] trong lời giải thích AI */
+  blanks?: Map<number, number>;
 }
 
 /**
  * Một câu ở màn xem lại: kết quả, lựa chọn của học viên so với đáp án đúng, giải thích, bài mẫu;
  * câu trắc nghiệm có thêm "Giải thích bằng AI"
  */
-export function ReviewQuestionCard({ attemptId, question }: ReviewQuestionCardProps) {
+export function ReviewQuestionCard({ attemptId, question, blanks }: ReviewQuestionCardProps) {
   const meta = OUTCOME_META[question.outcome];
   const choice = question.type === 'SINGLE_CHOICE';
 
@@ -131,7 +133,7 @@ export function ReviewQuestionCard({ attemptId, question }: ReviewQuestionCardPr
         </details>
       )}
 
-      {choice && <AiExplanationPanel attemptId={attemptId} question={question} />}
+      {choice && <AiExplanationPanel attemptId={attemptId} question={question} blanks={blanks} />}
     </article>
   );
 }

@@ -1,6 +1,7 @@
 import { FileText } from 'lucide-react';
 import type { PaperBlock, Skill } from '@/api/generated';
 import { QuestionMedia } from '@/components/QuestionMedia';
+import { blankNumbers, fillBlankNumbers, isTextCompletion } from '@/features/question-bank/blanks';
 import { PassageView } from '@/features/question-bank/components/GroupContent';
 import { cn } from '@/lib/utils';
 import { QuestionCard } from './QuestionCard';
@@ -20,10 +21,16 @@ interface BlockViewProps {
  * bên trái (dính khi cuộn), các câu bên phải; màn hẹp thì xếp chồng
  */
 export function BlockView({ block, skill, part, answers, activeId, onChange }: BlockViewProps) {
+  // Part 6: đổi [n] trong đoạn văn và câu hỏi sang số câu của đề
+  const blanks =
+    block.group && isTextCompletion(skill, part) ? blankNumbers(block.questions) : undefined;
+
   const cards = block.questions.map((question) => (
     <QuestionCard
       key={question.examQuestionId}
-      question={question}
+      question={
+        blanks ? { ...question, content: fillBlankNumbers(question.content, blanks) } : question
+      }
       skill={skill}
       part={part}
       answer={answers[question.examQuestionId]}
@@ -54,7 +61,7 @@ export function BlockView({ block, skill, part, answers, activeId, onChange }: B
         {group.imageUrl && <QuestionMedia kind="image" url={group.imageUrl} openable={false} />}
         {group.passage && (
           <div className="rounded-2xl bg-slate-50 p-4 sm:p-5">
-            <PassageView text={group.passage} />
+            <PassageView text={group.passage} blanks={blanks} />
           </div>
         )}
         {skill === 'LISTENING' && !group.passage && (
