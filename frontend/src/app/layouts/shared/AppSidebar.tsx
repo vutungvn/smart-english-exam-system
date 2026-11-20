@@ -41,6 +41,8 @@ interface AppSidebarProps extends SidebarSlotProps {
   subtitle?: string;
   ariaLabel: string;
   sections: SidebarSection[];
+  /** Tiêu đề nhỏ của từng nhóm theo cùng thứ tự `sections`; nhóm không có tiêu đề để undefined */
+  sectionTitles?: (string | undefined)[];
   footer?: ReactNode;
 }
 
@@ -52,12 +54,13 @@ const BADGE_TONES = {
 
 const itemClass = 'relative flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium';
 
-// Sidebar dùng chung: học viên, giáo viên (sau này admin) chỉ khác danh sách mục và phần chân
+// Sidebar dùng chung: học viên, giáo viên, admin chỉ khác danh sách mục, tiêu đề nhóm và phần chân
 export function AppSidebar({
   homePath,
   subtitle,
   ariaLabel,
   sections,
+  sectionTitles,
   footer,
   onNavigate,
   onClose,
@@ -81,18 +84,29 @@ export function AppSidebar({
       </div>
 
       <nav aria-label={ariaLabel} className="flex-1 overflow-y-auto px-4 py-6">
-        {sections.map((items, index) => (
-          <ul
-            key={index}
-            className={cn('space-y-1', index > 0 && 'mt-4 border-t border-border pt-4')}
-          >
-            {items.map((item) => (
-              <li key={item.to}>
-                <SidebarLink item={item} active={item.to === activePath} onNavigate={onNavigate} />
-              </li>
-            ))}
-          </ul>
-        ))}
+        {sections.map((items, index) => {
+          const title = sectionTitles?.[index];
+          return (
+            <div key={index} className={cn(index > 0 && 'mt-4 border-t border-border pt-4')}>
+              {title && (
+                <p className="mb-2 px-4 text-[11px] font-bold tracking-wider text-subtle uppercase">
+                  {title}
+                </p>
+              )}
+              <ul className="space-y-1">
+                {items.map((item) => (
+                  <li key={item.to}>
+                    <SidebarLink
+                      item={item}
+                      active={item.to === activePath}
+                      onNavigate={onNavigate}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
       </nav>
 
       {footer && <div className="shrink-0 border-t border-border p-4">{footer}</div>}

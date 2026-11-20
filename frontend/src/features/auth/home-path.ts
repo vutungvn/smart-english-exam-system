@@ -7,8 +7,7 @@ import { selectCurrentUser } from '@/store/slice/auth-slice';
 const AREA_PATHS: Record<RoleCode, string> = {
   STUDENT: '/app',
   TEACHER: '/teacher',
-  // TẠM: chưa có layout admin nên tạm về trang xem trước phiên đăng nhập
-  ADMIN: '/dev/auth',
+  ADMIN: '/admin',
 };
 
 export function getHomePath(role: RoleCode): string {
