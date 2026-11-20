@@ -17,7 +17,7 @@ import { describeOAuthError, OAUTH_ERROR_PARAM } from '../oauth-errors';
 import { loginSchema, type LoginValues } from '../schemas';
 import { useAppDispatch } from '@/hooks/hooks';
 import { sessionReceived } from '@/store/slice/auth-slice';
-import { getHomePath, type RedirectState } from '../home-path';
+import { getChangePasswordPath, getHomePath, type RedirectState } from '../home-path';
 
 // Màn Đăng nhập theo Stitch (project "Hệ thống luyện thi tiếng anh")
 export function LoginPage() {
@@ -47,9 +47,12 @@ export function LoginPage() {
       const { data: session } = await login(values).unwrap();
       dispatch(sessionReceived(session));
       // Về trang đang định vào trước khi bị chuyển sang Đăng nhập, không có thì về trang chủ theo vai trò.
-      // TẠM: chưa xử lý mustChangePassword (chưa có trang Đổi mật khẩu)
+      // Tài khoản bị buộc đổi mật khẩu thì vào thẳng trang Đổi mật khẩu
       const from = (location.state as RedirectState | null)?.from;
-      void navigate(from ?? getHomePath(session.user.role), { replace: true });
+      const target = session.user.mustChangePassword
+        ? getChangePasswordPath(session.user.role)
+        : (from ?? getHomePath(session.user.role));
+      void navigate(target, { replace: true });
     } catch (error) {
       const apiError = toApiError(error);
       if (applyFieldErrors(apiError, setError, ['email', 'password'])) return;

@@ -14,6 +14,11 @@ export function getHomePath(role: RoleCode): string {
   return AREA_PATHS[role];
 }
 
+/** Trang Đổi mật khẩu của vai trò; tài khoản bị buộc đổi mật khẩu chỉ được ở trang này */
+export function getChangePasswordPath(role: RoleCode): string {
+  return `${AREA_PATHS[role]}/profile/password`;
+}
+
 /** Gốc khu vực của người đang đăng nhập; dùng cho link dùng chung giữa các vai trò (hồ sơ, menu) */
 export function useAreaPath(): string {
   const user = useAppSelector(selectCurrentUser);

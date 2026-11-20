@@ -31,6 +31,7 @@ export const ErrorCode = {
   AUTH_TOO_MANY_LOGIN_ATTEMPTS: 'AUTH_TOO_MANY_LOGIN_ATTEMPTS',
   AUTH_CURRENT_PASSWORD_INCORRECT: 'AUTH_CURRENT_PASSWORD_INCORRECT',
   AUTH_PASSWORD_NOT_SET: 'AUTH_PASSWORD_NOT_SET',
+  AUTH_PASSWORD_CHANGE_REQUIRED: 'AUTH_PASSWORD_CHANGE_REQUIRED',
   AUTH_GOOGLE_DISABLED: 'AUTH_GOOGLE_DISABLED',
   AUTH_GOOGLE_FAILED: 'AUTH_GOOGLE_FAILED',
   AUTH_GOOGLE_EMAIL_UNVERIFIED: 'AUTH_GOOGLE_EMAIL_UNVERIFIED',
@@ -167,6 +168,10 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.AUTH_ACCOUNT_LOCKED]: {
     status: HttpStatus.FORBIDDEN,
     message: 'Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên',
+  },
+  [ErrorCode.AUTH_PASSWORD_CHANGE_REQUIRED]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống',
   },
   [ErrorCode.AUTH_REFRESH_TOKEN_INVALID]: {
     status: HttpStatus.UNAUTHORIZED,

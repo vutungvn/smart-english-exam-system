@@ -6,7 +6,7 @@ import { hashPassword } from '../../src/modules/auth/password.js';
 // Tài khoản học viên chỉ để thử luồng làm bài ở dev (học viên thật tự đăng ký, xác minh email)
 const DEMO_STUDENT = {
   email: 'student@gmail.com',
-  password: '12345678',
+  password: 'Tung2004@',
   fullName: 'Học viên',
 };
 

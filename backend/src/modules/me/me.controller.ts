@@ -13,6 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AllowPasswordChangePending } from '../../common/decorators/allow-password-change-pending.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
 import { MeService } from './me.service.js';
@@ -49,6 +50,7 @@ export class MeController {
   ) {}
 
   @Get()
+  @AllowPasswordChangePending()
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ cá nhân' })
   @ApiEnvelope(MeProfile)
   @ApiErrors(USER_NOT_FOUND)
@@ -97,6 +99,7 @@ export class MeController {
   }
 
   @Patch('password')
+  @AllowPasswordChangePending()
   @ApiOperation({
     summary: 'Đổi mật khẩu',
     description:
