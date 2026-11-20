@@ -37,6 +37,12 @@ export const ErrorCode = {
   AUTH_GOOGLE_EMAIL_UNVERIFIED: 'AUTH_GOOGLE_EMAIL_UNVERIFIED',
   AUTH_GOOGLE_STUDENT_ONLY: 'AUTH_GOOGLE_STUDENT_ONLY',
 
+  // Quản lý người dùng (admin)
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  ADMIN_ACCOUNT_PROTECTED: 'ADMIN_ACCOUNT_PROTECTED',
+  USER_ALREADY_LOCKED: 'USER_ALREADY_LOCKED',
+  USER_NOT_LOCKED: 'USER_NOT_LOCKED',
+
   // Tệp
   STORAGE_UNAVAILABLE: 'STORAGE_UNAVAILABLE',
   AVATAR_INVALID_IMAGE: 'AVATAR_INVALID_IMAGE',
@@ -213,6 +219,25 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
     status: HttpStatus.FORBIDDEN,
     message: 'Đăng nhập bằng Google chỉ dành cho học viên, vui lòng dùng email và mật khẩu',
   },
+
+  // Quản lý người dùng (admin)
+  [ErrorCode.USER_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy người dùng',
+  },
+  [ErrorCode.ADMIN_ACCOUNT_PROTECTED]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'Không thể thao tác trên tài khoản quản trị viên',
+  },
+  [ErrorCode.USER_ALREADY_LOCKED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Tài khoản đã bị khóa trước đó',
+  },
+  [ErrorCode.USER_NOT_LOCKED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Tài khoản không ở trạng thái bị khóa',
+  },
+
   // Tệp
   [ErrorCode.STORAGE_UNAVAILABLE]: {
     status: HttpStatus.SERVICE_UNAVAILABLE,

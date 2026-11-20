@@ -93,6 +93,7 @@ export class NotificationsGateway
     const { token } = socket.handshake.auth as { token?: unknown };
     if (typeof token !== 'string' || !token) throw new Error('Thiếu access token');
     const user = await this.tokens.verifyAccessToken(token);
+    if (await this.tokens.isUserLocked(user.id)) throw new Error('Tài khoản đã bị khóa');
     socket.data.userId = user.id;
     socket.data.expiresAt = this.tokens.accessTokenExpiresAt(token);
     this.logger.debug(`Người dùng ${user.id} kết nối /notifications`);

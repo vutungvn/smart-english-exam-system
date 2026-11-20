@@ -123,6 +123,23 @@ export class TokenService {
     }
   }
 
+  /**
+   * Đánh dấu tài khoản vừa bị khóa. Access token không lưu trạng thái nên vẫn dùng được tới khi hết
+   * hạn; JwtAuthGuard kiểm tra key này ở mỗi request. Key chỉ cần sống bằng thời hạn access token:
+   * sau đó mọi token cấp trước lúc khóa đã hết hạn, còn đăng nhập, refresh bị chặn theo status
+   */
+  async markUserLocked(userId: string): Promise<void> {
+    await this.redis.set(redisKeys.userLocked(userId), '1', 'EX', this.accessTokenTtl);
+  }
+
+  async clearUserLocked(userId: string): Promise<void> {
+    await this.redis.del(redisKeys.userLocked(userId));
+  }
+
+  async isUserLocked(userId: string): Promise<boolean> {
+    return (await this.redis.exists(redisKeys.userLocked(userId))) === 1;
+  }
+
   private async verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
     try {
       return await this.jwt.verifyAsync<RefreshTokenPayload>(token, {

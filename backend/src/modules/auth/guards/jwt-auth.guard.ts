@@ -4,9 +4,11 @@ import { Reflector } from '@nestjs/core';
 import { ALLOW_PASSWORD_CHANGE_PENDING_KEY } from '../../../common/decorators/allow-password-change-pending.decorator.js';
 import { IS_PUBLIC_KEY } from '../../../common/decorators/public.decorator.js';
 import { AppException } from '../../../common/errors/app.exception.js';
-import { ErrorCode } from '../../../common/errors/error-codes.js';
+import { ERROR_CATALOG, ErrorCode } from '../../../common/errors/error-codes.js';
 import type { AuthenticatedRequest } from '../../../common/types/auth-user.js';
 import { TokenService } from '../token.service.js';
+
+const ACCOUNT_LOCKED_MESSAGE = ERROR_CATALOG[ErrorCode.AUTH_ACCOUNT_LOCKED].message;
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -28,6 +30,12 @@ export class JwtAuthGuard implements CanActivate {
     if (type !== 'Bearer' || !token) throw new AppException(ErrorCode.UNAUTHORIZED);
 
     const payload = await this.tokens.verifyAccessToken(token);
+
+    // Tài khoản vừa bị admin khóa: trả 401 (không phải 403) để FE thử refresh, refresh thất bại
+    // vì phiên đã bị thu hồi thì FE tự đăng xuất
+    if (await this.tokens.isUserLocked(payload.id)) {
+      throw new AppException(ErrorCode.UNAUTHORIZED, ACCOUNT_LOCKED_MESSAGE);
+    }
     request.user = payload;
 
     // Bị buộc đổi mật khẩu: chỉ gọi được route gắn @AllowPasswordChangePending() (xem hồ sơ, đổi
