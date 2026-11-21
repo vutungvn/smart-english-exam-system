@@ -7,7 +7,7 @@ import { adminNavItem, adminPath } from '../admin-nav';
 
 // Lối tắt tới các mục quản trị hay dùng (theo Stitch, khối "Truy cập nhanh")
 const QUICK_LINKS = [
-  { path: 'users', hint: 'Tìm kiếm, tạo, khóa tài khoản', tone: 'bg-accent text-primary' },
+  { path: 'users', hint: 'Tìm kiếm, sửa, khóa tài khoản', tone: 'bg-accent text-primary' },
   { path: 'roles', hint: 'Phân quyền theo vai trò', tone: 'bg-violet-50 text-violet-600' },
   { path: 'settings', hint: 'Bảng quy đổi điểm, hạn mức AI', tone: 'bg-slate-100 text-slate-600' },
   {
