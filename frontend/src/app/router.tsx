@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate } from 'react-router';
 import { ComingSoonPage } from '@/components/ComingSoonPage';
 import { ADMIN_HOME, ADMIN_PLACEHOLDERS, adminNavItem } from '@/features/admin/admin-nav';
 import { AdminOverviewPage } from '@/features/admin/pages/AdminOverviewPage';
+import { AdminUserDetailPage } from '@/features/admin-users/pages/AdminUserDetailPage';
+import { AdminUsersPage } from '@/features/admin-users/pages/AdminUsersPage';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
 import { CheckEmailPage } from '@/features/auth/pages/CheckEmailPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
@@ -148,6 +150,8 @@ export const router = createBrowserRouter([
             element: <AdminLayout />,
             children: [
               { index: true, element: <AdminOverviewPage /> },
+              { path: 'users', element: <AdminUsersPage /> },
+              { path: 'users/:id', element: <AdminUserDetailPage /> },
               { path: 'profile', element: <ProfilePage /> },
               { path: 'profile/password', element: <ChangePasswordPage /> },
               ...ADMIN_PLACEHOLDERS.map((path) => ({

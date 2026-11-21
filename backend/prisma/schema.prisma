@@ -256,6 +256,7 @@ model User {
   /// Các câu giáo viên này đã chấm lại (SPRINT-91)
   reviewedAssessments AnswerAssessment[]
   notifications       Notification[]
+  auditLogs           AuditLog[]
 
   @@index([roleId], map: "ix_users_role_id")
   @@index([status], map: "ix_users_status")
@@ -319,6 +320,32 @@ model LoginHistory {
 
   @@index([userId, createdAt(sort: Desc)], map: "ix_login_histories_user_created")
   @@map("login_histories")
+}
+
+/// Nhật ký kiểm toán (NFR-09): mỗi thao tác quản trị gắn @Audit ghi một dòng sau khi thành công.
+/// Không bao giờ chứa mật khẩu, token; before/after chỉ gồm các trường nghiệp vụ đã chọn
+model AuditLog {
+  id        String   @id(map: "pk_audit_logs") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Người thực hiện; null khi tài khoản đó đã bị xóa (giữ lại nhật ký)
+  actorId   String?  @map("actor_id") @db.Uuid
+  /// Dạng <entity>.<action>, ví dụ user.lock
+  action    String   @db.VarChar(100)
+  entity    String   @db.VarChar(50)
+  entityId  String?  @map("entity_id") @db.Uuid
+  before    Json?
+  after     Json?
+  /// Thông tin thêm của thao tác, ví dụ lý do khóa tài khoản
+  meta      Json?
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull, map: "fk_audit_logs_actor_id")
+
+  @@index([entity, entityId, createdAt(sort: Desc)], map: "ix_audit_logs_entity_created")
+  @@index([actorId, createdAt(sort: Desc)], map: "ix_audit_logs_actor_created")
+  @@index([createdAt(sort: Desc)], map: "ix_audit_logs_created")
+  @@map("audit_logs")
 }
 
 // ================================================================

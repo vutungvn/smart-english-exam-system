@@ -63,7 +63,6 @@ export function adminPath(path: string): string {
  * Làm xong trang nào thì xóa path đó khỏi đây và khai báo route thật trong router
  */
 export const ADMIN_PLACEHOLDERS: string[] = [
-  'users',
   'teacher-applications',
   'roles',
   'subjects',

@@ -13,6 +13,7 @@ export const addTagTypes = [
   'Notifications',
   'Progress',
   'AI Explanations',
+  'Admin Users',
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -648,6 +649,57 @@ const injectedRtkApi = api
       getMyAiQuotas: build.query<GetMyAiQuotasApiResponse, GetMyAiQuotasApiArg>({
         query: () => ({ url: `/api/v1/me/ai-quotas` }),
         providesTags: ['AI Explanations'],
+      }),
+      listAdminUsers: build.query<ListAdminUsersApiResponse, ListAdminUsersApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/users`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+            q: queryArg.q,
+            role: queryArg.role,
+            status: queryArg.status,
+            sort: queryArg.sort,
+          },
+        }),
+        providesTags: ['Admin Users'],
+      }),
+      getAdminUser: build.query<GetAdminUserApiResponse, GetAdminUserApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/admin/users/${queryArg}` }),
+        providesTags: ['Admin Users'],
+      }),
+      updateAdminUser: build.mutation<UpdateAdminUserApiResponse, UpdateAdminUserApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/users/${queryArg.id}`,
+          method: 'PATCH',
+          body: queryArg.adminUpdateUserDto,
+        }),
+        invalidatesTags: ['Admin Users'],
+      }),
+      lockAdminUser: build.mutation<LockAdminUserApiResponse, LockAdminUserApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/users/${queryArg.id}/lock`,
+          method: 'POST',
+          body: queryArg.lockUserDto,
+        }),
+        invalidatesTags: ['Admin Users'],
+      }),
+      unlockAdminUser: build.mutation<UnlockAdminUserApiResponse, UnlockAdminUserApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/admin/users/${queryArg}/unlock`, method: 'POST' }),
+        invalidatesTags: ['Admin Users'],
+      }),
+      getAdminUserLoginHistory: build.query<
+        GetAdminUserLoginHistoryApiResponse,
+        GetAdminUserLoginHistoryApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/users/${queryArg.id}/login-history`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ['Admin Users'],
       }),
     }),
     overrideExisting: false,
@@ -1334,6 +1386,70 @@ export type GetMyAiQuotasApiResponse = /** status 200 Thành công */ {
   data: AiQuotas;
 };
 export type GetMyAiQuotasApiArg = void;
+export type ListAdminUsersApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminUserListItem[];
+  meta: PaginationMetaDto;
+};
+export type ListAdminUsersApiArg = {
+  page?: number;
+  limit?: number;
+  /** Tìm theo họ tên hoặc email (không phân biệt hoa thường) */
+  q?: string;
+  role?: ManagedRole;
+  status?: UserStatus;
+  sort?:
+    | 'createdAt:desc'
+    | 'createdAt:asc'
+    | 'lastLoginAt:desc'
+    | 'lastLoginAt:asc'
+    | 'fullName:asc'
+    | 'fullName:desc'
+    | 'email:asc'
+    | 'email:desc';
+};
+export type GetAdminUserApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminUserDetail;
+};
+export type GetAdminUserApiArg = string;
+export type UpdateAdminUserApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminUserDetail;
+};
+export type UpdateAdminUserApiArg = {
+  id: string;
+  adminUpdateUserDto: AdminUpdateUserDto;
+};
+export type LockAdminUserApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminUserDetail;
+};
+export type LockAdminUserApiArg = {
+  id: string;
+  lockUserDto: LockUserDto;
+};
+export type UnlockAdminUserApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminUserDetail;
+};
+export type UnlockAdminUserApiArg = string;
+export type GetAdminUserLoginHistoryApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: LoginHistoryItem[];
+  meta: PaginationMetaDto;
+};
+export type GetAdminUserLoginHistoryApiArg = {
+  id: string;
+  page?: number;
+  limit?: number;
+};
 export type UserStatus = 'PENDING_VERIFICATION' | 'PENDING_APPROVAL' | 'ACTIVE' | 'LOCKED';
 export type RegisterResult = {
   id: string;
@@ -1369,6 +1485,10 @@ export type ErrorCode =
   | 'AUTH_GOOGLE_FAILED'
   | 'AUTH_GOOGLE_EMAIL_UNVERIFIED'
   | 'AUTH_GOOGLE_STUDENT_ONLY'
+  | 'USER_NOT_FOUND'
+  | 'ADMIN_ACCOUNT_PROTECTED'
+  | 'USER_ALREADY_LOCKED'
+  | 'USER_NOT_LOCKED'
   | 'STORAGE_UNAVAILABLE'
   | 'AVATAR_INVALID_IMAGE'
   | 'MEDIA_LINK_INVALID'
@@ -2931,6 +3051,61 @@ export type AiQuotas = {
   /** Giải thích đáp án bằng AI */
   explanation: AiQuota;
 };
+export type ManagedRole = 'STUDENT' | 'TEACHER';
+export type AdminUserListItem = {
+  id: string;
+  email: string;
+  fullName: string;
+  avatarUrl: string | null;
+  role: ManagedRole;
+  status: UserStatus;
+  emailVerifiedAt: string | null;
+  lastLoginAt: string | null;
+  createdAt: string;
+};
+export type AdminTeacherProfile = {
+  organization: string;
+  specialization: string;
+  /** Đã được admin duyệt hồ sơ giáo viên */
+  isApproved: boolean;
+};
+export type AdminUserDetail = {
+  id: string;
+  email: string;
+  fullName: string;
+  avatarUrl: string | null;
+  role: ManagedRole;
+  status: UserStatus;
+  emailVerifiedAt: string | null;
+  lastLoginAt: string | null;
+  createdAt: string;
+  /** false: tài khoản chỉ đăng nhập bằng Google */
+  hasPassword: boolean;
+  /** true: đã liên kết đăng nhập bằng Google */
+  googleLinked: boolean;
+  mustChangePassword: boolean;
+  termsAcceptedAt: string | null;
+  /** Gửi lại trong PATCH để kiểm tra xung đột */
+  updatedAt: string;
+  /** null nếu không phải học viên */
+  student: StudentProfile | null;
+  /** null nếu không phải giáo viên */
+  teacher: AdminTeacherProfile | null;
+};
+export type AdminUpdateUserDto = {
+  /** updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409 */
+  updatedAt: string;
+  fullName?: string;
+  /** Điểm TOEIC mục tiêu, bước 5 điểm (chỉ học viên) */
+  targetScore?: number;
+  /** Chỉ giáo viên */
+  organization?: string;
+  /** Chỉ giáo viên */
+  specialization?: string;
+};
+export type LockUserDto = {
+  reason?: string;
+};
 export const {
   useRegisterMutation,
   useVerifyEmailMutation,
@@ -3014,4 +3189,10 @@ export const {
   useGetProgressSkillsQuery,
   useGetAiExplanationQuery,
   useGetMyAiQuotasQuery,
+  useListAdminUsersQuery,
+  useGetAdminUserQuery,
+  useUpdateAdminUserMutation,
+  useLockAdminUserMutation,
+  useUnlockAdminUserMutation,
+  useGetAdminUserLoginHistoryQuery,
 } = injectedRtkApi;

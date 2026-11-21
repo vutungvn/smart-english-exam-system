@@ -21,6 +21,8 @@ import { ProgressModule } from './modules/progress/progress.module.js';
 import { AiModule } from './infra/ai/ai.module.js';
 import { AiExplanationsModule } from './modules/ai-explanations/ai-explanations.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
+import { AuditModule } from './infra/audit/audit.module.js';
+import { AdminUsersModule } from './modules/admin-users/admin-users.module.js';
 
 @Module({
   imports: [
@@ -36,6 +38,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     MailModule,
     StorageModule,
     AiModule,
+    AuditModule,
     CommonModule,
     AuthModule,
     MeModule,
@@ -48,6 +51,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     ProgressModule,
     AiExplanationsModule,
     NotificationsModule,
+    AdminUsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

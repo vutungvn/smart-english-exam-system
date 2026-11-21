@@ -241,10 +241,7 @@ export class AuthService {
 
     const session = await this.createSession(user);
 
-    await Promise.all([
-      this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
-      this.recordLogin(user.id, meta),
-    ]);
+    await Promise.all([this.touchLastLogin(user.id), this.recordLogin(user.id, meta)]);
 
     return session;
   }
@@ -287,6 +284,12 @@ export class AuthService {
     if (user.status === UserStatus.LOCKED) {
       await this.recordLogin(user.id, meta, 'ACCOUNT_LOCKED');
       throw new AppException(ErrorCode.AUTH_ACCOUNT_LOCKED);
+    }
+
+    // Đã liên kết, đã kích hoạt: lần đăng nhập này không đổi gì trong hồ sơ
+    if (user.googleId && user.status !== UserStatus.PENDING_VERIFICATION) {
+      await Promise.all([this.touchLastLogin(user.id), this.recordLogin(user.id, meta)]);
+      return this.createSession(user);
     }
 
     const now = new Date();
@@ -408,6 +411,16 @@ export class AuthService {
         mustChangePassword: user.mustChangePassword,
       },
     };
+  }
+
+  /**
+   * Ghi lần đăng nhập cuối mà không đổi updated_at: updatedAt dùng làm khóa lạc quan khi admin sửa
+   * hồ sơ, đăng nhập không phải sửa hồ sơ nên không được làm form sửa của admin bị 409.
+   * Dùng SQL thô vì Prisma luôn tự đặt lại cột @updatedAt khi update
+   */
+  private async touchLastLogin(userId: string): Promise<void> {
+    await this.prisma
+      .$executeRaw`UPDATE users SET last_login_at = now() WHERE id = ${userId}::uuid`;
   }
 
   // Chỉ ghi cho tài khoản có thật vì login_histories.user_id là khóa ngoại tới users
