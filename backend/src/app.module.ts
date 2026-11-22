@@ -23,6 +23,7 @@ import { AiExplanationsModule } from './modules/ai-explanations/ai-explanations.
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { AuditModule } from './infra/audit/audit.module.js';
 import { AdminUsersModule } from './modules/admin-users/admin-users.module.js';
+import { AdminAuditLogsModule } from './modules/admin-audit-logs/admin-audit-logs.module.js';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { AdminUsersModule } from './modules/admin-users/admin-users.module.js';
     AiExplanationsModule,
     NotificationsModule,
     AdminUsersModule,
+    AdminAuditLogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
