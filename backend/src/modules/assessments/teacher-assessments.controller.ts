@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RoleCode } from '../../common/constants/roles.js';
+import { Audit } from '../../common/decorators/audit.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
@@ -95,6 +96,7 @@ export class TeacherAssessmentsController {
   }
 
   @Put(':answerId')
+  @Audit('assessment.override')
   @ApiOperation({
     summary: 'Chấm hoặc sửa điểm một câu Speaking/Writing',
     description:

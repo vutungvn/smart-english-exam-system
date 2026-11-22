@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router';
 import { ComingSoonPage } from '@/components/ComingSoonPage';
 import { ADMIN_HOME, ADMIN_PLACEHOLDERS, adminNavItem } from '@/features/admin/admin-nav';
 import { AdminOverviewPage } from '@/features/admin/pages/AdminOverviewPage';
+import { AdminAuditLogsPage } from '@/features/admin-audit-logs/pages/AdminAuditLogsPage';
 import { AdminUserDetailPage } from '@/features/admin-users/pages/AdminUserDetailPage';
 import { AdminUsersPage } from '@/features/admin-users/pages/AdminUsersPage';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
@@ -152,6 +153,7 @@ export const router = createBrowserRouter([
               { index: true, element: <AdminOverviewPage /> },
               { path: 'users', element: <AdminUsersPage /> },
               { path: 'users/:id', element: <AdminUserDetailPage /> },
+              { path: 'audit-logs', element: <AdminAuditLogsPage /> },
               { path: 'profile', element: <ProfilePage /> },
               { path: 'profile/password', element: <ChangePasswordPage /> },
               ...ADMIN_PLACEHOLDERS.map((path) => ({

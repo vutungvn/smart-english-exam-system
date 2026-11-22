@@ -13,6 +13,7 @@ import {
   QuestionType,
   Skill,
 } from '../../generated/prisma/enums.js';
+import { AuditContext, type AuditSnapshot } from '../../infra/audit/audit-context.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import { openMaxScore } from '../attempts/grading/toeic-sw-conversion.js';
 import { MediaUrlService } from '../media/media-url.service.js';
@@ -95,6 +96,25 @@ const detailSelect = {
 
 type ItemRow = Prisma.AttemptAnswerGetPayload<{ select: typeof itemSelect }>;
 type DetailRow = Prisma.AttemptAnswerGetPayload<{ select: typeof detailSelect }>;
+
+/** Điểm một bản chấm ghi vào audit_logs: không có transcript, bài làm (dữ liệu cá nhân) */
+function assessmentSnapshot(assessment: {
+  grader: Grader;
+  status: AssessmentStatus;
+  score: Prisma.Decimal | number | null;
+  maxScore: Prisma.Decimal | number;
+  criteria: Prisma.JsonValue | Prisma.InputJsonValue | null;
+  feedback: string | null | undefined;
+}): AuditSnapshot {
+  return {
+    grader: assessment.grader,
+    status: assessment.status,
+    score: assessment.score === null ? null : Number(assessment.score),
+    maxScore: Number(assessment.maxScore),
+    criteria: assessment.criteria ?? null,
+    feedback: assessment.feedback ?? null,
+  };
+}
 
 /** Câu Speaking/Writing của bài đã nộp (giáo viên chỉ chấm được các câu này) */
 function openAnswerWhere(user: AuthUser, scope: 'ALL' | 'MINE', skill?: Skill) {
@@ -185,6 +205,7 @@ export class TeacherAssessmentsService {
     private readonly scoring: AttemptScoringService,
     private readonly media: MediaUrlService,
     private readonly notifications: AttemptNotificationsService,
+    private readonly audit: AuditContext,
   ) {}
 
   async list(
@@ -380,6 +401,13 @@ export class TeacherAssessmentsService {
     }
 
     const attemptId = row.attempt.id;
+    // Nhật ký: trước là bản giáo viên cũ, chấm lần đầu thì là bản AI (nếu có)
+    const previous = existing ?? row.assessments.find((item) => item.grader === Grader.AI);
+    this.audit.setEntityId(answerId);
+    if (previous) this.audit.setBefore(assessmentSnapshot(previous));
+    this.audit.setAfter(assessmentSnapshot({ grader: Grader.TEACHER, ...data }));
+    this.audit.setMeta({ attemptId, skill, part });
+
     await this.scoring.refresh(attemptId);
     await this.notifications.teacherReviewed(attemptId, { skill, part, score, maxScore });
     return this.detail(answerId, user);

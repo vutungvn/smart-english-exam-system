@@ -68,7 +68,6 @@ export const ADMIN_PLACEHOLDERS: string[] = [
   'subjects',
   'settings',
   'ai-usage',
-  'audit-logs',
 ];
 
 export function adminNavItem(path: string): AdminNavItem | undefined {

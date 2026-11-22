@@ -43,6 +43,10 @@ export const ErrorCode = {
   USER_ALREADY_LOCKED: 'USER_ALREADY_LOCKED',
   USER_NOT_LOCKED: 'USER_NOT_LOCKED',
 
+  // Nhật ký kiểm toán
+  AUDIT_LOG_NOT_FOUND: 'AUDIT_LOG_NOT_FOUND',
+  AUDIT_EXPORT_TOO_LARGE: 'AUDIT_EXPORT_TOO_LARGE',
+
   // Tệp
   STORAGE_UNAVAILABLE: 'STORAGE_UNAVAILABLE',
   AVATAR_INVALID_IMAGE: 'AVATAR_INVALID_IMAGE',
@@ -236,6 +240,16 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.USER_NOT_LOCKED]: {
     status: HttpStatus.CONFLICT,
     message: 'Tài khoản không ở trạng thái bị khóa',
+  },
+
+  // Nhật ký kiểm toán
+  [ErrorCode.AUDIT_LOG_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy bản ghi nhật ký',
+  },
+  [ErrorCode.AUDIT_EXPORT_TOO_LARGE]: {
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    message: 'Quá nhiều bản ghi để xuất, hãy thu hẹp khoảng thời gian hoặc thêm điều kiện lọc',
   },
 
   // Tệp

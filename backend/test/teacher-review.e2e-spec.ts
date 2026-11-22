@@ -221,6 +221,27 @@ describe('Giáo viên chấm lại Speaking/Writing (e2e, FakeAiProvider)', () =
     expect(edited.status).toBe(200);
     expect((await result(attemptId)).skillScores[0].openRaw).toBe(8);
 
+    // Nhật ký: chỉ lượt lưu thành công; lần đầu "trước" là bản AI, lần sửa là bản giáo viên cũ
+    const logs = await prisma.auditLog.findMany({
+      where: { action: 'assessment.override', entityId: part3 },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(logs).toHaveLength(2);
+    expect(logs[0]).toMatchObject({
+      entity: 'assessment',
+      before: { grader: 'AI', score: 3 },
+      after: {
+        grader: 'TEACHER',
+        score: 1,
+        feedback: 'Trả lời thiếu ý thứ hai, cần nói rõ lý do.',
+      },
+      meta: { attemptId, skill: 'SPEAKING', part: 3 },
+    });
+    expect(logs[1]).toMatchObject({
+      before: { grader: 'TEACHER', score: 1 },
+      after: { grader: 'TEACHER', score: 2, feedback: 'Sửa lại điểm' },
+    });
+
     // Speaking Part 1: bắt buộc 2 điểm con, điểm câu là tổng
     const noSub = await teacher.put(`/teacher/assessments/${part1}`, {
       score: 5,
