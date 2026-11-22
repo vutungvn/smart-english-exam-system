@@ -165,5 +165,16 @@ export const enhancedApi = api.enhanceEndpoints({
       }),
       providesTags: [],
     },
+
+    // Xuất nhật ký kiểm toán: tệp lưu thẳng xuống máy (không giữ Blob trong store). Việc xuất cũng
+    // được ghi nhật ký (audit_log.export) nên invalidatesTags mặc định làm danh sách tải lại
+    exportAuditLogs: {
+      query: (body) => ({
+        url: '/api/v1/admin/audit-logs/export',
+        method: 'POST',
+        body,
+        responseHandler: downloadResponse(`nhat-ky-kiem-toan.${body.format ?? 'xlsx'}`),
+      }),
+    },
   },
 });

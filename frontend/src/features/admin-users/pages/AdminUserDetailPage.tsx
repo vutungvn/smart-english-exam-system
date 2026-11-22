@@ -1,19 +1,21 @@
 import { useState } from 'react';
-import { useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
 import { skipToken } from '@reduxjs/toolkit/query';
-import { Lock, LockOpen, Mail, Pencil, ShieldAlert, UserX } from 'lucide-react';
+import { History, Lock, LockOpen, Mail, Pencil, ShieldAlert, UserX } from 'lucide-react';
 import { toApiError } from '@/api/errors';
 import { useGetAdminUserQuery } from '@/api/generated';
 import { ButtonLink } from '@/components/ButtonLink';
 import { PageHeader } from '@/components/PageHeader';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { UserAvatar } from '@/components/UserAvatar';
 import { adminPath } from '@/features/admin/admin-nav';
+import { entityLogsPath } from '@/features/admin-audit-logs/labels';
 import {
   EmptyState,
   ErrorState,
   SuccessBanner,
 } from '@/features/question-bank/components/ListStates';
+import { cn } from '@/lib/utils';
 import { AccountInfoCard, RoleProfileCard } from '../components/DetailCards';
 import { LoginHistoryCard } from '../components/LoginHistoryCard';
 import { RoleBadge, StatusBadge } from '../components/UserBadges';
@@ -93,6 +95,15 @@ export function AdminUserDetailPage() {
         backTo={{ label: 'Danh sách người dùng', to: LIST_PATH }}
         title="Chi tiết người dùng"
         description="Thông tin tài khoản, hồ sơ và lịch sử đăng nhập"
+        actions={
+          <Link
+            to={entityLogsPath('user', user.id)}
+            className={cn(buttonVariants({ variant: 'outline' }), outlineButton, 'font-semibold')}
+          >
+            <History />
+            Nhật ký thao tác
+          </Link>
+        }
       />
 
       {flash && <SuccessBanner message={flash} onClose={() => setFlash(undefined)} />}

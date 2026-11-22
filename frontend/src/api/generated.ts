@@ -14,6 +14,7 @@ export const addTagTypes = [
   'Progress',
   'AI Explanations',
   'Admin Users',
+  'Admin Audit Logs',
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -700,6 +701,40 @@ const injectedRtkApi = api
           },
         }),
         providesTags: ['Admin Users'],
+      }),
+      listAuditLogs: build.query<ListAuditLogsApiResponse, ListAuditLogsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/audit-logs`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+            from: queryArg['from'],
+            to: queryArg.to,
+            actorId: queryArg.actorId,
+            q: queryArg.q,
+            action: queryArg.action,
+            entity: queryArg.entity,
+            entityId: queryArg.entityId,
+            sort: queryArg.sort,
+          },
+        }),
+        providesTags: ['Admin Audit Logs'],
+      }),
+      getAuditLogFilters: build.query<GetAuditLogFiltersApiResponse, GetAuditLogFiltersApiArg>({
+        query: () => ({ url: `/api/v1/admin/audit-logs/filters` }),
+        providesTags: ['Admin Audit Logs'],
+      }),
+      exportAuditLogs: build.mutation<ExportAuditLogsApiResponse, ExportAuditLogsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/audit-logs/export`,
+          method: 'POST',
+          body: queryArg,
+        }),
+        invalidatesTags: ['Admin Audit Logs'],
+      }),
+      getAuditLog: build.query<GetAuditLogApiResponse, GetAuditLogApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/admin/audit-logs/${queryArg}` }),
+        providesTags: ['Admin Audit Logs'],
       }),
     }),
     overrideExisting: false,
@@ -1450,6 +1485,45 @@ export type GetAdminUserLoginHistoryApiArg = {
   page?: number;
   limit?: number;
 };
+export type ListAuditLogsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AuditLogListItem[];
+  meta: PaginationMetaDto;
+};
+export type ListAuditLogsApiArg = {
+  page?: number;
+  limit?: number;
+  /** Từ thời điểm (ISO 8601, tính cả mốc này) */
+  from?: string;
+  /** Đến thời điểm (ISO 8601, tính cả mốc này) */
+  to?: string;
+  /** Người thực hiện */
+  actorId?: string;
+  /** Tìm người thực hiện theo họ tên hoặc email */
+  q?: string;
+  /** Hành động, ví dụ user.lock */
+  action?: string;
+  /** Loại đối tượng, ví dụ user */
+  entity?: string;
+  /** Mã đối tượng bị tác động */
+  entityId?: string;
+  sort?: 'createdAt:desc' | 'createdAt:asc';
+};
+export type GetAuditLogFiltersApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AuditLogFilterOptions;
+};
+export type GetAuditLogFiltersApiArg = void;
+export type ExportAuditLogsApiResponse = /** status 200 Tệp .csv hoặc .xlsx */ Blob;
+export type ExportAuditLogsApiArg = ExportAuditLogsDto;
+export type GetAuditLogApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AuditLogDetail;
+};
+export type GetAuditLogApiArg = string;
 export type UserStatus = 'PENDING_VERIFICATION' | 'PENDING_APPROVAL' | 'ACTIVE' | 'LOCKED';
 export type RegisterResult = {
   id: string;
@@ -1489,6 +1563,8 @@ export type ErrorCode =
   | 'ADMIN_ACCOUNT_PROTECTED'
   | 'USER_ALREADY_LOCKED'
   | 'USER_NOT_LOCKED'
+  | 'AUDIT_LOG_NOT_FOUND'
+  | 'AUDIT_EXPORT_TOO_LARGE'
   | 'STORAGE_UNAVAILABLE'
   | 'AVATAR_INVALID_IMAGE'
   | 'MEDIA_LINK_INVALID'
@@ -3106,6 +3182,72 @@ export type AdminUpdateUserDto = {
 export type LockUserDto = {
   reason?: string;
 };
+export type AuditLogActor = {
+  id: string;
+  fullName: string;
+  email: string;
+  role: RoleCode;
+};
+export type AuditLogListItem = {
+  id: string;
+  createdAt: string;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  ipAddress: string | null;
+  /** null khi tài khoản thực hiện đã bị xóa */
+  actor: AuditLogActor | null;
+};
+export type AuditFilterOption = {
+  value: string;
+  label: string;
+};
+export type AuditLogFilterOptions = {
+  /** Hành động đã có trong nhật ký */
+  actions: AuditFilterOption[];
+  /** Loại đối tượng đã có trong nhật ký */
+  entities: AuditFilterOption[];
+};
+export type ExportAuditLogsDto = {
+  /** Từ thời điểm (ISO 8601, tính cả mốc này) */
+  from?: string;
+  /** Đến thời điểm (ISO 8601, tính cả mốc này) */
+  to?: string;
+  /** Người thực hiện */
+  actorId?: string;
+  /** Tìm người thực hiện theo họ tên hoặc email */
+  q?: string;
+  /** Hành động, ví dụ user.lock */
+  action?: string;
+  /** Loại đối tượng, ví dụ user */
+  entity?: string;
+  /** Mã đối tượng bị tác động */
+  entityId?: string;
+  format?: 'csv' | 'xlsx';
+};
+export type AuditLogDetail = {
+  id: string;
+  createdAt: string;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  ipAddress: string | null;
+  /** null khi tài khoản thực hiện đã bị xóa */
+  actor: AuditLogActor | null;
+  /** Dữ liệu trước khi thay đổi */
+  before: {
+    [key: string]: any;
+  } | null;
+  /** Dữ liệu sau khi thay đổi */
+  after: {
+    [key: string]: any;
+  } | null;
+  /** Thông tin thêm, ví dụ lý do khóa tài khoản */
+  meta: {
+    [key: string]: any;
+  } | null;
+  userAgent: string | null;
+};
 export const {
   useRegisterMutation,
   useVerifyEmailMutation,
@@ -3195,4 +3337,8 @@ export const {
   useLockAdminUserMutation,
   useUnlockAdminUserMutation,
   useGetAdminUserLoginHistoryQuery,
+  useListAuditLogsQuery,
+  useGetAuditLogFiltersQuery,
+  useExportAuditLogsMutation,
+  useGetAuditLogQuery,
 } = injectedRtkApi;

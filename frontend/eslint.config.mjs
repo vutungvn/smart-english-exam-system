@@ -30,5 +30,12 @@ export default defineConfig(
     rules: { 'react-refresh/only-export-components': 'off' },
   },
 
+  // File do @rtk-query/codegen-openapi sinh: trường JSON tự do (audit before/after) thành
+  // { [key: string]: any }; code tự viết đọc lại bằng Record<string, unknown>
+  {
+    files: ['src/api/generated.ts'],
+    rules: { '@typescript-eslint/no-explicit-any': 'off' },
+  },
+
   prettier,
 );
