@@ -59,4 +59,7 @@ export const redisKeys = {
 
   // Bộ đếm số lần đăng nhập sai theo email; key còn và đạt ngưỡng nghĩa là đang bị khóa
   loginFailures: (email: string) => `rate:login-fail:${email}`,
+
+  // Admin vừa khóa tài khoản: chặn cả access token còn hạn; sống bằng thời hạn access token
+  userLocked: (userId: string) => `user-locked:${userId}`,
 };

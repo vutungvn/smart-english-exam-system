@@ -9,6 +9,11 @@ interface QuestionMediaProps {
   label?: string;
   /** Dòng phụ khi chưa có tệp */
   emptyHint?: string;
+  /**
+   * Bấm ảnh mở ảnh cỡ gốc ở tab mới (mặc định, cho giáo viên soạn đề). Trang làm bài, xem lại của học
+   * viên tắt đi để bấm nhầm không rời khỏi bài
+   */
+  openable?: boolean;
   className?: string;
 }
 
@@ -17,7 +22,14 @@ interface QuestionMediaProps {
  * tránh trình quản lý tải xuống như IDM bắt tệp .mp3).
  * Chưa có tệp thì hiện ô gạch đứt để giáo viên biết Part này cần tệp.
  */
-export function QuestionMedia({ kind, url, label, emptyHint, className }: QuestionMediaProps) {
+export function QuestionMedia({
+  kind,
+  url,
+  label,
+  emptyHint,
+  openable = true,
+  className,
+}: QuestionMediaProps) {
   const Icon = kind === 'audio' ? Headphones : ImageIcon;
   const title = label ?? (kind === 'audio' ? 'Âm thanh' : 'Hình ảnh');
 
@@ -48,16 +60,26 @@ export function QuestionMedia({ kind, url, label, emptyHint, className }: Questi
       </figcaption>
       {kind === 'audio' ? (
         <MediaAudio url={url} />
-      ) : (
+      ) : openable ? (
         <a href={url} target="_blank" rel="noreferrer" title="Mở ảnh cỡ gốc">
-          <img
-            src={url}
-            alt={title}
-            loading="lazy"
-            className="max-h-72 w-full rounded-xl bg-slate-50 object-contain"
-          />
+          <QuestionImage url={url} alt={title} />
         </a>
+      ) : (
+        // Không kéo thả được: kéo ảnh ra thanh tab cũng mở tab mới
+        <QuestionImage url={url} alt={title} draggable={false} />
       )}
     </figure>
+  );
+}
+
+function QuestionImage({ url, alt, draggable }: { url: string; alt: string; draggable?: boolean }) {
+  return (
+    <img
+      src={url}
+      alt={alt}
+      loading="lazy"
+      draggable={draggable}
+      className="max-h-72 w-full rounded-xl bg-slate-50 object-contain"
+    />
   );
 }

@@ -6,9 +6,9 @@ import { WeakTopicsCard } from '@/features/progress/components/WeakTopicsCard';
 import type { ProgressRange } from '@/features/progress/progress-meta';
 import { useAppSelector } from '@/hooks/hooks';
 import { selectCurrentUser } from '@/store/slice/auth-slice';
-import { ActiveCoursesCard } from './components/ActiveCoursesCard';
 import { FlashcardTodayCard } from './components/FlashcardTodayCard';
 import { InProgressExamCard } from './components/InProgressExamCard';
+import { NewExamsCard } from './components/NewExamsCard';
 import { SkillScoreCards } from './components/SkillScoreCards';
 import { WelcomeCard } from './components/WelcomeCard';
 
@@ -17,8 +17,9 @@ const ROW = 'grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]';
 const CHART_RANGES: readonly ProgressRange[] = ['30d', '90d', 'all'];
 
 /**
- * Trang chủ học viên `/app` (theo Stitch, màn "Trang chủ học viên"). Điểm, bài làm dở, biểu đồ,
- * gợi ý luyện tập lấy từ API tiến độ; khóa học, flashcard còn dữ liệu mẫu (chưa có chức năng)
+ * Trang chủ học viên `/app` (theo Stitch, màn "Trang chủ học viên"). Điểm 4 kỹ năng, bài làm dở,
+ * biểu đồ, gợi ý luyện tập lấy từ API tiến độ; đề thi mới lấy từ danh sách đề công khai;
+ * flashcard còn dữ liệu mẫu (chưa có chức năng)
  */
 export function StudentDashboardPage() {
   const user = useAppSelector(selectCurrentUser);
@@ -59,6 +60,7 @@ export function StudentDashboardPage() {
           fullName={user?.fullName}
           trend={trend}
           overview={skills?.overview}
+          openSkills={skills?.openSkills}
           failed={failed}
         />
         <InProgressExamCard />
@@ -85,7 +87,7 @@ export function StudentDashboardPage() {
         )}
       </div>
       <div className={ROW}>
-        <ActiveCoursesCard />
+        <NewExamsCard />
         <FlashcardTodayCard />
       </div>
     </div>

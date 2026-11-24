@@ -1331,6 +1331,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "404": {
             "description": "Lỗi, error.code thuộc: NOT_FOUND",
             "content": {
@@ -1486,7 +1509,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -1501,6 +1524,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ học viên mới đặt được điểm mục tiêu"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -1682,6 +1716,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
             "content": {
@@ -1777,7 +1834,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -1792,6 +1849,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ học viên mới làm bài Speaking"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -1990,6 +2058,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "404": {
             "description": "Lỗi, error.code thuộc: NOT_FOUND",
             "content": {
@@ -2161,6 +2252,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "404": {
             "description": "Lỗi, error.code thuộc: NOT_FOUND",
             "content": {
@@ -2314,6 +2428,29 @@
                       "error": {
                         "code": "UNAUTHORIZED",
                         "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -2808,7 +2945,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -2823,6 +2960,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -2962,7 +3110,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -2988,6 +3136,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ thêm câu vào nhóm do bạn tạo"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -3150,7 +3309,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -3165,6 +3324,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -3336,7 +3506,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -3362,6 +3532,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -3580,7 +3761,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -3606,6 +3787,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -3793,7 +3985,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -3808,6 +4000,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4011,7 +4214,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4026,6 +4229,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4165,7 +4379,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4180,6 +4394,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4319,7 +4544,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4334,6 +4559,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4505,7 +4741,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4531,6 +4767,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4749,7 +4996,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4775,6 +5022,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -4973,7 +5231,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4988,6 +5246,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -5172,7 +5441,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -5187,6 +5456,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -5440,7 +5720,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -5455,6 +5735,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -5696,7 +5987,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -5711,6 +6002,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -5964,7 +6266,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -5979,6 +6281,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Chỉ giáo viên tạo ra mới được sửa hoặc xóa"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -6119,7 +6432,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -6134,6 +6447,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -6290,7 +6614,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -6305,6 +6629,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -6512,7 +6847,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -6527,6 +6862,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -6759,7 +7105,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -6774,6 +7120,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -6981,7 +7338,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -6996,6 +7353,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -7134,7 +7502,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -7149,6 +7517,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -7288,7 +7667,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -7303,6 +7682,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -7473,7 +7863,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -7488,6 +7878,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -7673,7 +8074,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -7688,6 +8089,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -7875,7 +8287,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -7890,6 +8302,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -8040,7 +8463,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -8055,6 +8478,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -8259,7 +8693,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -8274,6 +8708,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -8489,7 +8934,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -8504,6 +8949,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -8732,7 +9188,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -8747,6 +9203,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -8955,7 +9422,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -8970,6 +9437,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -9143,7 +9621,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -9158,6 +9636,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -9354,7 +9843,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -9369,6 +9858,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -9577,7 +10077,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -9592,6 +10092,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -9754,7 +10265,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -9769,6 +10280,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -9931,7 +10453,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -9946,6 +10468,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -10140,7 +10673,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -10155,6 +10688,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -10363,6 +10907,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
             "content": {
@@ -10487,6 +11054,29 @@
                       "error": {
                         "code": "UNAUTHORIZED",
                         "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -10690,7 +11280,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: VOICE_CONSENT_REQUIRED",
+            "description": "Lỗi, error.code thuộc: VOICE_CONSENT_REQUIRED, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -10705,6 +11295,17 @@
                       "error": {
                         "code": "VOICE_CONSENT_REQUIRED",
                         "message": "Bạn cần đồng ý cho hệ thống ghi âm và xử lý giọng nói trước khi làm phần Speaking"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -10893,7 +11494,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -10908,6 +11509,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -11099,7 +11711,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -11114,6 +11726,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -11254,7 +11877,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -11269,6 +11892,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -11466,7 +12100,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -11481,6 +12115,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -11662,7 +12307,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -11677,6 +12322,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -11935,7 +12591,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -11950,6 +12606,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -12214,7 +12881,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -12229,6 +12896,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -12426,7 +13104,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -12441,6 +13119,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -12629,7 +13318,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -12644,6 +13333,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -12838,7 +13538,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -12853,6 +13553,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -13090,7 +13801,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -13105,6 +13816,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -13369,7 +14091,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -13384,6 +14106,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -13537,7 +14270,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -13552,6 +14285,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -13711,7 +14455,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -13726,6 +14470,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -13879,7 +14634,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -13894,6 +14649,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14065,7 +14831,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -14080,6 +14846,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14307,6 +15084,29 @@
               }
             }
           },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
             "content": {
@@ -14393,6 +15193,29 @@
                       "error": {
                         "code": "UNAUTHORIZED",
                         "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14488,6 +15311,29 @@
                       "error": {
                         "code": "UNAUTHORIZED",
                         "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14622,6 +15468,29 @@
                       "error": {
                         "code": "UNAUTHORIZED",
                         "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14793,7 +15662,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -14808,6 +15677,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -14852,7 +15732,7 @@
     },
     "/api/v1/me/progress/skills": {
       "get": {
-        "description": "Tính trên câu trắc nghiệm của các bài đã nộp (câu bỏ trống tính là sai). Chủ đề yếu: đã làm ≥ 5 câu và đúng dưới 80%, yếu nhất trước, tối đa 5 chủ đề.",
+        "description": "Trắc nghiệm (skills, parts, weakTopics): tính trên câu trắc nghiệm của các bài đã nộp (câu bỏ trống tính là sai). Chủ đề yếu: đã làm ≥ 5 câu và đúng dưới 80%, yếu nhất trước, tối đa 5 chủ đề. Speaking/Writing (openSkills, openParts): điểm chấm (giáo viên ưu tiên hơn AI) so với điểm tối đa; câu bỏ trống 0 điểm, câu còn chờ chấm chưa tính.",
         "operationId": "getProgressSkills",
         "parameters": [
           {
@@ -14955,7 +15835,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -14970,6 +15850,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -15118,7 +16009,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -15133,6 +16024,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -15361,7 +16263,7 @@
             }
           },
           "403": {
-            "description": "Lỗi, error.code thuộc: FORBIDDEN",
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -15376,6 +16278,17 @@
                       "error": {
                         "code": "FORBIDDEN",
                         "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
                       }
                     }
                   }
@@ -15415,6 +16328,2619 @@
         "summary": "Lượt dùng AI hôm nay của học viên",
         "tags": [
           "AI Explanations"
+        ]
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "description": "Tài khoản admin không nằm trong danh sách.",
+        "operationId": "listAdminUsers",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Tìm theo họ tên hoặc email (không phân biệt hoa thường)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ManagedRole"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/UserStatus"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "createdAt:desc",
+              "type": "string",
+              "enum": [
+                "createdAt:desc",
+                "createdAt:asc",
+                "lastLoginAt:desc",
+                "lastLoginAt:asc",
+                "fullName:asc",
+                "fullName:desc",
+                "email:asc",
+                "email:desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminUserListItem"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "page",
+                            "message": "page không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Danh sách học viên, giáo viên (tìm kiếm, lọc, phân trang)",
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}": {
+      "get": {
+        "operationId": "getAdminUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminUserDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: ADMIN_ACCOUNT_PROTECTED, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ADMIN_ACCOUNT_PROTECTED": {
+                    "summary": "ADMIN_ACCOUNT_PROTECTED: Không thể thao tác trên tài khoản quản trị viên",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "ADMIN_ACCOUNT_PROTECTED",
+                        "message": "Không thể thao tác trên tài khoản quản trị viên"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: USER_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "USER_NOT_FOUND": {
+                    "summary": "USER_NOT_FOUND: Không tìm thấy người dùng",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "USER_NOT_FOUND",
+                        "message": "Không tìm thấy người dùng"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Chi tiết một người dùng kèm hồ sơ theo vai trò",
+        "tags": [
+          "Admin Users"
+        ]
+      },
+      "patch": {
+        "description": "targetScore chỉ dành cho học viên; organization, specialization chỉ dành cho giáo viên.",
+        "operationId": "updateAdminUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminUserDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "BAD_REQUEST": {
+                    "summary": "BAD_REQUEST: Chỉ giáo viên mới có đơn vị công tác và chuyên môn",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "BAD_REQUEST",
+                        "message": "Chỉ giáo viên mới có đơn vị công tác và chuyên môn"
+                      }
+                    }
+                  },
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "updatedAt",
+                            "message": "updatedAt không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: ADMIN_ACCOUNT_PROTECTED, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ADMIN_ACCOUNT_PROTECTED": {
+                    "summary": "ADMIN_ACCOUNT_PROTECTED: Không thể thao tác trên tài khoản quản trị viên",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "ADMIN_ACCOUNT_PROTECTED",
+                        "message": "Không thể thao tác trên tài khoản quản trị viên"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: USER_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "USER_NOT_FOUND": {
+                    "summary": "USER_NOT_FOUND: Không tìm thấy người dùng",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "USER_NOT_FOUND",
+                        "message": "Không tìm thấy người dùng"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: VERSION_CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VERSION_CONFLICT": {
+                    "summary": "VERSION_CONFLICT: Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "VERSION_CONFLICT",
+                        "message": "Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sửa thông tin người dùng",
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/lock": {
+      "post": {
+        "description": "Đăng xuất người dùng khỏi mọi thiết bị ngay lập tức, kể cả access token còn hạn.",
+        "operationId": "lockAdminUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LockUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminUserDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "reason",
+                            "message": "reason không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: ADMIN_ACCOUNT_PROTECTED, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ADMIN_ACCOUNT_PROTECTED": {
+                    "summary": "ADMIN_ACCOUNT_PROTECTED: Không thể thao tác trên tài khoản quản trị viên",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "ADMIN_ACCOUNT_PROTECTED",
+                        "message": "Không thể thao tác trên tài khoản quản trị viên"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: USER_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "USER_NOT_FOUND": {
+                    "summary": "USER_NOT_FOUND: Không tìm thấy người dùng",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "USER_NOT_FOUND",
+                        "message": "Không tìm thấy người dùng"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: USER_ALREADY_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "USER_ALREADY_LOCKED": {
+                    "summary": "USER_ALREADY_LOCKED: Tài khoản đã bị khóa trước đó",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "USER_ALREADY_LOCKED",
+                        "message": "Tài khoản đã bị khóa trước đó"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Khóa tài khoản",
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/unlock": {
+      "post": {
+        "description": "Trạng thái sau khi mở: chưa xác minh email → PENDING_VERIFICATION; giáo viên chưa được duyệt → PENDING_APPROVAL; còn lại → ACTIVE.",
+        "operationId": "unlockAdminUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminUserDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: ADMIN_ACCOUNT_PROTECTED, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ADMIN_ACCOUNT_PROTECTED": {
+                    "summary": "ADMIN_ACCOUNT_PROTECTED: Không thể thao tác trên tài khoản quản trị viên",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "ADMIN_ACCOUNT_PROTECTED",
+                        "message": "Không thể thao tác trên tài khoản quản trị viên"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: USER_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "USER_NOT_FOUND": {
+                    "summary": "USER_NOT_FOUND: Không tìm thấy người dùng",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "USER_NOT_FOUND",
+                        "message": "Không tìm thấy người dùng"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: USER_NOT_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "USER_NOT_LOCKED": {
+                    "summary": "USER_NOT_LOCKED: Tài khoản không ở trạng thái bị khóa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "USER_NOT_LOCKED",
+                        "message": "Tài khoản không ở trạng thái bị khóa"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mở khóa tài khoản",
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/login-history": {
+      "get": {
+        "operationId": "getAdminUserLoginHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LoginHistoryItem"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: ADMIN_ACCOUNT_PROTECTED, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "ADMIN_ACCOUNT_PROTECTED": {
+                    "summary": "ADMIN_ACCOUNT_PROTECTED: Không thể thao tác trên tài khoản quản trị viên",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "ADMIN_ACCOUNT_PROTECTED",
+                        "message": "Không thể thao tác trên tài khoản quản trị viên"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: USER_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "USER_NOT_FOUND": {
+                    "summary": "USER_NOT_FOUND: Không tìm thấy người dùng",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "USER_NOT_FOUND",
+                        "message": "Không tìm thấy người dùng"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lịch sử đăng nhập của người dùng, mới nhất trước",
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/audit-logs": {
+      "get": {
+        "description": "Mặc định mới nhất trước. Lịch sử thao tác trên một tài khoản: entity=user&entityId=<id>.",
+        "operationId": "listAuditLogs",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Từ thời điểm (ISO 8601, tính cả mốc này)",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-11-01T00:00:00+07:00",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Đến thời điểm (ISO 8601, tính cả mốc này)",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-11-30T23:59:59+07:00",
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorId",
+            "required": false,
+            "in": "query",
+            "description": "Người thực hiện",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Tìm người thực hiện theo họ tên hoặc email",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": false,
+            "in": "query",
+            "description": "Hành động, ví dụ user.lock",
+            "schema": {
+              "example": "user.lock",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "required": false,
+            "in": "query",
+            "description": "Loại đối tượng, ví dụ user",
+            "schema": {
+              "example": "user",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "required": false,
+            "in": "query",
+            "description": "Mã đối tượng bị tác động",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "createdAt:desc",
+              "type": "string",
+              "enum": [
+                "createdAt:desc",
+                "createdAt:asc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AuditLogListItem"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "BAD_REQUEST": {
+                    "summary": "BAD_REQUEST: Thời điểm bắt đầu phải trước thời điểm kết thúc",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "BAD_REQUEST",
+                        "message": "Thời điểm bắt đầu phải trước thời điểm kết thúc"
+                      }
+                    }
+                  },
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "page",
+                            "message": "page không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tra cứu nhật ký kiểm toán (lọc, phân trang)",
+        "tags": [
+          "Admin Audit Logs"
+        ]
+      }
+    },
+    "/api/v1/admin/audit-logs/filters": {
+      "get": {
+        "operationId": "getAuditLogFilters",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AuditLogFilterOptions"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Hành động, loại đối tượng đã có trong nhật ký (cho bộ lọc)",
+        "tags": [
+          "Admin Audit Logs"
+        ]
+      }
+    },
+    "/api/v1/admin/audit-logs/export": {
+      "post": {
+        "description": "Cùng điều kiện lọc với danh sách, tối đa 10000 dòng, mới nhất trước.",
+        "operationId": "exportAuditLogs",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportAuditLogsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tệp .csv hoặc .xlsx",
+            "content": {
+              "text/csv; charset=utf-8": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "from",
+                            "message": "from không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Lỗi, error.code thuộc: AUDIT_EXPORT_TOO_LARGE",
+            "content": {
+              "text/csv; charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUDIT_EXPORT_TOO_LARGE": {
+                    "summary": "AUDIT_EXPORT_TOO_LARGE: Quá nhiều bản ghi để xuất, hãy thu hẹp khoảng thời gian hoặc thêm điều kiện lọc",
+                    "value": {
+                      "success": false,
+                      "status": 422,
+                      "error": {
+                        "code": "AUDIT_EXPORT_TOO_LARGE",
+                        "message": "Quá nhiều bản ghi để xuất, hãy thu hẹp khoảng thời gian hoặc thêm điều kiện lọc"
+                      }
+                    }
+                  }
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUDIT_EXPORT_TOO_LARGE": {
+                    "summary": "AUDIT_EXPORT_TOO_LARGE: Quá nhiều bản ghi để xuất, hãy thu hẹp khoảng thời gian hoặc thêm điều kiện lọc",
+                    "value": {
+                      "success": false,
+                      "status": 422,
+                      "error": {
+                        "code": "AUDIT_EXPORT_TOO_LARGE",
+                        "message": "Quá nhiều bản ghi để xuất, hãy thu hẹp khoảng thời gian hoặc thêm điều kiện lọc"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xuất kết quả tra cứu ra CSV hoặc Excel",
+        "tags": [
+          "Admin Audit Logs"
+        ]
+      }
+    },
+    "/api/v1/admin/audit-logs/{id}": {
+      "get": {
+        "operationId": "getAuditLog",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AuditLogDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: AUDIT_LOG_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "AUDIT_LOG_NOT_FOUND": {
+                    "summary": "AUDIT_LOG_NOT_FOUND: Không tìm thấy bản ghi nhật ký",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "AUDIT_LOG_NOT_FOUND",
+                        "message": "Không tìm thấy bản ghi nhật ký"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Chi tiết một bản ghi: dữ liệu trước và sau khi thay đổi",
+        "tags": [
+          "Admin Audit Logs"
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard/overview": {
+      "get": {
+        "description": "Số \"tổng\" là hiện trạng; số \"trong kỳ\" theo from/to (giờ Việt Nam, tối đa 366 ngày). Số liệu lưu tạm 5 phút; xem generatedAt.",
+        "operationId": "getOverview",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Từ ngày (giờ Việt Nam, tính cả ngày này). Mặc định 29 ngày trước \"to\". Kỳ tối đa 366 ngày",
+            "schema": {
+              "format": "date",
+              "example": "2026-11-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Đến ngày (giờ Việt Nam, tính cả ngày này). Mặc định hôm nay",
+            "schema": {
+              "format": "date",
+              "example": "2026-11-30",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DashboardOverview"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "BAD_REQUEST": {
+                    "summary": "BAD_REQUEST: Ngày bắt đầu phải trước hoặc trùng ngày kết thúc",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "BAD_REQUEST",
+                        "message": "Ngày bắt đầu phải trước hoặc trùng ngày kết thúc"
+                      }
+                    }
+                  },
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "from",
+                            "message": "from không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Chỉ số tổng quan: người dùng, đề thi, lượt làm bài, lượt gọi AI, truy cập",
+        "tags": [
+          "Admin Dashboard"
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard/trends": {
+      "get": {
+        "description": "Đủ mọi mốc trong kỳ, mốc không có dữ liệu là 0. Số liệu lưu tạm 5 phút; xem generatedAt.",
+        "operationId": "getTrends",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Từ ngày (giờ Việt Nam, tính cả ngày này). Mặc định 29 ngày trước \"to\". Kỳ tối đa 366 ngày",
+            "schema": {
+              "format": "date",
+              "example": "2026-11-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Đến ngày (giờ Việt Nam, tính cả ngày này). Mặc định hôm nay",
+            "schema": {
+              "format": "date",
+              "example": "2026-11-30",
+              "type": "string"
+            }
+          },
+          {
+            "name": "granularity",
+            "required": false,
+            "in": "query",
+            "description": "Gom số liệu theo ngày hoặc theo tuần (tuần bắt đầu thứ Hai)",
+            "schema": {
+              "default": "day",
+              "type": "string",
+              "enum": [
+                "day",
+                "week"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DashboardTrends"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: BAD_REQUEST, VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "BAD_REQUEST": {
+                    "summary": "BAD_REQUEST: Ngày bắt đầu phải trước hoặc trùng ngày kết thúc",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "BAD_REQUEST",
+                        "message": "Ngày bắt đầu phải trước hoặc trùng ngày kết thúc"
+                      }
+                    }
+                  },
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "from",
+                            "message": "from không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Dữ liệu biểu đồ xu hướng theo ngày hoặc tuần",
+        "tags": [
+          "Admin Dashboard"
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard/refresh": {
+      "post": {
+        "operationId": "refreshDashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DashboardRefreshResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xóa số liệu đang lưu tạm để lần xem kế tiếp tính lại từ DB",
+        "tags": [
+          "Admin Dashboard"
         ]
       }
     }
@@ -15467,10 +18993,17 @@
           "AUTH_TOO_MANY_LOGIN_ATTEMPTS",
           "AUTH_CURRENT_PASSWORD_INCORRECT",
           "AUTH_PASSWORD_NOT_SET",
+          "AUTH_PASSWORD_CHANGE_REQUIRED",
           "AUTH_GOOGLE_DISABLED",
           "AUTH_GOOGLE_FAILED",
           "AUTH_GOOGLE_EMAIL_UNVERIFIED",
           "AUTH_GOOGLE_STUDENT_ONLY",
+          "USER_NOT_FOUND",
+          "ADMIN_ACCOUNT_PROTECTED",
+          "USER_ALREADY_LOCKED",
+          "USER_NOT_LOCKED",
+          "AUDIT_LOG_NOT_FOUND",
+          "AUDIT_EXPORT_TOO_LARGE",
           "STORAGE_UNAVAILABLE",
           "AVATAR_INVALID_IMAGE",
           "MEDIA_LINK_INVALID",
@@ -21384,6 +24917,118 @@
           "name"
         ]
       },
+      "OpenSkillProgress": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Số lượt câu Speaking/Writing (bỏ trống vẫn tính)"
+          },
+          "scored": {
+            "type": "integer",
+            "description": "Số câu đã có điểm (câu bỏ trống tính 0 điểm)"
+          },
+          "pending": {
+            "type": "integer",
+            "description": "Câu đã trả lời nhưng chưa có điểm (chờ AI chấm hoặc chấm lỗi), chưa tính vào điểm"
+          },
+          "earned": {
+            "type": "number",
+            "description": "Tổng điểm thô của các câu đã có điểm"
+          },
+          "max": {
+            "type": "number",
+            "description": "Tổng điểm tối đa của các câu đã có điểm"
+          },
+          "percent": {
+            "type": "number",
+            "nullable": true,
+            "description": "% điểm đạt (earned / max); null khi chưa có câu nào có điểm"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          }
+        },
+        "required": [
+          "total",
+          "scored",
+          "pending",
+          "earned",
+          "max",
+          "percent",
+          "skill"
+        ]
+      },
+      "OpenPartProgress": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Số lượt câu Speaking/Writing (bỏ trống vẫn tính)"
+          },
+          "scored": {
+            "type": "integer",
+            "description": "Số câu đã có điểm (câu bỏ trống tính 0 điểm)"
+          },
+          "pending": {
+            "type": "integer",
+            "description": "Câu đã trả lời nhưng chưa có điểm (chờ AI chấm hoặc chấm lỗi), chưa tính vào điểm"
+          },
+          "earned": {
+            "type": "number",
+            "description": "Tổng điểm thô của các câu đã có điểm"
+          },
+          "max": {
+            "type": "number",
+            "description": "Tổng điểm tối đa của các câu đã có điểm"
+          },
+          "percent": {
+            "type": "number",
+            "nullable": true,
+            "description": "% điểm đạt (earned / max); null khi chưa có câu nào có điểm"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "part": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "example": "Respond to a written request"
+          },
+          "maxScore": {
+            "type": "number",
+            "description": "Điểm tối đa một câu của dạng câu (Writing P1: 3…)"
+          },
+          "average": {
+            "type": "number",
+            "nullable": true,
+            "description": "Điểm trung bình một câu theo thang của dạng câu; null khi chưa có câu nào có điểm"
+          }
+        },
+        "required": [
+          "total",
+          "scored",
+          "pending",
+          "earned",
+          "max",
+          "percent",
+          "skill",
+          "part",
+          "name",
+          "maxScore",
+          "average"
+        ]
+      },
       "TopicProgress": {
         "type": "object",
         "properties": {
@@ -21475,6 +25120,20 @@
               "$ref": "#/components/schemas/PartProgress"
             }
           },
+          "openSkills": {
+            "description": "Speaking/Writing theo kỹ năng (chỉ kỹ năng đã làm), Speaking trước Writing",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpenSkillProgress"
+            }
+          },
+          "openParts": {
+            "description": "Speaking/Writing theo Part, thứ tự trong đề",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpenPartProgress"
+            }
+          },
           "weakTopics": {
             "description": "Chủ đề cần luyện thêm: đã làm ≥ minTopicQuestions câu và tỉ lệ đúng < weakAccuracy; yếu nhất trước, tối đa 5",
             "type": "array",
@@ -21497,6 +25156,8 @@
           "overview",
           "skills",
           "parts",
+          "openSkills",
+          "openParts",
           "weakTopics",
           "minTopicQuestions",
           "weakAccuracy"
@@ -21637,6 +25298,845 @@
         },
         "required": [
           "explanation"
+        ]
+      },
+      "ManagedRole": {
+        "type": "string",
+        "enum": [
+          "STUDENT",
+          "TEACHER"
+        ]
+      },
+      "AdminUserListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "example": "hocvien@gmail.com"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Nguyễn Văn A"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ManagedRole"
+              }
+            ]
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserStatus"
+              }
+            ]
+          },
+          "emailVerifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "avatarUrl",
+          "role",
+          "status",
+          "emailVerifiedAt",
+          "lastLoginAt",
+          "createdAt"
+        ]
+      },
+      "AdminTeacherProfile": {
+        "type": "object",
+        "properties": {
+          "organization": {
+            "type": "string",
+            "example": "Trường THPT A"
+          },
+          "specialization": {
+            "type": "string",
+            "example": "TOEIC Listening"
+          },
+          "isApproved": {
+            "type": "boolean",
+            "description": "Đã được admin duyệt hồ sơ giáo viên"
+          }
+        },
+        "required": [
+          "organization",
+          "specialization",
+          "isApproved"
+        ]
+      },
+      "AdminUserDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "example": "hocvien@gmail.com"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Nguyễn Văn A"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ManagedRole"
+              }
+            ]
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserStatus"
+              }
+            ]
+          },
+          "emailVerifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "hasPassword": {
+            "type": "boolean",
+            "description": "false: tài khoản chỉ đăng nhập bằng Google"
+          },
+          "googleLinked": {
+            "type": "boolean",
+            "description": "true: đã liên kết đăng nhập bằng Google"
+          },
+          "mustChangePassword": {
+            "type": "boolean"
+          },
+          "termsAcceptedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Gửi lại trong PATCH để kiểm tra xung đột"
+          },
+          "student": {
+            "nullable": true,
+            "description": "null nếu không phải học viên",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StudentProfile"
+              }
+            ]
+          },
+          "teacher": {
+            "nullable": true,
+            "description": "null nếu không phải giáo viên",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminTeacherProfile"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "avatarUrl",
+          "role",
+          "status",
+          "emailVerifiedAt",
+          "lastLoginAt",
+          "createdAt",
+          "hasPassword",
+          "googleLinked",
+          "mustChangePassword",
+          "termsAcceptedAt",
+          "updatedAt",
+          "student",
+          "teacher"
+        ]
+      },
+      "AdminUpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Nguyễn Văn A",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "targetScore": {
+            "type": "number",
+            "example": 750,
+            "minimum": 10,
+            "maximum": 990,
+            "description": "Điểm TOEIC mục tiêu, bước 5 điểm (chỉ học viên)"
+          },
+          "organization": {
+            "type": "string",
+            "example": "Trường THPT A",
+            "maxLength": 255,
+            "description": "Chỉ giáo viên"
+          },
+          "specialization": {
+            "type": "string",
+            "example": "TOEIC Listening",
+            "maxLength": 255,
+            "description": "Chỉ giáo viên"
+          }
+        },
+        "required": [
+          "updatedAt"
+        ]
+      },
+      "LockUserDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "example": "Chia sẻ tài khoản cho người khác"
+          }
+        }
+      },
+      "AuditLogActor": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Quản trị viên"
+          },
+          "email": {
+            "type": "string",
+            "example": "admin@smartexam.vn"
+          },
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoleCode"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "email",
+          "role"
+        ]
+      },
+      "AuditLogListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string",
+            "example": "user.lock"
+          },
+          "entity": {
+            "type": "string",
+            "example": "user"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "ipAddress": {
+            "type": "string",
+            "nullable": true,
+            "example": "127.0.0.1"
+          },
+          "actor": {
+            "nullable": true,
+            "description": "null khi tài khoản thực hiện đã bị xóa",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuditLogActor"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "action",
+          "entity",
+          "entityId",
+          "ipAddress",
+          "actor"
+        ]
+      },
+      "AuditFilterOption": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "example": "user.lock"
+          },
+          "label": {
+            "type": "string",
+            "example": "Khóa tài khoản"
+          }
+        },
+        "required": [
+          "value",
+          "label"
+        ]
+      },
+      "AuditLogFilterOptions": {
+        "type": "object",
+        "properties": {
+          "actions": {
+            "description": "Hành động đã có trong nhật ký",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditFilterOption"
+            }
+          },
+          "entities": {
+            "description": "Loại đối tượng đã có trong nhật ký",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditFilterOption"
+            }
+          }
+        },
+        "required": [
+          "actions",
+          "entities"
+        ]
+      },
+      "ExportAuditLogsDto": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Từ thời điểm (ISO 8601, tính cả mốc này)",
+            "example": "2026-11-01T00:00:00+07:00"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Đến thời điểm (ISO 8601, tính cả mốc này)",
+            "example": "2026-11-30T23:59:59+07:00"
+          },
+          "actorId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Người thực hiện"
+          },
+          "q": {
+            "type": "string",
+            "description": "Tìm người thực hiện theo họ tên hoặc email"
+          },
+          "action": {
+            "type": "string",
+            "description": "Hành động, ví dụ user.lock",
+            "example": "user.lock"
+          },
+          "entity": {
+            "type": "string",
+            "description": "Loại đối tượng, ví dụ user",
+            "example": "user"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Mã đối tượng bị tác động"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "csv",
+              "xlsx"
+            ],
+            "default": "xlsx"
+          }
+        }
+      },
+      "AuditLogDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string",
+            "example": "user.lock"
+          },
+          "entity": {
+            "type": "string",
+            "example": "user"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "ipAddress": {
+            "type": "string",
+            "nullable": true,
+            "example": "127.0.0.1"
+          },
+          "actor": {
+            "nullable": true,
+            "description": "null khi tài khoản thực hiện đã bị xóa",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuditLogActor"
+              }
+            ]
+          },
+          "before": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true,
+            "description": "Dữ liệu trước khi thay đổi"
+          },
+          "after": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true,
+            "description": "Dữ liệu sau khi thay đổi"
+          },
+          "meta": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true,
+            "description": "Thông tin thêm, ví dụ lý do khóa tài khoản"
+          },
+          "userAgent": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "action",
+          "entity",
+          "entityId",
+          "ipAddress",
+          "actor",
+          "before",
+          "after",
+          "meta",
+          "userAgent"
+        ]
+      },
+      "DashboardRangeInfo": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-10-26"
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-11-24"
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ]
+      },
+      "DashboardUsersByRole": {
+        "type": "object",
+        "properties": {
+          "STUDENT": {
+            "type": "number",
+            "example": 120
+          },
+          "TEACHER": {
+            "type": "number",
+            "example": 8
+          },
+          "ADMIN": {
+            "type": "number",
+            "example": 1
+          }
+        },
+        "required": [
+          "STUDENT",
+          "TEACHER",
+          "ADMIN"
+        ]
+      },
+      "DashboardUserStats": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Tổng số tài khoản hiện có",
+            "example": 129
+          },
+          "byRole": {
+            "$ref": "#/components/schemas/DashboardUsersByRole"
+          },
+          "newInRange": {
+            "type": "number",
+            "description": "Tài khoản tạo trong kỳ",
+            "example": 15
+          },
+          "locked": {
+            "type": "number",
+            "description": "Tài khoản đang bị khóa",
+            "example": 2
+          },
+          "pendingApproval": {
+            "type": "number",
+            "description": "Giáo viên chờ admin duyệt",
+            "example": 3
+          }
+        },
+        "required": [
+          "total",
+          "byRole",
+          "newInRange",
+          "locked",
+          "pendingApproval"
+        ]
+      },
+      "DashboardExamStats": {
+        "type": "object",
+        "properties": {
+          "published": {
+            "type": "number",
+            "example": 12
+          },
+          "draft": {
+            "type": "number",
+            "example": 4
+          },
+          "unpublished": {
+            "type": "number",
+            "example": 1
+          }
+        },
+        "required": [
+          "published",
+          "draft",
+          "unpublished"
+        ]
+      },
+      "DashboardQuestionStats": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Câu hỏi chưa bị xóa",
+            "example": 850
+          },
+          "active": {
+            "type": "number",
+            "description": "Câu hỏi đang dùng (ACTIVE)",
+            "example": 800
+          }
+        },
+        "required": [
+          "total",
+          "active"
+        ]
+      },
+      "DashboardContentStats": {
+        "type": "object",
+        "properties": {
+          "exams": {
+            "description": "Đề thi chưa bị xóa theo trạng thái",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DashboardExamStats"
+              }
+            ]
+          },
+          "questions": {
+            "$ref": "#/components/schemas/DashboardQuestionStats"
+          }
+        },
+        "required": [
+          "exams",
+          "questions"
+        ]
+      },
+      "DashboardAttemptStats": {
+        "type": "object",
+        "properties": {
+          "started": {
+            "type": "number",
+            "description": "Lượt bắt đầu làm bài trong kỳ, tính cả lượt đã hủy",
+            "example": 340
+          },
+          "completed": {
+            "type": "number",
+            "description": "Trong số đó, lượt đã nộp bài",
+            "example": 290
+          },
+          "completionRate": {
+            "type": "number",
+            "nullable": true,
+            "description": "completed / started (%): lượt hủy hoặc đang làm dở kéo tỉ lệ xuống; null khi chưa có lượt nào",
+            "example": 85.3
+          },
+          "averageToeicScore": {
+            "type": "number",
+            "nullable": true,
+            "description": "Điểm TB thang 990 của lượt làm cả đề TOEIC LR nộp trong kỳ; null khi chưa có lượt nào",
+            "example": 615
+          }
+        },
+        "required": [
+          "started",
+          "completed",
+          "completionRate",
+          "averageToeicScore"
+        ]
+      },
+      "DashboardAiStats": {
+        "type": "object",
+        "properties": {
+          "calls": {
+            "type": "number",
+            "description": "Lượt gọi AI trong kỳ",
+            "example": 520
+          },
+          "failed": {
+            "type": "number",
+            "description": "Lượt lỗi hoặc AI trả sai định dạng",
+            "example": 12
+          },
+          "failureRate": {
+            "type": "number",
+            "nullable": true,
+            "description": "failed / calls (%), null khi chưa có lượt nào",
+            "example": 2.3
+          },
+          "inputTokens": {
+            "type": "number",
+            "example": 1250000
+          },
+          "outputTokens": {
+            "type": "number",
+            "example": 340000
+          }
+        },
+        "required": [
+          "calls",
+          "failed",
+          "failureRate",
+          "inputTokens",
+          "outputTokens"
+        ]
+      },
+      "DashboardAccessStats": {
+        "type": "object",
+        "properties": {
+          "logins": {
+            "type": "number",
+            "description": "Lượt đăng nhập thành công trong kỳ",
+            "example": 1024
+          },
+          "activeUsers": {
+            "type": "number",
+            "description": "Số tài khoản có đăng nhập trong kỳ",
+            "example": 98
+          }
+        },
+        "required": [
+          "logins",
+          "activeUsers"
+        ]
+      },
+      "DashboardOverview": {
+        "type": "object",
+        "properties": {
+          "range": {
+            "$ref": "#/components/schemas/DashboardRangeInfo"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Thời điểm tổng hợp (có thể lấy từ cache)"
+          },
+          "users": {
+            "$ref": "#/components/schemas/DashboardUserStats"
+          },
+          "content": {
+            "$ref": "#/components/schemas/DashboardContentStats"
+          },
+          "attempts": {
+            "$ref": "#/components/schemas/DashboardAttemptStats"
+          },
+          "ai": {
+            "$ref": "#/components/schemas/DashboardAiStats"
+          },
+          "access": {
+            "$ref": "#/components/schemas/DashboardAccessStats"
+          }
+        },
+        "required": [
+          "range",
+          "generatedAt",
+          "users",
+          "content",
+          "attempts",
+          "ai",
+          "access"
+        ]
+      },
+      "DashboardGranularity": {
+        "type": "string",
+        "enum": [
+          "day",
+          "week"
+        ]
+      },
+      "DashboardTrendPoint": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "format": "date",
+            "description": "Ngày đầu mốc: chính ngày đó, hoặc thứ Hai của tuần",
+            "example": "2026-11-23"
+          },
+          "newUsers": {
+            "type": "number",
+            "example": 4
+          },
+          "attempts": {
+            "type": "number",
+            "description": "Lượt bắt đầu làm bài, tính cả lượt đã hủy",
+            "example": 21
+          },
+          "aiCalls": {
+            "type": "number",
+            "example": 35
+          },
+          "logins": {
+            "type": "number",
+            "description": "Lượt đăng nhập thành công",
+            "example": 60
+          }
+        },
+        "required": [
+          "bucket",
+          "newUsers",
+          "attempts",
+          "aiCalls",
+          "logins"
+        ]
+      },
+      "DashboardTrends": {
+        "type": "object",
+        "properties": {
+          "range": {
+            "$ref": "#/components/schemas/DashboardRangeInfo"
+          },
+          "granularity": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DashboardGranularity"
+              }
+            ]
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "points": {
+            "description": "Tăng dần, đủ mọi mốc trong kỳ",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardTrendPoint"
+            }
+          }
+        },
+        "required": [
+          "range",
+          "granularity",
+          "generatedAt",
+          "points"
+        ]
+      },
+      "DashboardRefreshResult": {
+        "type": "object",
+        "properties": {
+          "refreshedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "refreshedAt"
         ]
       }
     }

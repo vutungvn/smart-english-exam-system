@@ -8,18 +8,37 @@ import {
   type AiQuota,
   type ReviewQuestion,
 } from '@/api/generated';
+import { fillBlankNumbers } from '@/features/question-bank/blanks';
 import { cn } from '@/lib/utils';
 
 interface AiExplanationPanelProps {
   attemptId: string;
   question: ReviewQuestion;
+  /** Reading Part 6: AI ghi chỗ trống dạng [n] (lời giải thích dùng chung mọi đề), đổi sang số câu */
+  blanks?: Map<number, number>;
+}
+
+/** Đổi [n] sang số câu của đề trong mọi đoạn chữ tiếng Việt của lời giải thích */
+function withBlankNumbers(
+  explanation: AiExplanation,
+  blanks: Map<number, number> | undefined,
+): AiExplanation {
+  if (!blanks?.size) return explanation;
+  const fill = (text: string) => fillBlankNumbers(text, blanks);
+  return {
+    ...explanation,
+    summary: fill(explanation.summary),
+    options: explanation.options.map((item) => ({ ...item, reason: fill(item.reason) })),
+    keyPoints: explanation.keyPoints.map((point) => ({ ...point, note: fill(point.note) })),
+    tip: fill(explanation.tip),
+  };
 }
 
 /**
  * "Giải thích bằng AI" của một câu trắc nghiệm ở màn xem lại. Chỉ gọi API khi học viên bấm: AI sinh
  * mới thì tốn 1 lượt trong ngày, câu đã có lời giải thích sẵn (người khác hỏi trước) thì không tốn
  */
-export function AiExplanationPanel({ attemptId, question }: AiExplanationPanelProps) {
+export function AiExplanationPanel({ attemptId, question, blanks }: AiExplanationPanelProps) {
   const [requested, setRequested] = useState(false);
   const { data, error, isFetching, refetch } = useGetAiExplanationQuery(
     { id: attemptId, examQuestionId: question.examQuestionId },
@@ -28,7 +47,11 @@ export function AiExplanationPanel({ attemptId, question }: AiExplanationPanelPr
   const quota = useGetMyAiQuotasQuery().data?.data.explanation;
   const explanation = data?.data;
 
-  if (explanation) return <ExplanationView explanation={explanation} question={question} />;
+  if (explanation) {
+    return (
+      <ExplanationView explanation={withBlankNumbers(explanation, blanks)} question={question} />
+    );
+  }
 
   if (isFetching) {
     return (

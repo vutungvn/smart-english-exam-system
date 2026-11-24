@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { PASSAGE_BLANK } from '../blanks';
 
 // Dòng thoại "M: ...", "W2: ..." theo cách viết transcript TOEIC (M: nam, W: nữ)
 const SPEAKER_LINE = /^\s*([MW])(\d?)\s*:\s*(.*)$/;
@@ -48,8 +50,19 @@ export function TranscriptView({ text, className }: { text: string; className?: 
   );
 }
 
-/** Đoạn văn, bảng thông tin: giữ xuống dòng và khoảng trắng như lúc nhập */
-export function PassageView({ text, className }: { text: string; className?: string }) {
+/**
+ * Đoạn văn, bảng thông tin: giữ xuống dòng và khoảng trắng như lúc nhập.
+ * Có `blanks` (Reading Part 6) thì dấu [n] hiện thành ô ghi số câu của đề.
+ */
+export function PassageView({
+  text,
+  blanks,
+  className,
+}: {
+  text: string;
+  blanks?: Map<number, number>;
+  className?: string;
+}) {
   return (
     <p
       className={cn(
@@ -57,7 +70,28 @@ export function PassageView({ text, className }: { text: string; className?: str
         className,
       )}
     >
-      {text}
+      {blanks?.size ? renderBlanks(text, blanks) : text}
     </p>
   );
+}
+
+function renderBlanks(text: string, blanks: Map<number, number>): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  let cursor = 0;
+  for (const match of text.matchAll(PASSAGE_BLANK)) {
+    const number = blanks.get(Number(match[1]));
+    if (number === undefined) continue; // [n] không ứng với câu nào: giữ nguyên văn bản
+    nodes.push(text.slice(cursor, match.index));
+    nodes.push(
+      <span
+        key={match.index}
+        className="mx-0.5 inline-block min-w-14 rounded-md border-b-2 border-primary bg-primary/10 px-2 text-center font-bold text-brand tabular-nums"
+      >
+        {number}
+      </span>,
+    );
+    cursor = match.index + match[0].length;
+  }
+  nodes.push(text.slice(cursor));
+  return nodes;
 }

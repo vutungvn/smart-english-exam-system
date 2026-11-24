@@ -10,7 +10,7 @@ const ROLES = [
   {
     code: RoleCode.TEACHER,
     name: 'Giáo viên',
-    description: 'Quản lý khóa học, ngân hàng câu hỏi và đề thi',
+    description: 'Quản lý ngân hàng câu hỏi và đề thi',
   },
   {
     code: RoleCode.ADMIN,

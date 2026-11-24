@@ -49,7 +49,8 @@ function commonErrors(document: OpenAPIObject, operation: OperationObject): ApiE
   const errors: ApiErrorSpec[] = [];
 
   const needsBearer = operation.security?.some((requirement) => 'bearer' in requirement);
-  if (needsBearer) errors.push(ErrorCode.UNAUTHORIZED);
+  // Tài khoản bị buộc đổi mật khẩu gọi route khác hồ sơ, đổi mật khẩu → 403 (JwtAuthGuard)
+  if (needsBearer) errors.push(ErrorCode.UNAUTHORIZED, ErrorCode.AUTH_PASSWORD_CHANGE_REQUIRED);
 
   const field = firstInputField(document, operation);
   if (field) {
@@ -65,7 +66,7 @@ function commonErrors(document: OpenAPIObject, operation: OperationObject): ApiE
 
 /**
  * Thêm lỗi chung cho mọi route, để từng route chỉ phải khai báo lỗi nghiệp vụ bằng @ApiErrors:
- * - cần access token (@ApiBearerAuth) → 401 UNAUTHORIZED
+ * - cần access token (@ApiBearerAuth) → 401 UNAUTHORIZED, 403 AUTH_PASSWORD_CHANGE_REQUIRED
  * - có body hoặc tham số (path/query) → 400 VALIDATION_ERROR (có details theo trường của route)
  * - mọi route → 500 INTERNAL_SERVER_ERROR
  * Status route đã khai báo bằng @ApiErrors thì gộp thêm ví dụ vào, không ghi đè ví dụ của route.

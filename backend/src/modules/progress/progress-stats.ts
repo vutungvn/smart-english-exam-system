@@ -1,7 +1,16 @@
 import { Skill } from '../../generated/prisma/enums.js';
+import { openMaxScore } from '../attempts/grading/toeic-sw-conversion.js';
 import { partOrder } from '../exams/exam-structure.js';
 import { findPartRule } from '../questions/toeic-parts.js';
-import type { AccuracyStat, PartProgress, SkillProgress, TopicProgress } from './progress.types.js';
+import type {
+  AccuracyStat,
+  OpenPartProgress,
+  OpenScoreStat,
+  OpenSkillProgress,
+  PartProgress,
+  SkillProgress,
+  TopicProgress,
+} from './progress.types.js';
 
 export const PROGRESS_RANGES = ['30d', '90d', '1y', 'all'] as const;
 export type ProgressRange = (typeof PROGRESS_RANGES)[number];
@@ -55,8 +64,8 @@ function sum(rows: ScopeRow[]): AccuracyStat {
   };
 }
 
-function groupBy<K>(rows: ScopeRow[], key: (row: ScopeRow) => K): Map<K, ScopeRow[]> {
-  const groups = new Map<K, ScopeRow[]>();
+function groupBy<T, K>(rows: T[], key: (row: T) => K): Map<K, T[]> {
+  const groups = new Map<K, T[]>();
   for (const row of rows) {
     const k = key(row);
     groups.set(k, [...(groups.get(k) ?? []), row]);
@@ -129,4 +138,56 @@ export function weakTopics(
 /** Tổng câu trắc nghiệm của mọi kỹ năng */
 export function totalStat(rows: ScopeRow[]): AccuracyStat {
   return sum(rows);
+}
+
+/** Một nhóm câu Speaking/Writing (kỹ năng, Part) trong các bài đã nộp */
+export interface OpenScopeRow {
+  skill: Skill;
+  part: number;
+  /** Số lượt câu (bỏ trống vẫn tính) */
+  total: number;
+  /** Câu đã trả lời nhưng chưa có điểm (chờ AI chấm hoặc chấm lỗi) */
+  pending: number;
+  /** Tổng điểm các câu đã có điểm (câu bỏ trống 0 điểm) */
+  earned: number;
+}
+
+const round2 = (value: number) => Math.round(value * 100) / 100;
+
+/** Câu chờ chấm chưa tính vào điểm đạt lẫn điểm tối đa, giống cách tính % lúc chấm bài */
+function openSum(rows: OpenScopeRow[]): OpenScoreStat {
+  const total = rows.reduce((acc, row) => acc + row.total, 0);
+  const pending = rows.reduce((acc, row) => acc + row.pending, 0);
+  const earned = round2(rows.reduce((acc, row) => acc + row.earned, 0));
+  // Mỗi Part một thang điểm riêng (Writing P1 0–3, P3 0–5…) nên nhân theo từng dòng
+  const max = rows.reduce(
+    (acc, row) => acc + (row.total - row.pending) * openMaxScore(row.skill, row.part),
+    0,
+  );
+  return { total, scored: total - pending, pending, earned, max, percent: percentOf(earned, max) };
+}
+
+/** Speaking/Writing theo kỹ năng, Speaking trước Writing */
+export function openSkillStats(rows: OpenScopeRow[]): OpenSkillProgress[] {
+  return [...groupBy(rows, (row) => row.skill)]
+    .map(([skill, items]) => ({ skill, ...openSum(items) }))
+    .sort((a, b) => SKILL_ORDER.indexOf(a.skill) - SKILL_ORDER.indexOf(b.skill));
+}
+
+/** Speaking/Writing theo Part, đúng thứ tự trong đề */
+export function openPartStats(rows: OpenScopeRow[]): OpenPartProgress[] {
+  return [...groupBy(rows, (row) => `${row.skill}-${row.part}`)]
+    .map(([, items]) => {
+      const { skill, part } = items[0];
+      const stat = openSum(items);
+      return {
+        skill,
+        part,
+        name: findPartRule(skill, part)?.name ?? `Part ${part}`,
+        maxScore: openMaxScore(skill, part),
+        average: stat.scored > 0 ? round2(stat.earned / stat.scored) : null,
+        ...stat,
+      };
+    })
+    .sort((a, b) => partOrder(a.skill, a.part) - partOrder(b.skill, b.part));
 }

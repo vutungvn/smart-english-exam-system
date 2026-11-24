@@ -104,4 +104,22 @@ describe('explanationPrompt', () => {
     expect(prompt).toContain('Audio transcript:');
     expect(prompt).toContain('M: Where is the meeting?');
   });
+
+  it('Reading Part 6 dặn AI giữ đúng dấu chỗ trống [n]; Part khác không có', () => {
+    const part6 = explanationPrompt(
+      source({
+        part: 6,
+        content: 'Chọn phương án phù hợp nhất cho chỗ trống [1].',
+        group: {
+          passage: 'Your subscription will -------[1]------- soon.',
+          transcript: null,
+          imageKey: null,
+        },
+      }),
+      false,
+    );
+    expect(part6).toContain('"chỗ trống [2]"');
+    expect(part6).toContain('Passage:');
+    expect(explanationPrompt(source(), false)).not.toContain('square brackets');
+  });
 });

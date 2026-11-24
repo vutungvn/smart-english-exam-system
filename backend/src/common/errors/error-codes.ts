@@ -31,10 +31,21 @@ export const ErrorCode = {
   AUTH_TOO_MANY_LOGIN_ATTEMPTS: 'AUTH_TOO_MANY_LOGIN_ATTEMPTS',
   AUTH_CURRENT_PASSWORD_INCORRECT: 'AUTH_CURRENT_PASSWORD_INCORRECT',
   AUTH_PASSWORD_NOT_SET: 'AUTH_PASSWORD_NOT_SET',
+  AUTH_PASSWORD_CHANGE_REQUIRED: 'AUTH_PASSWORD_CHANGE_REQUIRED',
   AUTH_GOOGLE_DISABLED: 'AUTH_GOOGLE_DISABLED',
   AUTH_GOOGLE_FAILED: 'AUTH_GOOGLE_FAILED',
   AUTH_GOOGLE_EMAIL_UNVERIFIED: 'AUTH_GOOGLE_EMAIL_UNVERIFIED',
   AUTH_GOOGLE_STUDENT_ONLY: 'AUTH_GOOGLE_STUDENT_ONLY',
+
+  // Quản lý người dùng (admin)
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  ADMIN_ACCOUNT_PROTECTED: 'ADMIN_ACCOUNT_PROTECTED',
+  USER_ALREADY_LOCKED: 'USER_ALREADY_LOCKED',
+  USER_NOT_LOCKED: 'USER_NOT_LOCKED',
+
+  // Nhật ký kiểm toán
+  AUDIT_LOG_NOT_FOUND: 'AUDIT_LOG_NOT_FOUND',
+  AUDIT_EXPORT_TOO_LARGE: 'AUDIT_EXPORT_TOO_LARGE',
 
   // Tệp
   STORAGE_UNAVAILABLE: 'STORAGE_UNAVAILABLE',
@@ -168,6 +179,10 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
     status: HttpStatus.FORBIDDEN,
     message: 'Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên',
   },
+  [ErrorCode.AUTH_PASSWORD_CHANGE_REQUIRED]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống',
+  },
   [ErrorCode.AUTH_REFRESH_TOKEN_INVALID]: {
     status: HttpStatus.UNAUTHORIZED,
     message: 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại',
@@ -208,6 +223,35 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
     status: HttpStatus.FORBIDDEN,
     message: 'Đăng nhập bằng Google chỉ dành cho học viên, vui lòng dùng email và mật khẩu',
   },
+
+  // Quản lý người dùng (admin)
+  [ErrorCode.USER_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy người dùng',
+  },
+  [ErrorCode.ADMIN_ACCOUNT_PROTECTED]: {
+    status: HttpStatus.FORBIDDEN,
+    message: 'Không thể thao tác trên tài khoản quản trị viên',
+  },
+  [ErrorCode.USER_ALREADY_LOCKED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Tài khoản đã bị khóa trước đó',
+  },
+  [ErrorCode.USER_NOT_LOCKED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Tài khoản không ở trạng thái bị khóa',
+  },
+
+  // Nhật ký kiểm toán
+  [ErrorCode.AUDIT_LOG_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy bản ghi nhật ký',
+  },
+  [ErrorCode.AUDIT_EXPORT_TOO_LARGE]: {
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    message: 'Quá nhiều bản ghi để xuất, hãy thu hẹp khoảng thời gian hoặc thêm điều kiện lọc',
+  },
+
   // Tệp
   [ErrorCode.STORAGE_UNAVAILABLE]: {
     status: HttpStatus.SERVICE_UNAVAILABLE,

@@ -13,6 +13,9 @@ export const addTagTypes = [
   'Notifications',
   'Progress',
   'AI Explanations',
+  'Admin Users',
+  'Admin Audit Logs',
+  'Admin Dashboard',
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -648,6 +651,116 @@ const injectedRtkApi = api
       getMyAiQuotas: build.query<GetMyAiQuotasApiResponse, GetMyAiQuotasApiArg>({
         query: () => ({ url: `/api/v1/me/ai-quotas` }),
         providesTags: ['AI Explanations'],
+      }),
+      listAdminUsers: build.query<ListAdminUsersApiResponse, ListAdminUsersApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/users`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+            q: queryArg.q,
+            role: queryArg.role,
+            status: queryArg.status,
+            sort: queryArg.sort,
+          },
+        }),
+        providesTags: ['Admin Users'],
+      }),
+      getAdminUser: build.query<GetAdminUserApiResponse, GetAdminUserApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/admin/users/${queryArg}` }),
+        providesTags: ['Admin Users'],
+      }),
+      updateAdminUser: build.mutation<UpdateAdminUserApiResponse, UpdateAdminUserApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/users/${queryArg.id}`,
+          method: 'PATCH',
+          body: queryArg.adminUpdateUserDto,
+        }),
+        invalidatesTags: ['Admin Users'],
+      }),
+      lockAdminUser: build.mutation<LockAdminUserApiResponse, LockAdminUserApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/users/${queryArg.id}/lock`,
+          method: 'POST',
+          body: queryArg.lockUserDto,
+        }),
+        invalidatesTags: ['Admin Users'],
+      }),
+      unlockAdminUser: build.mutation<UnlockAdminUserApiResponse, UnlockAdminUserApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/admin/users/${queryArg}/unlock`, method: 'POST' }),
+        invalidatesTags: ['Admin Users'],
+      }),
+      getAdminUserLoginHistory: build.query<
+        GetAdminUserLoginHistoryApiResponse,
+        GetAdminUserLoginHistoryApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/users/${queryArg.id}/login-history`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ['Admin Users'],
+      }),
+      listAuditLogs: build.query<ListAuditLogsApiResponse, ListAuditLogsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/audit-logs`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+            from: queryArg['from'],
+            to: queryArg.to,
+            actorId: queryArg.actorId,
+            q: queryArg.q,
+            action: queryArg.action,
+            entity: queryArg.entity,
+            entityId: queryArg.entityId,
+            sort: queryArg.sort,
+          },
+        }),
+        providesTags: ['Admin Audit Logs'],
+      }),
+      getAuditLogFilters: build.query<GetAuditLogFiltersApiResponse, GetAuditLogFiltersApiArg>({
+        query: () => ({ url: `/api/v1/admin/audit-logs/filters` }),
+        providesTags: ['Admin Audit Logs'],
+      }),
+      exportAuditLogs: build.mutation<ExportAuditLogsApiResponse, ExportAuditLogsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/audit-logs/export`,
+          method: 'POST',
+          body: queryArg,
+        }),
+        invalidatesTags: ['Admin Audit Logs'],
+      }),
+      getAuditLog: build.query<GetAuditLogApiResponse, GetAuditLogApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/admin/audit-logs/${queryArg}` }),
+        providesTags: ['Admin Audit Logs'],
+      }),
+      getOverview: build.query<GetOverviewApiResponse, GetOverviewApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/dashboard/overview`,
+          params: {
+            from: queryArg['from'],
+            to: queryArg.to,
+          },
+        }),
+        providesTags: ['Admin Dashboard'],
+      }),
+      getTrends: build.query<GetTrendsApiResponse, GetTrendsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/dashboard/trends`,
+          params: {
+            from: queryArg['from'],
+            to: queryArg.to,
+            granularity: queryArg.granularity,
+          },
+        }),
+        providesTags: ['Admin Dashboard'],
+      }),
+      refreshDashboard: build.mutation<RefreshDashboardApiResponse, RefreshDashboardApiArg>({
+        query: () => ({ url: `/api/v1/admin/dashboard/refresh`, method: 'POST' }),
+        invalidatesTags: ['Admin Dashboard'],
       }),
     }),
     overrideExisting: false,
@@ -1334,6 +1447,139 @@ export type GetMyAiQuotasApiResponse = /** status 200 Thành công */ {
   data: AiQuotas;
 };
 export type GetMyAiQuotasApiArg = void;
+export type ListAdminUsersApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminUserListItem[];
+  meta: PaginationMetaDto;
+};
+export type ListAdminUsersApiArg = {
+  page?: number;
+  limit?: number;
+  /** Tìm theo họ tên hoặc email (không phân biệt hoa thường) */
+  q?: string;
+  role?: ManagedRole;
+  status?: UserStatus;
+  sort?:
+    | 'createdAt:desc'
+    | 'createdAt:asc'
+    | 'lastLoginAt:desc'
+    | 'lastLoginAt:asc'
+    | 'fullName:asc'
+    | 'fullName:desc'
+    | 'email:asc'
+    | 'email:desc';
+};
+export type GetAdminUserApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminUserDetail;
+};
+export type GetAdminUserApiArg = string;
+export type UpdateAdminUserApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminUserDetail;
+};
+export type UpdateAdminUserApiArg = {
+  id: string;
+  adminUpdateUserDto: AdminUpdateUserDto;
+};
+export type LockAdminUserApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminUserDetail;
+};
+export type LockAdminUserApiArg = {
+  id: string;
+  lockUserDto: LockUserDto;
+};
+export type UnlockAdminUserApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminUserDetail;
+};
+export type UnlockAdminUserApiArg = string;
+export type GetAdminUserLoginHistoryApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: LoginHistoryItem[];
+  meta: PaginationMetaDto;
+};
+export type GetAdminUserLoginHistoryApiArg = {
+  id: string;
+  page?: number;
+  limit?: number;
+};
+export type ListAuditLogsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AuditLogListItem[];
+  meta: PaginationMetaDto;
+};
+export type ListAuditLogsApiArg = {
+  page?: number;
+  limit?: number;
+  /** Từ thời điểm (ISO 8601, tính cả mốc này) */
+  from?: string;
+  /** Đến thời điểm (ISO 8601, tính cả mốc này) */
+  to?: string;
+  /** Người thực hiện */
+  actorId?: string;
+  /** Tìm người thực hiện theo họ tên hoặc email */
+  q?: string;
+  /** Hành động, ví dụ user.lock */
+  action?: string;
+  /** Loại đối tượng, ví dụ user */
+  entity?: string;
+  /** Mã đối tượng bị tác động */
+  entityId?: string;
+  sort?: 'createdAt:desc' | 'createdAt:asc';
+};
+export type GetAuditLogFiltersApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AuditLogFilterOptions;
+};
+export type GetAuditLogFiltersApiArg = void;
+export type ExportAuditLogsApiResponse = /** status 200 Tệp .csv hoặc .xlsx */ Blob;
+export type ExportAuditLogsApiArg = ExportAuditLogsDto;
+export type GetAuditLogApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AuditLogDetail;
+};
+export type GetAuditLogApiArg = string;
+export type GetOverviewApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: DashboardOverview;
+};
+export type GetOverviewApiArg = {
+  /** Từ ngày (giờ Việt Nam, tính cả ngày này). Mặc định 29 ngày trước "to". Kỳ tối đa 366 ngày */
+  from?: string;
+  /** Đến ngày (giờ Việt Nam, tính cả ngày này). Mặc định hôm nay */
+  to?: string;
+};
+export type GetTrendsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: DashboardTrends;
+};
+export type GetTrendsApiArg = {
+  /** Từ ngày (giờ Việt Nam, tính cả ngày này). Mặc định 29 ngày trước "to". Kỳ tối đa 366 ngày */
+  from?: string;
+  /** Đến ngày (giờ Việt Nam, tính cả ngày này). Mặc định hôm nay */
+  to?: string;
+  /** Gom số liệu theo ngày hoặc theo tuần (tuần bắt đầu thứ Hai) */
+  granularity?: 'day' | 'week';
+};
+export type RefreshDashboardApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: DashboardRefreshResult;
+};
+export type RefreshDashboardApiArg = void;
 export type UserStatus = 'PENDING_VERIFICATION' | 'PENDING_APPROVAL' | 'ACTIVE' | 'LOCKED';
 export type RegisterResult = {
   id: string;
@@ -1364,10 +1610,17 @@ export type ErrorCode =
   | 'AUTH_TOO_MANY_LOGIN_ATTEMPTS'
   | 'AUTH_CURRENT_PASSWORD_INCORRECT'
   | 'AUTH_PASSWORD_NOT_SET'
+  | 'AUTH_PASSWORD_CHANGE_REQUIRED'
   | 'AUTH_GOOGLE_DISABLED'
   | 'AUTH_GOOGLE_FAILED'
   | 'AUTH_GOOGLE_EMAIL_UNVERIFIED'
   | 'AUTH_GOOGLE_STUDENT_ONLY'
+  | 'USER_NOT_FOUND'
+  | 'ADMIN_ACCOUNT_PROTECTED'
+  | 'USER_ALREADY_LOCKED'
+  | 'USER_NOT_LOCKED'
+  | 'AUDIT_LOG_NOT_FOUND'
+  | 'AUDIT_EXPORT_TOO_LARGE'
   | 'STORAGE_UNAVAILABLE'
   | 'AVATAR_INVALID_IMAGE'
   | 'MEDIA_LINK_INVALID'
@@ -2820,6 +3073,42 @@ export type PartProgress = {
   part: number;
   name: string;
 };
+export type OpenSkillProgress = {
+  /** Số lượt câu Speaking/Writing (bỏ trống vẫn tính) */
+  total: number;
+  /** Số câu đã có điểm (câu bỏ trống tính 0 điểm) */
+  scored: number;
+  /** Câu đã trả lời nhưng chưa có điểm (chờ AI chấm hoặc chấm lỗi), chưa tính vào điểm */
+  pending: number;
+  /** Tổng điểm thô của các câu đã có điểm */
+  earned: number;
+  /** Tổng điểm tối đa của các câu đã có điểm */
+  max: number;
+  /** % điểm đạt (earned / max); null khi chưa có câu nào có điểm */
+  percent: number | null;
+  skill: Skill;
+};
+export type OpenPartProgress = {
+  /** Số lượt câu Speaking/Writing (bỏ trống vẫn tính) */
+  total: number;
+  /** Số câu đã có điểm (câu bỏ trống tính 0 điểm) */
+  scored: number;
+  /** Câu đã trả lời nhưng chưa có điểm (chờ AI chấm hoặc chấm lỗi), chưa tính vào điểm */
+  pending: number;
+  /** Tổng điểm thô của các câu đã có điểm */
+  earned: number;
+  /** Tổng điểm tối đa của các câu đã có điểm */
+  max: number;
+  /** % điểm đạt (earned / max); null khi chưa có câu nào có điểm */
+  percent: number | null;
+  skill: Skill;
+  part: number;
+  name: string;
+  /** Điểm tối đa một câu của dạng câu (Writing P1: 3…) */
+  maxScore: number;
+  /** Điểm trung bình một câu theo thang của dạng câu; null khi chưa có câu nào có điểm */
+  average: number | null;
+};
 export type TopicProgress = {
   /** Số lượt câu trắc nghiệm (một câu làm ở 2 bài tính 2) */
   total: number;
@@ -2843,6 +3132,10 @@ export type ProgressSkills = {
   skills: SkillProgress[];
   /** Theo thứ tự Part trong đề (L1…L4, R5…R7) */
   parts: PartProgress[];
+  /** Speaking/Writing theo kỹ năng (chỉ kỹ năng đã làm), Speaking trước Writing */
+  openSkills: OpenSkillProgress[];
+  /** Speaking/Writing theo Part, thứ tự trong đề */
+  openParts: OpenPartProgress[];
   /** Chủ đề cần luyện thêm: đã làm ≥ minTopicQuestions câu và tỉ lệ đúng < weakAccuracy; yếu nhất trước, tối đa 5 */
   weakTopics: TopicProgress[];
   minTopicQuestions: number;
@@ -2889,6 +3182,220 @@ export type AiExplanation = {
 export type AiQuotas = {
   /** Giải thích đáp án bằng AI */
   explanation: AiQuota;
+};
+export type ManagedRole = 'STUDENT' | 'TEACHER';
+export type AdminUserListItem = {
+  id: string;
+  email: string;
+  fullName: string;
+  avatarUrl: string | null;
+  role: ManagedRole;
+  status: UserStatus;
+  emailVerifiedAt: string | null;
+  lastLoginAt: string | null;
+  createdAt: string;
+};
+export type AdminTeacherProfile = {
+  organization: string;
+  specialization: string;
+  /** Đã được admin duyệt hồ sơ giáo viên */
+  isApproved: boolean;
+};
+export type AdminUserDetail = {
+  id: string;
+  email: string;
+  fullName: string;
+  avatarUrl: string | null;
+  role: ManagedRole;
+  status: UserStatus;
+  emailVerifiedAt: string | null;
+  lastLoginAt: string | null;
+  createdAt: string;
+  /** false: tài khoản chỉ đăng nhập bằng Google */
+  hasPassword: boolean;
+  /** true: đã liên kết đăng nhập bằng Google */
+  googleLinked: boolean;
+  mustChangePassword: boolean;
+  termsAcceptedAt: string | null;
+  /** Gửi lại trong PATCH để kiểm tra xung đột */
+  updatedAt: string;
+  /** null nếu không phải học viên */
+  student: StudentProfile | null;
+  /** null nếu không phải giáo viên */
+  teacher: AdminTeacherProfile | null;
+};
+export type AdminUpdateUserDto = {
+  /** updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409 */
+  updatedAt: string;
+  fullName?: string;
+  /** Điểm TOEIC mục tiêu, bước 5 điểm (chỉ học viên) */
+  targetScore?: number;
+  /** Chỉ giáo viên */
+  organization?: string;
+  /** Chỉ giáo viên */
+  specialization?: string;
+};
+export type LockUserDto = {
+  reason?: string;
+};
+export type AuditLogActor = {
+  id: string;
+  fullName: string;
+  email: string;
+  role: RoleCode;
+};
+export type AuditLogListItem = {
+  id: string;
+  createdAt: string;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  ipAddress: string | null;
+  /** null khi tài khoản thực hiện đã bị xóa */
+  actor: AuditLogActor | null;
+};
+export type AuditFilterOption = {
+  value: string;
+  label: string;
+};
+export type AuditLogFilterOptions = {
+  /** Hành động đã có trong nhật ký */
+  actions: AuditFilterOption[];
+  /** Loại đối tượng đã có trong nhật ký */
+  entities: AuditFilterOption[];
+};
+export type ExportAuditLogsDto = {
+  /** Từ thời điểm (ISO 8601, tính cả mốc này) */
+  from?: string;
+  /** Đến thời điểm (ISO 8601, tính cả mốc này) */
+  to?: string;
+  /** Người thực hiện */
+  actorId?: string;
+  /** Tìm người thực hiện theo họ tên hoặc email */
+  q?: string;
+  /** Hành động, ví dụ user.lock */
+  action?: string;
+  /** Loại đối tượng, ví dụ user */
+  entity?: string;
+  /** Mã đối tượng bị tác động */
+  entityId?: string;
+  format?: 'csv' | 'xlsx';
+};
+export type AuditLogDetail = {
+  id: string;
+  createdAt: string;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  ipAddress: string | null;
+  /** null khi tài khoản thực hiện đã bị xóa */
+  actor: AuditLogActor | null;
+  /** Dữ liệu trước khi thay đổi */
+  before: {
+    [key: string]: any;
+  } | null;
+  /** Dữ liệu sau khi thay đổi */
+  after: {
+    [key: string]: any;
+  } | null;
+  /** Thông tin thêm, ví dụ lý do khóa tài khoản */
+  meta: {
+    [key: string]: any;
+  } | null;
+  userAgent: string | null;
+};
+export type DashboardRangeInfo = {
+  from: string;
+  to: string;
+};
+export type DashboardUsersByRole = {
+  STUDENT: number;
+  TEACHER: number;
+  ADMIN: number;
+};
+export type DashboardUserStats = {
+  /** Tổng số tài khoản hiện có */
+  total: number;
+  byRole: DashboardUsersByRole;
+  /** Tài khoản tạo trong kỳ */
+  newInRange: number;
+  /** Tài khoản đang bị khóa */
+  locked: number;
+  /** Giáo viên chờ admin duyệt */
+  pendingApproval: number;
+};
+export type DashboardExamStats = {
+  published: number;
+  draft: number;
+  unpublished: number;
+};
+export type DashboardQuestionStats = {
+  /** Câu hỏi chưa bị xóa */
+  total: number;
+  /** Câu hỏi đang dùng (ACTIVE) */
+  active: number;
+};
+export type DashboardContentStats = {
+  /** Đề thi chưa bị xóa theo trạng thái */
+  exams: DashboardExamStats;
+  questions: DashboardQuestionStats;
+};
+export type DashboardAttemptStats = {
+  /** Lượt bắt đầu làm bài trong kỳ, tính cả lượt đã hủy */
+  started: number;
+  /** Trong số đó, lượt đã nộp bài */
+  completed: number;
+  /** completed / started (%): lượt hủy hoặc đang làm dở kéo tỉ lệ xuống; null khi chưa có lượt nào */
+  completionRate: number | null;
+  /** Điểm TB thang 990 của lượt làm cả đề TOEIC LR nộp trong kỳ; null khi chưa có lượt nào */
+  averageToeicScore: number | null;
+};
+export type DashboardAiStats = {
+  /** Lượt gọi AI trong kỳ */
+  calls: number;
+  /** Lượt lỗi hoặc AI trả sai định dạng */
+  failed: number;
+  /** failed / calls (%), null khi chưa có lượt nào */
+  failureRate: number | null;
+  inputTokens: number;
+  outputTokens: number;
+};
+export type DashboardAccessStats = {
+  /** Lượt đăng nhập thành công trong kỳ */
+  logins: number;
+  /** Số tài khoản có đăng nhập trong kỳ */
+  activeUsers: number;
+};
+export type DashboardOverview = {
+  range: DashboardRangeInfo;
+  /** Thời điểm tổng hợp (có thể lấy từ cache) */
+  generatedAt: string;
+  users: DashboardUserStats;
+  content: DashboardContentStats;
+  attempts: DashboardAttemptStats;
+  ai: DashboardAiStats;
+  access: DashboardAccessStats;
+};
+export type DashboardGranularity = 'day' | 'week';
+export type DashboardTrendPoint = {
+  /** Ngày đầu mốc: chính ngày đó, hoặc thứ Hai của tuần */
+  bucket: string;
+  newUsers: number;
+  /** Lượt bắt đầu làm bài, tính cả lượt đã hủy */
+  attempts: number;
+  aiCalls: number;
+  /** Lượt đăng nhập thành công */
+  logins: number;
+};
+export type DashboardTrends = {
+  range: DashboardRangeInfo;
+  granularity: DashboardGranularity;
+  generatedAt: string;
+  /** Tăng dần, đủ mọi mốc trong kỳ */
+  points: DashboardTrendPoint[];
+};
+export type DashboardRefreshResult = {
+  refreshedAt: string;
 };
 export const {
   useRegisterMutation,
@@ -2973,4 +3480,17 @@ export const {
   useGetProgressSkillsQuery,
   useGetAiExplanationQuery,
   useGetMyAiQuotasQuery,
+  useListAdminUsersQuery,
+  useGetAdminUserQuery,
+  useUpdateAdminUserMutation,
+  useLockAdminUserMutation,
+  useUnlockAdminUserMutation,
+  useGetAdminUserLoginHistoryQuery,
+  useListAuditLogsQuery,
+  useGetAuditLogFiltersQuery,
+  useExportAuditLogsMutation,
+  useGetAuditLogQuery,
+  useGetOverviewQuery,
+  useGetTrendsQuery,
+  useRefreshDashboardMutation,
 } = injectedRtkApi;

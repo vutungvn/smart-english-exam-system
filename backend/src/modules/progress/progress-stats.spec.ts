@@ -1,17 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { Skill } from '../../generated/prisma/enums.js';
 import {
+  openPartStats,
+  openSkillStats,
   partStats,
   percentOf,
   sinceOf,
   skillStats,
   totalStat,
   weakTopics,
+  type OpenScopeRow,
   type ScopeRow,
   type TopicInfo,
 } from './progress-stats.js';
 
-const { LISTENING, READING } = Skill;
+const { LISTENING, READING, SPEAKING, WRITING } = Skill;
 const row = (
   skill: Skill,
   part: number,
@@ -121,5 +124,54 @@ describe('chủ đề yếu', () => {
     );
     expect(result).toHaveLength(5);
     expect(result.slice(0, 2).map((t) => t.topicId)).toEqual(['y', 'x']);
+  });
+});
+
+describe('thống kê Speaking/Writing', () => {
+  const open = (
+    skill: Skill,
+    part: number,
+    total: number,
+    pending: number,
+    earned: number,
+  ): OpenScopeRow => ({ skill, part, total, pending, earned });
+
+  const rows = [
+    open(WRITING, 3, 2, 1, 4), // 1 câu chờ chấm, 1 câu được 4/5
+    open(SPEAKING, 2, 2, 0, 3), // 2 câu (1 câu bỏ trống 0 điểm): 3/6
+    open(WRITING, 1, 3, 0, 9), // 9/9
+  ];
+
+  it('theo kỹ năng: Speaking trước Writing; câu chờ chấm chưa tính vào điểm tối đa', () => {
+    expect(openSkillStats(rows)).toEqual([
+      { skill: SPEAKING, total: 2, scored: 2, pending: 0, earned: 3, max: 6, percent: 50 },
+      // max = 3 câu P1 × 3 + 1 câu P3 đã chấm × 5 = 14
+      { skill: WRITING, total: 5, scored: 4, pending: 1, earned: 13, max: 14, percent: 92.9 },
+    ]);
+  });
+
+  it('theo Part: thứ tự trong đề, điểm trung bình theo thang của dạng câu', () => {
+    expect(
+      openPartStats(rows).map(({ skill, part, maxScore, average, percent }) => ({
+        skill,
+        part,
+        maxScore,
+        average,
+        percent,
+      })),
+    ).toEqual([
+      { skill: SPEAKING, part: 2, maxScore: 3, average: 1.5, percent: 50 },
+      { skill: WRITING, part: 1, maxScore: 3, average: 3, percent: 100 },
+      { skill: WRITING, part: 3, maxScore: 5, average: 4, percent: 80 },
+    ]);
+  });
+
+  it('chỉ có câu chờ chấm: chưa có điểm', () => {
+    expect(openPartStats([open(SPEAKING, 5, 1, 1, 0)])[0]).toMatchObject({
+      scored: 0,
+      max: 0,
+      average: null,
+      percent: null,
+    });
   });
 });

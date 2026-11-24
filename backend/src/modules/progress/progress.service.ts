@@ -9,6 +9,8 @@ import { findPartRule } from '../questions/toeic-parts.js';
 import type { ProgressSkillsQueryDto, ScoreTrendQueryDto } from './dto/progress-query.dto.js';
 import {
   MIN_TOPIC_QUESTIONS,
+  openPartStats,
+  openSkillStats,
   partStats,
   percentOf,
   sinceOf,
@@ -16,6 +18,7 @@ import {
   totalStat,
   WEAK_ACCURACY,
   weakTopics,
+  type OpenScopeRow,
   type ScopeRow,
   type TopicInfo,
 } from './progress-stats.js';
@@ -87,8 +90,9 @@ export class ProgressService {
 
   async skills(query: ProgressSkillsQueryDto, user: AuthUser): Promise<ProgressSkills> {
     const from = sinceOf(query.range, new Date());
-    const [rows, attempts] = await Promise.all([
+    const [rows, openRows, attempts] = await Promise.all([
       this.scopeRows(user.id, from),
+      this.openScopeRows(user.id, from),
       this.prisma.examAttempt.findMany({
         where: {
           studentId: user.id,
@@ -141,6 +145,8 @@ export class ProgressService {
       },
       skills: skillStats(rows),
       parts: partStats(rows),
+      openSkills: openSkillStats(openRows),
+      openParts: openPartStats(openRows),
       weakTopics: weakTopics(rows, topicMap),
       minTopicQuestions: MIN_TOPIC_QUESTIONS,
       weakAccuracy: WEAK_ACCURACY,
@@ -185,6 +191,49 @@ export class ProgressService {
       total: Number(row.total),
       correct: Number(row.correct),
       wrong: Number(row.wrong),
+    }));
+  }
+
+  /**
+   * Câu Speaking/Writing trong phạm vi các bài đã nộp, gộp theo kỹ năng – Part. Điểm hiệu lực giống
+   * lúc chấm bài (AttemptScoringService.openScores): bản giáo viên DONE thay bản AI. Câu bỏ trống
+   * không có phiếu chấm → 0 điểm; có phiếu mà chưa có điểm DONE → đang chờ chấm
+   */
+  private async openScopeRows(studentId: string, from: Date | null): Promise<OpenScopeRow[]> {
+    const rows = await this.prisma.$queryRaw<
+      { skill: Skill; part: number; total: bigint; pending: bigint; earned: number }[]
+    >`
+      SELECT q.skill, q.part,
+             COUNT(*) AS total,
+             COUNT(*) FILTER (
+               WHERE ev.score IS NULL
+                 AND EXISTS (SELECT 1 FROM answer_assessments y WHERE y.attempt_answer_id = aa.id)
+             ) AS pending,
+             COALESCE(SUM(ev.score), 0)::float8 AS earned
+      FROM exam_attempts a
+      JOIN exam_sections s ON s.exam_id = a.exam_id AND (a.section_id IS NULL OR s.id = a.section_id)
+      JOIN exam_questions eq ON eq.section_id = s.id
+      JOIN questions q ON q.id = eq.question_id
+      LEFT JOIN attempt_answers aa ON aa.attempt_id = a.id AND aa.exam_question_id = eq.id
+      LEFT JOIN LATERAL (
+        SELECT x.score
+        FROM answer_assessments x
+        WHERE x.attempt_answer_id = aa.id AND x.status = 'DONE' AND x.score IS NOT NULL
+        ORDER BY (x.grader = 'TEACHER') DESC
+        LIMIT 1
+      ) ev ON TRUE
+      WHERE a.student_id = ${studentId}::uuid
+        AND a.status IN ('SUBMITTED', 'GRADED')
+        AND q.type IN ('WRITTEN_RESPONSE', 'SPOKEN_RESPONSE')
+        ${from ? Prisma.sql`AND a.submitted_at >= ${from}` : Prisma.empty}
+      GROUP BY q.skill, q.part`;
+
+    return rows.map((row) => ({
+      skill: row.skill,
+      part: Number(row.part),
+      total: Number(row.total),
+      pending: Number(row.pending),
+      earned: Number(row.earned),
     }));
   }
 }

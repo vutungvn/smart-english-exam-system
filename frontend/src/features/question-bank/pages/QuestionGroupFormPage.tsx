@@ -663,6 +663,7 @@ function GroupGuide({ rule }: { rule?: PartRule }) {
           ? [
               'Đánh dấu chỗ trống theo thứ tự câu trong nhóm: [1] ___, [2] ___, [3] ___, [4] ___. Không dùng số câu của đề (131, 132…) vì mỗi đề đánh số khác nhau.',
               'Câu hỏi có Thứ tự trong nhóm là n sẽ điền vào chỗ trống [n]; form câu hỏi tự ghi nhãn "Chỗ trống [n]".',
+              'Khi học viên làm bài, [n] tự hiện thành số câu của đề (ví dụ [1] → 131) để khớp với số câu hỏi.',
               'Thường có 1 chỗ trống điền cả câu: 4 phương án là 4 câu hoàn chỉnh.',
             ]
           : [

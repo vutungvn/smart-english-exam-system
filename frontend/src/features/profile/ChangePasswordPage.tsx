@@ -56,6 +56,8 @@ export function ChangePasswordPage() {
   const user = useAppSelector(selectCurrentUser);
   const { data, isLoading } = useGetProfileQuery();
   const [done, setDone] = useState(false);
+  // Bị buộc đổi mật khẩu: chưa đi trang khác được (RequireAuth), nên ẩn các lối quay lại hồ sơ
+  const forced = user?.mustChangePassword === true;
   // Lỗi tải hồ sơ thì vẫn hiện form: backend tự trả AUTH_PASSWORD_NOT_SET nếu chưa có mật khẩu
   const noPassword = data?.data.hasPassword === false;
   const title = noPassword ? 'Tạo mật khẩu' : 'Đổi mật khẩu';
@@ -71,19 +73,23 @@ export function ChangePasswordPage() {
   } else if (done) {
     content = <ChangePasswordDone />;
   } else {
-    content = <ChangePasswordForm onDone={() => setDone(true)} />;
+    content = <ChangePasswordForm forced={forced} onDone={() => setDone(true)} />;
   }
 
   return (
     <div className="mx-auto max-w-250 space-y-6">
       <title>{`${title} – Smart English Exam`}</title>
       <PageHeader
-        breadcrumbs={[
-          { label: 'Trang chủ', to: areaPath },
-          { label: 'Hồ sơ cá nhân', to: `${areaPath}/profile` },
-          { label: title },
-        ]}
-        backTo={{ label: 'Quay lại hồ sơ', to: `${areaPath}/profile` }}
+        breadcrumbs={
+          forced
+            ? undefined
+            : [
+                { label: 'Trang chủ', to: areaPath },
+                { label: 'Hồ sơ cá nhân', to: `${areaPath}/profile` },
+                { label: title },
+              ]
+        }
+        backTo={forced ? undefined : { label: 'Quay lại hồ sơ', to: `${areaPath}/profile` }}
         title={title}
         description={
           <>
@@ -93,6 +99,19 @@ export function ChangePasswordPage() {
         }
       />
 
+      {forced && (
+        <p
+          role="alert"
+          className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+        >
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+          <span>
+            Tài khoản của bạn đang dùng mật khẩu được cấp sẵn. Vui lòng đặt mật khẩu mới trước khi
+            tiếp tục sử dụng hệ thống.
+          </span>
+        </p>
+      )}
+
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         {content}
         <PasswordTips />
@@ -101,7 +120,7 @@ export function ChangePasswordPage() {
   );
 }
 
-function ChangePasswordForm({ onDone }: { onDone: () => void }) {
+function ChangePasswordForm({ forced, onDone }: { forced: boolean; onDone: () => void }) {
   const areaPath = useAreaPath();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -172,12 +191,14 @@ function ChangePasswordForm({ onDone }: { onDone: () => void }) {
         description="Bảo vệ tài khoản học tập với mật khẩu đạt độ bảo mật cao"
         footer={
           <>
-            <Link
-              to={`${areaPath}/profile`}
-              className="inline-flex h-10 items-center rounded-xl border border-border bg-white px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-            >
-              Hủy
-            </Link>
+            {!forced && (
+              <Link
+                to={`${areaPath}/profile`}
+                className="inline-flex h-10 items-center rounded-xl border border-border bg-white px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+              >
+                Hủy
+              </Link>
+            )}
             <SubmitButton
               loading={isSubmitting}
               disabled={!isValid}

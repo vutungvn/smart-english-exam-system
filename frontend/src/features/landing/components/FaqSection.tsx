@@ -19,7 +19,7 @@ const FAQS = [
   {
     question: 'Làm sao để trở thành giáo viên?',
     answer:
-      'Đăng ký tài khoản giáo viên kèm minh chứng chuyên môn. Quản trị viên duyệt hồ sơ, sau đó bạn có thể tạo khóa học và đề thi.',
+      'Đăng ký tài khoản giáo viên kèm minh chứng chuyên môn. Quản trị viên duyệt hồ sơ, sau đó bạn có thể soạn câu hỏi và đề thi.',
   },
   {
     question: 'Dữ liệu ghi âm được lưu bao lâu?',

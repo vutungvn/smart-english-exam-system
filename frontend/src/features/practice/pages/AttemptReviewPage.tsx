@@ -282,6 +282,8 @@ function ReviewContent({ review }: { review: AttemptReview }) {
                     attemptId={review.id}
                     block={block}
                     questions={questions}
+                    skill={section.skill}
+                    part={section.part}
                   />
                 ))}
               </section>

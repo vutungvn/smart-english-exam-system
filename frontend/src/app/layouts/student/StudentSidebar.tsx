@@ -1,6 +1,5 @@
 import { Link } from 'react-router';
 import {
-  BookOpen,
   Bot,
   BrainCircuit,
   ChartNoAxesColumn,
@@ -18,7 +17,6 @@ import type { SidebarSlotProps } from '../shared/AppShell';
 const SECTIONS: SidebarSection[] = [
   [
     { to: '/app', label: 'Trang chủ', icon: House, end: true },
-    { to: '/app/courses', label: 'Khóa học của tôi', icon: BookOpen },
     { to: '/app/exams', label: 'Luyện đề thi', icon: FileText },
     { to: '/app/results', label: 'Kết quả & xem lại', icon: CircleCheck },
     { to: '/app/progress', label: 'Tiến độ học tập', icon: ChartNoAxesColumn },

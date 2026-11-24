@@ -1,16 +1,38 @@
 import { useState } from 'react';
-import { CalendarClock, ChartNoAxesColumn, ClipboardCheck, Target, Trophy } from 'lucide-react';
+import {
+  CalendarClock,
+  ChartNoAxesColumn,
+  ClipboardCheck,
+  Mic,
+  Target,
+  Trophy,
+  type LucideIcon,
+} from 'lucide-react';
 import { toApiError } from '@/api/errors';
-import { useGetProgressSkillsQuery, type ProgressOverview } from '@/api/generated';
+import {
+  useGetProgressSkillsQuery,
+  useGetScoreTrendQuery,
+  type OpenSkillProgress,
+  type ProgressOverview,
+  type ScoreTrendPoint,
+} from '@/api/generated';
 import { ButtonLink } from '@/components/ButtonLink';
 import { PageHeader } from '@/components/PageHeader';
+import { skillScaled, swSummary } from '@/features/dashboard/dashboard-progress';
 import { EmptyState, ErrorState } from '@/features/question-bank/components/ListStates';
 import { PRACTICE_PATH } from '@/features/practice/practice-meta';
 import { cn } from '@/lib/utils';
 import { PartAccuracyCard } from '../components/PartAccuracyCard';
 import { ScoreTrendCard } from '../components/ScoreTrendCard';
 import { WeakTopicsCard } from '../components/WeakTopicsCard';
-import { formatPercent, formatShortDate, RANGE_LABEL, type ProgressRange } from '../progress-meta';
+import {
+  formatPercent,
+  formatShortDate,
+  openTotal,
+  percentOf,
+  RANGE_LABEL,
+  type ProgressRange,
+} from '../progress-meta';
 
 const RANGES: readonly ProgressRange[] = ['30d', '90d', '1y', 'all'];
 
@@ -18,6 +40,8 @@ const RANGES: readonly ProgressRange[] = ['30d', '90d', '1y', 'all'];
 export function ProgressPage() {
   const [range, setRange] = useState<ProgressRange>('90d');
   const { data, error, isLoading, isFetching, refetch } = useGetProgressSkillsQuery(range);
+  // Cùng tham số với biểu đồ bên dưới nên RTK Query dùng chung một lần gọi
+  const trendQuery = useGetScoreTrendQuery(range);
   const stats = data?.data;
 
   return (
@@ -85,18 +109,27 @@ export function ProgressPage() {
       ) : (
         stats && (
           <div className={cn('space-y-6 transition-opacity', isFetching && 'opacity-60')}>
-            <OverviewTiles overview={stats.overview} />
+            <OverviewTiles
+              overview={stats.overview}
+              openSkills={stats.openSkills}
+              points={trendQuery.data?.data.points}
+            />
             <ScoreTrendCard
               title="Điểm qua các lần làm bài"
               description="Mỗi điểm là một bài đã nộp; rê chuột (hoặc chạm) để xem chi tiết."
               range={range}
             />
             <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-              {stats.skills.length > 0 ? (
-                <PartAccuracyCard skills={stats.skills} parts={stats.parts} />
+              {stats.skills.length > 0 || stats.openSkills.length > 0 ? (
+                <PartAccuracyCard
+                  skills={stats.skills}
+                  parts={stats.parts}
+                  openSkills={stats.openSkills}
+                  openParts={stats.openParts}
+                />
               ) : (
                 <section className="rounded-3xl border border-border bg-white p-6 text-sm text-muted-foreground shadow-2xs">
-                  Các bài đã nộp chưa có câu trắc nghiệm nào (chỉ Speaking/Writing).
+                  Các bài đã nộp chưa có câu nào để thống kê.
                 </section>
               )}
               <WeakTopicsCard data={stats} />
@@ -108,9 +141,53 @@ export function ProgressPage() {
   );
 }
 
-function OverviewTiles({ overview }: { overview: ProgressOverview }) {
+interface Tile {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  note: string;
+  className?: string;
+}
+
+/** Điểm TOEIC SW gần nhất từng kỹ năng; chưa làm đề SW đầy đủ thì % điểm trung bình các câu đã chấm */
+function swTile(
+  openSkills: OpenSkillProgress[],
+  points: ScoreTrendPoint[] = [],
+): Pick<Tile, 'value' | 'note'> {
+  const speaking = skillScaled(swSummary(points, 'SPEAKING').latest, 'SPEAKING');
+  const writing = skillScaled(swSummary(points, 'WRITING').latest, 'WRITING');
+  if (speaking !== null || writing !== null) {
+    return {
+      value: `${speaking ?? '—'} · ${writing ?? '—'}`,
+      note: 'Điểm TOEIC SW gần nhất (mỗi kỹ năng 0–200)',
+    };
+  }
+  const open = openTotal(openSkills);
+  if (open.scored > 0) {
+    const waiting = open.pending ? ` · ${open.pending} câu chờ chấm` : '';
+    return {
+      value: formatPercent(percentOf(open.earned, open.max)),
+      note: `Điểm TB · ${open.scored} câu đã chấm${waiting}`,
+    };
+  }
+  return {
+    value: '—',
+    note: open.pending ? `${open.pending} câu đang chờ AI chấm` : 'Chưa làm câu Speaking/Writing',
+  };
+}
+
+function OverviewTiles({
+  overview,
+  openSkills,
+  points,
+}: {
+  overview: ProgressOverview;
+  openSkills: OpenSkillProgress[];
+  /** undefined khi biểu đồ đang tải: ô Speaking · Writing tạm dùng điểm trung bình */
+  points?: ScoreTrendPoint[];
+}) {
   const last = overview.lastSubmittedAt ? new Date(overview.lastSubmittedAt) : null;
-  const tiles = [
+  const tiles: Tile[] = [
     {
       icon: ClipboardCheck,
       label: 'Bài đã nộp',
@@ -119,7 +196,7 @@ function OverviewTiles({ overview }: { overview: ProgressOverview }) {
     },
     {
       icon: Target,
-      label: 'Tỉ lệ đúng',
+      label: 'Tỉ lệ đúng L/R',
       value: formatPercent(overview.accuracy),
       note: `${overview.choiceCorrect}/${overview.choiceTotal} câu trắc nghiệm`,
     },
@@ -132,6 +209,7 @@ function OverviewTiles({ overview }: { overview: ProgressOverview }) {
           ? 'Làm một đề TOEIC LR đầy đủ để có điểm'
           : `Gần nhất ${overview.latestToeicScore} / 990`,
     },
+    { icon: Mic, label: 'Speaking · Writing', ...swTile(openSkills, points) },
     {
       icon: CalendarClock,
       label: 'Lần nộp gần nhất',
@@ -139,15 +217,20 @@ function OverviewTiles({ overview }: { overview: ProgressOverview }) {
       note: last
         ? `${last.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} · ${last.getFullYear()}`
         : '',
+      // Ô thứ 5: trên lưới 2 cột (điện thoại, máy tính bảng) trải hết hàng cho cân
+      className: 'col-span-2 xl:col-span-1',
     },
   ];
 
   return (
-    <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-6">
-      {tiles.map(({ icon: Icon, label, value, note }) => (
+    <ul className="grid grid-cols-2 gap-3 lg:gap-6 xl:grid-cols-5">
+      {tiles.map(({ icon: Icon, label, value, note, className }) => (
         <li
           key={label}
-          className="rounded-[20px] border border-border bg-white p-4 shadow-2xs sm:p-5"
+          className={cn(
+            'rounded-[20px] border border-border bg-white p-4 shadow-2xs sm:p-5',
+            className,
+          )}
         >
           <span className="flex size-10 items-center justify-center rounded-xl bg-accent text-primary">
             <Icon className="size-5" />
@@ -166,11 +249,14 @@ function OverviewTiles({ overview }: { overview: ProgressOverview }) {
 function ProgressSkeleton() {
   return (
     <div aria-busy className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-6">
-        {[0, 1, 2, 3].map((i) => (
+      <div className="grid grid-cols-2 gap-3 lg:gap-6 xl:grid-cols-5">
+        {[0, 1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-36 animate-pulse rounded-[20px] border border-border bg-white"
+            className={cn(
+              'h-36 animate-pulse rounded-[20px] border border-border bg-white',
+              i === 4 && 'col-span-2 xl:col-span-1',
+            )}
           />
         ))}
       </div>

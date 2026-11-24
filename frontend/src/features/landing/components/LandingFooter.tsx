@@ -34,8 +34,8 @@ export function LandingFooter() {
                 </a>
               </li>
               <li>
-                <a href="#khoa-hoc" className={linkClass}>
-                  Khóa học
+                <a href="#ky-nang" className={linkClass}>
+                  4 kỹ năng
                 </a>
               </li>
             </ul>

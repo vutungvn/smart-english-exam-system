@@ -1,5 +1,10 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import { ComingSoonPage } from '@/components/ComingSoonPage';
+import { ADMIN_HOME, ADMIN_PLACEHOLDERS, adminNavItem } from '@/features/admin/admin-nav';
+import { AdminOverviewPage } from '@/features/admin/pages/AdminOverviewPage';
+import { AdminAuditLogsPage } from '@/features/admin-audit-logs/pages/AdminAuditLogsPage';
+import { AdminUserDetailPage } from '@/features/admin-users/pages/AdminUserDetailPage';
+import { AdminUsersPage } from '@/features/admin-users/pages/AdminUsersPage';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
 import { CheckEmailPage } from '@/features/auth/pages/CheckEmailPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
@@ -7,7 +12,6 @@ import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage';
-import { AuthPreviewPage } from '@/features/dev/AuthPreviewPage';
 import { LandingPage } from '@/features/landing/LandingPage';
 import { ChangePasswordPage } from '@/features/profile/ChangePasswordPage';
 import { ExamBuilderPage } from '@/features/exams/pages/ExamBuilderPage';
@@ -35,10 +39,10 @@ import { RequireAuth } from './guards/RequireAuth';
 import { RequireRole } from './guards/RequireRole';
 import { StudentLayout } from './layouts/student/StudentLayout';
 import { TeacherLayout } from './layouts/teacher/TeacherLayout';
+import { AdminLayout } from './layouts/admin/AdminLayout';
 
 // TẠM: các mục menu học viên chưa làm, hiện trang "đang phát triển" trong layout
 const STUDENT_PLACEHOLDERS = [
-  { path: 'courses', title: 'Khóa học của tôi' },
   { path: 'ai-analysis', title: 'Phân tích AI' },
   { path: 'assistant', title: 'Trợ giảng AI' },
   { path: 'flashcards', title: 'Flashcard' },
@@ -71,8 +75,6 @@ export const router = createBrowserRouter([
       { path: '/reset-password', element: <ResetPasswordPage /> },
     ],
   },
-  // TẠM: trang xem trước các màn auth và phiên đăng nhập, bỏ khi có layout giáo viên/admin
-  { path: '/dev/auth', element: <AuthPreviewPage /> },
   // Khu vực học viên: cần đăng nhập và đúng vai trò
   {
     element: <RequireAuth />,
@@ -135,6 +137,33 @@ export const router = createBrowserRouter([
               { path: 'assessments/:answerId', element: <GradingDetailPage /> },
               { path: 'profile', element: <ProfilePage /> },
               { path: 'profile/password', element: <ChangePasswordPage /> },
+            ],
+          },
+        ],
+      },
+      // Khu vực quản trị
+      {
+        element: <RequireRole roles={['ADMIN']} />,
+        children: [
+          {
+            path: ADMIN_HOME,
+            element: <AdminLayout />,
+            children: [
+              { index: true, element: <AdminOverviewPage /> },
+              { path: 'users', element: <AdminUsersPage /> },
+              { path: 'users/:id', element: <AdminUserDetailPage /> },
+              { path: 'audit-logs', element: <AdminAuditLogsPage /> },
+              { path: 'profile', element: <ProfilePage /> },
+              { path: 'profile/password', element: <ChangePasswordPage /> },
+              ...ADMIN_PLACEHOLDERS.map((path) => ({
+                path,
+                element: (
+                  <ComingSoonPage
+                    title={adminNavItem(path)?.label ?? 'Quản trị'}
+                    backTo={ADMIN_HOME}
+                  />
+                ),
+              })),
             ],
           },
         ],

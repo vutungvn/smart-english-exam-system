@@ -2,7 +2,7 @@ import { ChevronDown, ChevronUp, Minus, Sparkles } from 'lucide-react';
 import type { ProgressSkills, ScoreTrend, Skill } from '@/api/generated';
 import { formatPercent } from '@/features/progress/progress-meta';
 import { cn } from '@/lib/utils';
-import { skillScaled, toeicSummary } from '../dashboard-progress';
+import { skillScaled, swSummary, toeicSummary } from '../dashboard-progress';
 import { SKILL_META } from '../skill-meta';
 
 const SKILLS: readonly Skill[] = ['LISTENING', 'READING', 'SPEAKING', 'WRITING'];
@@ -17,13 +17,12 @@ interface SkillCard {
 }
 
 /**
- * Listening, Reading: điểm quy đổi của bài TOEIC LR gần nhất (5–495), chưa có thì tỉ lệ câu đúng.
- * Speaking, Writing: chờ AI chấm (Sprint 6).
+ * Listening, Reading: điểm quy đổi bài TOEIC LR gần nhất (5–495), chưa có thì tỉ lệ câu đúng.
+ * Speaking, Writing: điểm quy đổi bài TOEIC SW gần nhất (0–200), chưa có thì % điểm trung bình các
+ * câu đã chấm.
  */
 function cardOf(skill: Skill, trend: ScoreTrend, skills: ProgressSkills): SkillCard {
-  if (skill === 'SPEAKING' || skill === 'WRITING') {
-    return { value: '—', max: '200', percent: 0, note: 'Chấm bằng AI, sắp có', delta: null };
-  }
+  if (skill === 'SPEAKING' || skill === 'WRITING') return openCardOf(skill, trend, skills);
   const { latest, previous } = toeicSummary(trend.points);
   const scaled = skillScaled(latest, skill);
   if (scaled !== null) {
@@ -41,6 +40,37 @@ function cardOf(skill: Skill, trend: ScoreTrend, skills: ProgressSkills): SkillC
     value: formatPercent(stat?.accuracy),
     percent: stat?.accuracy ?? 0,
     note: stat ? `Tỉ lệ đúng · ${stat.correct}/${stat.total} câu` : 'Chưa làm câu nào',
+    delta: null,
+  };
+}
+
+function openCardOf(skill: Skill, trend: ScoreTrend, skills: ProgressSkills): SkillCard {
+  const { latest, previous } = swSummary(trend.points, skill);
+  const scaled = skillScaled(latest, skill);
+  if (scaled !== null) {
+    const before = skillScaled(previous, skill);
+    return {
+      value: `${scaled}`,
+      max: '200',
+      percent: Math.round((scaled / 200) * 100),
+      note: 'Điểm quy đổi bài TOEIC SW gần nhất',
+      delta: before === null ? null : scaled - before,
+    };
+  }
+  const stat = skills.openSkills.find((item) => item.skill === skill);
+  if (stat && stat.scored > 0) {
+    const waiting = stat.pending ? ` · ${stat.pending} câu chờ chấm` : '';
+    return {
+      value: formatPercent(stat.percent),
+      percent: stat.percent ?? 0,
+      note: `Điểm trung bình · ${stat.scored} câu đã chấm${waiting}`,
+      delta: null,
+    };
+  }
+  return {
+    value: '—',
+    percent: 0,
+    note: stat?.pending ? `${stat.pending} câu đang chờ AI chấm` : 'Chưa làm câu nào',
     delta: null,
   };
 }
@@ -124,7 +154,7 @@ function DeltaBadge({ delta }: { delta: number }) {
   const Icon = delta > 0 ? ChevronUp : delta < 0 ? ChevronDown : Minus;
   return (
     <span
-      title="So với bài TOEIC LR trước"
+      title="So với lần trước"
       className={cn(
         'inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums',
         delta > 0

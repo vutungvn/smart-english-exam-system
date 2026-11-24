@@ -62,6 +62,23 @@ export async function createUser(
   });
 }
 
+/** Tài khoản admin đã kích hoạt, không bị buộc đổi mật khẩu (khác admin trong seed) */
+export async function createAdmin(prisma: PrismaService): Promise<{ id: string; email: string }> {
+  const { id: roleId } = await prisma.role.findUniqueOrThrow({ where: { code: RoleCode.ADMIN } });
+  return prisma.user.create({
+    data: {
+      roleId,
+      email: `admin-${randomUUID().slice(0, 8)}@example.com`,
+      passwordHash: await hashPassword(PASSWORD),
+      fullName: 'E2E ADMIN',
+      status: UserStatus.ACTIVE,
+      emailVerifiedAt: new Date(),
+      admin: { create: { phone: '0900000000' } },
+    },
+    select: { id: true, email: true },
+  });
+}
+
 export async function login(app: INestApplication<App>, email: string): Promise<string> {
   const res = await request(app.getHttpServer())
     .post('/api/v1/auth/login')
