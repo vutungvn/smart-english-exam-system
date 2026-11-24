@@ -12,7 +12,7 @@ export function StudentLayout() {
       renderTopbar={(onOpenSidebar) => (
         <AppTopbar
           homePath="/app"
-          searchPlaceholder="Tìm khóa học, đề thi..."
+          searchPlaceholder="Tìm đề thi..."
           onOpenSidebar={onOpenSidebar}
         />
       )}

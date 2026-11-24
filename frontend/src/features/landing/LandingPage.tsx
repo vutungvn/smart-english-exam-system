@@ -1,4 +1,3 @@
-import { CoursesSection } from './components/CoursesSection';
 import { DataSafetySection } from './components/DataSafetySection';
 import { FaqSection } from './components/FaqSection';
 import { FeaturesSection } from './components/FeaturesSection';
@@ -21,7 +20,6 @@ export function LandingPage() {
         <FeaturesSection />
         <SkillsSection />
         <RoadmapSection />
-        <CoursesSection />
         <TeacherSection />
         <DataSafetySection />
         <FaqSection />
