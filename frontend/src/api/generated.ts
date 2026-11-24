@@ -15,6 +15,7 @@ export const addTagTypes = [
   'AI Explanations',
   'Admin Users',
   'Admin Audit Logs',
+  'Admin Dashboard',
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -735,6 +736,31 @@ const injectedRtkApi = api
       getAuditLog: build.query<GetAuditLogApiResponse, GetAuditLogApiArg>({
         query: (queryArg) => ({ url: `/api/v1/admin/audit-logs/${queryArg}` }),
         providesTags: ['Admin Audit Logs'],
+      }),
+      getOverview: build.query<GetOverviewApiResponse, GetOverviewApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/dashboard/overview`,
+          params: {
+            from: queryArg['from'],
+            to: queryArg.to,
+          },
+        }),
+        providesTags: ['Admin Dashboard'],
+      }),
+      getTrends: build.query<GetTrendsApiResponse, GetTrendsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/dashboard/trends`,
+          params: {
+            from: queryArg['from'],
+            to: queryArg.to,
+            granularity: queryArg.granularity,
+          },
+        }),
+        providesTags: ['Admin Dashboard'],
+      }),
+      refreshDashboard: build.mutation<RefreshDashboardApiResponse, RefreshDashboardApiArg>({
+        query: () => ({ url: `/api/v1/admin/dashboard/refresh`, method: 'POST' }),
+        invalidatesTags: ['Admin Dashboard'],
       }),
     }),
     overrideExisting: false,
@@ -1524,6 +1550,36 @@ export type GetAuditLogApiResponse = /** status 200 Thành công */ {
   data: AuditLogDetail;
 };
 export type GetAuditLogApiArg = string;
+export type GetOverviewApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: DashboardOverview;
+};
+export type GetOverviewApiArg = {
+  /** Từ ngày (giờ Việt Nam, tính cả ngày này). Mặc định 29 ngày trước "to". Kỳ tối đa 366 ngày */
+  from?: string;
+  /** Đến ngày (giờ Việt Nam, tính cả ngày này). Mặc định hôm nay */
+  to?: string;
+};
+export type GetTrendsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: DashboardTrends;
+};
+export type GetTrendsApiArg = {
+  /** Từ ngày (giờ Việt Nam, tính cả ngày này). Mặc định 29 ngày trước "to". Kỳ tối đa 366 ngày */
+  from?: string;
+  /** Đến ngày (giờ Việt Nam, tính cả ngày này). Mặc định hôm nay */
+  to?: string;
+  /** Gom số liệu theo ngày hoặc theo tuần (tuần bắt đầu thứ Hai) */
+  granularity?: 'day' | 'week';
+};
+export type RefreshDashboardApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: DashboardRefreshResult;
+};
+export type RefreshDashboardApiArg = void;
 export type UserStatus = 'PENDING_VERIFICATION' | 'PENDING_APPROVAL' | 'ACTIVE' | 'LOCKED';
 export type RegisterResult = {
   id: string;
@@ -3248,6 +3304,99 @@ export type AuditLogDetail = {
   } | null;
   userAgent: string | null;
 };
+export type DashboardRangeInfo = {
+  from: string;
+  to: string;
+};
+export type DashboardUsersByRole = {
+  STUDENT: number;
+  TEACHER: number;
+  ADMIN: number;
+};
+export type DashboardUserStats = {
+  /** Tổng số tài khoản hiện có */
+  total: number;
+  byRole: DashboardUsersByRole;
+  /** Tài khoản tạo trong kỳ */
+  newInRange: number;
+  /** Tài khoản đang bị khóa */
+  locked: number;
+  /** Giáo viên chờ admin duyệt */
+  pendingApproval: number;
+};
+export type DashboardExamStats = {
+  published: number;
+  draft: number;
+  unpublished: number;
+};
+export type DashboardQuestionStats = {
+  /** Câu hỏi chưa bị xóa */
+  total: number;
+  /** Câu hỏi đang dùng (ACTIVE) */
+  active: number;
+};
+export type DashboardContentStats = {
+  /** Đề thi chưa bị xóa theo trạng thái */
+  exams: DashboardExamStats;
+  questions: DashboardQuestionStats;
+};
+export type DashboardAttemptStats = {
+  /** Lượt bắt đầu làm bài trong kỳ, tính cả lượt đã hủy */
+  started: number;
+  /** Trong số đó, lượt đã nộp bài */
+  completed: number;
+  /** completed / started (%): lượt hủy hoặc đang làm dở kéo tỉ lệ xuống; null khi chưa có lượt nào */
+  completionRate: number | null;
+  /** Điểm TB thang 990 của lượt làm cả đề TOEIC LR nộp trong kỳ; null khi chưa có lượt nào */
+  averageToeicScore: number | null;
+};
+export type DashboardAiStats = {
+  /** Lượt gọi AI trong kỳ */
+  calls: number;
+  /** Lượt lỗi hoặc AI trả sai định dạng */
+  failed: number;
+  /** failed / calls (%), null khi chưa có lượt nào */
+  failureRate: number | null;
+  inputTokens: number;
+  outputTokens: number;
+};
+export type DashboardAccessStats = {
+  /** Lượt đăng nhập thành công trong kỳ */
+  logins: number;
+  /** Số tài khoản có đăng nhập trong kỳ */
+  activeUsers: number;
+};
+export type DashboardOverview = {
+  range: DashboardRangeInfo;
+  /** Thời điểm tổng hợp (có thể lấy từ cache) */
+  generatedAt: string;
+  users: DashboardUserStats;
+  content: DashboardContentStats;
+  attempts: DashboardAttemptStats;
+  ai: DashboardAiStats;
+  access: DashboardAccessStats;
+};
+export type DashboardGranularity = 'day' | 'week';
+export type DashboardTrendPoint = {
+  /** Ngày đầu mốc: chính ngày đó, hoặc thứ Hai của tuần */
+  bucket: string;
+  newUsers: number;
+  /** Lượt bắt đầu làm bài, tính cả lượt đã hủy */
+  attempts: number;
+  aiCalls: number;
+  /** Lượt đăng nhập thành công */
+  logins: number;
+};
+export type DashboardTrends = {
+  range: DashboardRangeInfo;
+  granularity: DashboardGranularity;
+  generatedAt: string;
+  /** Tăng dần, đủ mọi mốc trong kỳ */
+  points: DashboardTrendPoint[];
+};
+export type DashboardRefreshResult = {
+  refreshedAt: string;
+};
 export const {
   useRegisterMutation,
   useVerifyEmailMutation,
@@ -3341,4 +3490,7 @@ export const {
   useGetAuditLogFiltersQuery,
   useExportAuditLogsMutation,
   useGetAuditLogQuery,
+  useGetOverviewQuery,
+  useGetTrendsQuery,
+  useRefreshDashboardMutation,
 } = injectedRtkApi;

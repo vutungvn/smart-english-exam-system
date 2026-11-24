@@ -40,8 +40,8 @@ export function TeacherSection() {
           <SectionHeading
             align="left"
             eyebrow="Giáo viên"
-            title="Tạo khóa học và đề thi dễ dàng"
-            description="Công cụ trực quan giúp thầy cô số hóa kho đề, tạo khóa học và theo dõi kết quả của học viên."
+            title="Soạn câu hỏi và đề thi dễ dàng"
+            description="Công cụ trực quan giúp thầy cô số hóa kho đề, soạn đề thi theo chuẩn TOEIC và theo dõi kết quả của học viên."
           />
           <ul className="mt-8 space-y-3.5">
             {BENEFITS.map((text) => (

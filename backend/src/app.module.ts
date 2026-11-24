@@ -24,6 +24,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { AuditModule } from './infra/audit/audit.module.js';
 import { AdminUsersModule } from './modules/admin-users/admin-users.module.js';
 import { AdminAuditLogsModule } from './modules/admin-audit-logs/admin-audit-logs.module.js';
+import { AdminDashboardModule } from './modules/admin-dashboard/admin-dashboard.module.js';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { AdminAuditLogsModule } from './modules/admin-audit-logs/admin-audit-log
     NotificationsModule,
     AdminUsersModule,
     AdminAuditLogsModule,
+    AdminDashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

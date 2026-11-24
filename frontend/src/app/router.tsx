@@ -43,7 +43,6 @@ import { AdminLayout } from './layouts/admin/AdminLayout';
 
 // TẠM: các mục menu học viên chưa làm, hiện trang "đang phát triển" trong layout
 const STUDENT_PLACEHOLDERS = [
-  { path: 'courses', title: 'Khóa học của tôi' },
   { path: 'ai-analysis', title: 'Phân tích AI' },
   { path: 'assistant', title: 'Trợ giảng AI' },
   { path: 'flashcards', title: 'Flashcard' },

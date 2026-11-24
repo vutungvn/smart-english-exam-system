@@ -13,7 +13,6 @@ const NAV_ITEMS = [
   { href: '#tinh-nang', label: 'Tính năng' },
   { href: '#ky-nang', label: '4 kỹ năng' },
   { href: '#lo-trinh', label: 'Lộ trình' },
-  { href: '#khoa-hoc', label: 'Khóa học' },
   { href: '#giao-vien', label: 'Giáo viên' },
   { href: '#hoi-dap', label: 'Hỏi đáp' },
 ];
