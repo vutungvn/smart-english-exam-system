@@ -1,9 +1,17 @@
 import { Link } from 'react-router';
-import { ChartLine, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+import { toApiError } from '@/api/errors';
+import { useGetOverviewQuery } from '@/api/generated';
 import { useAppSelector } from '@/hooks/hooks';
 import { cn } from '@/lib/utils';
 import { selectCurrentUser } from '@/store/slice/auth-slice';
 import { adminNavItem, adminPath } from '../admin-nav';
+import { DashboardStatCards, DashboardStatCardsSkeleton } from '../components/DashboardStatCards';
+import { DashboardToolbar } from '../components/DashboardToolbar';
+import { PendingApprovalBanner } from '../components/PendingApprovalBanner';
+import { RecentAuditCard } from '../components/RecentAuditCard';
+import { TrendChartCard } from '../components/TrendChartCard';
+import { useDashboardFilters } from '../hooks/use-dashboard-filters';
 
 // Lối tắt tới các mục quản trị hay dùng (theo Stitch, khối "Truy cập nhanh")
 const QUICK_LINKS = [
@@ -18,35 +26,69 @@ const QUICK_LINKS = [
 ];
 
 /**
- * Trang chủ quản trị `/admin`. TẠM: chưa có API thống kê (SPRINT-68) nên khối số liệu, biểu đồ xu
- * hướng, việc cần xử lý chỉ là khung giữ chỗ; truy cập nhanh đã dùng được
+ * Trang chủ quản trị `/admin` (theo Stitch, màn "Tổng quan Quản trị viên"): chỉ số theo kỳ,
+ * giáo viên chờ duyệt, biểu đồ xu hướng, thao tác gần đây, truy cập nhanh.
+ * GET /admin/dashboard/overview, /trends; POST /admin/dashboard/refresh
  */
 export function AdminOverviewPage() {
   const user = useAppSelector(selectCurrentUser);
+  const { range, by, setRange, setBy, arg } = useDashboardFilters();
+  const { data, error, isLoading, isFetching, refetch } = useGetOverviewQuery(arg);
+  const overview = data?.data;
 
   return (
     <div className="space-y-6">
       <title>Tổng quan hệ thống – Smart English Exam</title>
-      <header>
-        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Tổng quan hệ thống</h1>
-        <p className="mt-1.5 text-muted-foreground">
-          Xin chào, {user?.fullName ?? 'Quản trị viên'}. Đây là khu vực quản trị Smart English Exam.
-        </p>
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Tổng quan hệ thống</h1>
+          <p className="mt-1.5 text-muted-foreground">
+            Xin chào, {user?.fullName ?? 'Quản trị viên'}. Đây là tình hình hoạt động của Smart
+            English Exam.
+          </p>
+        </div>
+        <DashboardToolbar
+          range={range}
+          onRangeChange={setRange}
+          generatedAt={overview?.generatedAt}
+        />
       </header>
 
-      <section
-        aria-label="Thống kê hệ thống"
-        className="flex flex-col items-center rounded-3xl border border-dashed border-border bg-white px-6 py-12 text-center"
-      >
-        <span className="flex size-12 items-center justify-center rounded-2xl bg-accent text-primary">
-          <ChartLine className="size-6" />
-        </span>
-        <h2 className="mt-4 text-lg font-bold text-foreground">Thống kê đang được xây dựng</h2>
-        <p className="mt-1.5 max-w-lg text-sm text-muted-foreground">
-          Số người dùng, đề thi đã xuất bản, lượt làm bài, lượt gọi AI, biểu đồ xu hướng và các việc
-          cần xử lý sẽ hiện ở đây.
-        </p>
-      </section>
+      {overview && <PendingApprovalBanner count={overview.users.pendingApproval} />}
+
+      {isLoading ? (
+        <DashboardStatCardsSkeleton />
+      ) : error && !overview ? (
+        <section
+          role="alert"
+          className="flex flex-col items-center gap-3 rounded-3xl border border-border bg-white px-6 py-12 text-center"
+        >
+          <p className="font-semibold text-foreground">Không tải được số liệu thống kê</p>
+          <p className="text-sm text-muted-foreground">{toApiError(error).message}</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="text-sm font-semibold text-primary hover:text-brand"
+          >
+            Thử lại
+          </button>
+        </section>
+      ) : (
+        overview && (
+          // Đổi kỳ, làm mới: giữ số cũ và làm mờ trong lúc tải, không nháy khung chờ
+          <div
+            aria-busy={isFetching}
+            className={cn('transition-opacity', isFetching && 'opacity-60')}
+          >
+            <DashboardStatCards overview={overview} />
+          </div>
+        )
+      )}
+
+      <div className="grid gap-6 xl:grid-cols-3">
+        <TrendChartCard arg={arg} by={by} onByChange={setBy} className="xl:col-span-2" />
+        <RecentAuditCard />
+      </div>
 
       <section
         aria-labelledby="quick-links"
