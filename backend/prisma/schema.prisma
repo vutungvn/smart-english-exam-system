@@ -260,6 +260,8 @@ model User {
 
   @@index([roleId], map: "ix_users_role_id")
   @@index([status], map: "ix_users_status")
+  /// Dashboard admin: người dùng mới theo kỳ, theo ngày/tuần (SPRINT-68)
+  @@index([createdAt], map: "ix_users_created_at")
   @@map("users")
 }
 
@@ -319,6 +321,8 @@ model LoginHistory {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_login_histories_user_id")
 
   @@index([userId, createdAt(sort: Desc)], map: "ix_login_histories_user_created")
+  /// Dashboard admin: lượt đăng nhập theo kỳ, theo ngày/tuần (SPRINT-68)
+  @@index([createdAt], map: "ix_login_histories_created_at")
   @@map("login_histories")
 }
 
@@ -586,6 +590,8 @@ model ExamAttempt {
   /// Lịch sử làm bài, biểu đồ điểm theo thời gian: bài đã nộp của một học viên, mới nhất trước
   @@index([studentId, submittedAt(sort: Desc)], map: "ix_exam_attempts_student_submitted")
   @@index([examId], map: "ix_exam_attempts_exam_id")
+  /// Dashboard admin: lượt làm bài theo kỳ, theo ngày/tuần (SPRINT-68)
+  @@index([startedAt], map: "ix_exam_attempts_started_at")
   @@map("exam_attempts")
 }
 
