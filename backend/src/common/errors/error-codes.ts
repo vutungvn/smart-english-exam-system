@@ -47,6 +47,9 @@ export const ErrorCode = {
   AUDIT_LOG_NOT_FOUND: 'AUDIT_LOG_NOT_FOUND',
   AUDIT_EXPORT_TOO_LARGE: 'AUDIT_EXPORT_TOO_LARGE',
 
+  // Cấu hình hệ thống
+  SETTING_GROUP_NOT_FOUND: 'SETTING_GROUP_NOT_FOUND',
+
   // Tệp
   STORAGE_UNAVAILABLE: 'STORAGE_UNAVAILABLE',
   AVATAR_INVALID_IMAGE: 'AVATAR_INVALID_IMAGE',
@@ -250,6 +253,12 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.AUDIT_EXPORT_TOO_LARGE]: {
     status: HttpStatus.UNPROCESSABLE_ENTITY,
     message: 'Quá nhiều bản ghi để xuất, hãy thu hẹp khoảng thời gian hoặc thêm điều kiện lọc',
+  },
+
+  // Cấu hình hệ thống
+  [ErrorCode.SETTING_GROUP_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy nhóm cấu hình',
   },
 
   // Tệp

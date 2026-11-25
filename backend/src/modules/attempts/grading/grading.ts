@@ -1,4 +1,5 @@
 import { AttemptMode, QuestionType, ScoringScale, Skill } from '../../../generated/prisma/enums.js';
+import type { ScoringSettings } from '../../../infra/settings/settings.schema.js';
 import { toeicLrScore } from './toeic-conversion.js';
 import { toeicSwScore } from './toeic-sw-conversion.js';
 
@@ -28,6 +29,8 @@ export interface GradingInput {
   /** Các câu trong phạm vi bài làm (cả đề, hoặc Part đang luyện), theo thứ tự đề */
   questions: GradingQuestion[];
   answers: GradingAnswer[];
+  /** Bảng quy đổi điểm TOEIC đang áp dụng (cấu hình hệ thống) */
+  tables: ScoringSettings;
 }
 
 export interface SkillScore {
@@ -67,21 +70,22 @@ function sumScaled(skills: SkillScore[]): number | null {
 }
 
 /** Đề TOEIC LR: mỗi kỹ năng quy đổi theo bảng (5–495), tổng 10–990 */
-export const toeic990Strategy: ScoringStrategy = {
+const toeic990Strategy = (tables: ScoringSettings): ScoringStrategy => ({
   name: 'TOEIC_990',
-  skillScore: (skill) => (skill.total > 0 ? toeicLrScore(skill.skill, skill.correct) : null),
+  skillScore: (skill) =>
+    skill.total > 0 ? toeicLrScore(tables, skill.skill, skill.correct) : null,
   totalScore: sumScaled,
-};
+});
 
 /** Đề TOEIC Speaking/Writing: mỗi kỹ năng quy đổi điểm thô theo bảng (0–200), tổng 0–400 */
-export const toeicSwStrategy: ScoringStrategy = {
+const toeicSwStrategy = (tables: ScoringSettings): ScoringStrategy => ({
   name: 'TOEIC_SW',
   skillScore: (skill) =>
     skill.openMax > 0 && skill.openRaw !== null
-      ? toeicSwScore(skill.skill, skill.openRaw, skill.openMax)
+      ? toeicSwScore(tables, skill.skill, skill.openRaw, skill.openMax)
       : null,
   totalScore: sumScaled,
-};
+});
 
 /**
  * Điểm và điểm tối đa theo kiểu %: câu trắc nghiệm 1 điểm, câu mở theo thang của dạng câu. Câu mở
@@ -105,11 +109,22 @@ export const percentStrategy: ScoringStrategy = {
   },
 };
 
-/** Chọn cách quy đổi: luyện theo Part luôn tính %, vì một Part không quy đổi ra điểm TOEIC được */
-export function strategyFor(scale: ScoringScale, mode: AttemptMode): ScoringStrategy {
-  if (mode !== AttemptMode.FULL) return percentStrategy;
-  if (scale === ScoringScale.TOEIC_990) return toeic990Strategy;
-  if (scale === ScoringScale.TOEIC_SW) return toeicSwStrategy;
+/** Tên cách quy đổi: luyện theo Part luôn tính %, vì một Part không quy đổi ra điểm TOEIC được */
+export function scoringNameOf(scale: ScoringScale, mode: AttemptMode): ScoringName {
+  if (mode !== AttemptMode.FULL) return 'PERCENT';
+  if (scale === ScoringScale.TOEIC_990) return 'TOEIC_990';
+  if (scale === ScoringScale.TOEIC_SW) return 'TOEIC_SW';
+  return 'PERCENT';
+}
+
+export function strategyFor(
+  scale: ScoringScale,
+  mode: AttemptMode,
+  tables: ScoringSettings,
+): ScoringStrategy {
+  const name = scoringNameOf(scale, mode);
+  if (name === 'TOEIC_990') return toeic990Strategy(tables);
+  if (name === 'TOEIC_SW') return toeicSwStrategy(tables);
   return percentStrategy;
 }
 
@@ -143,7 +158,7 @@ export function scoreSkills(
 }
 
 export function gradeAttempt(input: GradingInput): GradingResult {
-  const strategy = strategyFor(input.scale, input.mode);
+  const strategy = strategyFor(input.scale, input.mode, input.tables);
   const selected = new Map(input.answers.map((a) => [a.examQuestionId, a.selectedOptionId]));
   const marks = new Map<string, boolean>();
   const bySkill = new Map<Skill, SkillScore>();

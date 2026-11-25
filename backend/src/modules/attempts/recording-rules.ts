@@ -1,3 +1,6 @@
+import type { Prisma } from '../../generated/prisma/client.js';
+import { AttemptStatus } from '../../generated/prisma/enums.js';
+
 // Quy tắc thuần của bài nói Speaking (không đụng DB, không chạy ffmpeg) để test được riêng
 
 /** Bài nói dài nhất 60 giây (S5): WebM/Opus khoảng 0,5 MB, MP4/AAC khoảng 1 MB; 10 MB là dư sức */
@@ -42,4 +45,26 @@ export function lastProgressSeconds(stderr: string): number | null {
 /** Dài hơn thời gian trả lời của câu (cộng dung sai); câu không ghi thời gian trả lời thì không chặn */
 export function recordingTooLong(seconds: number, responseSeconds: number | null): boolean {
   return responseSeconds !== null && seconds > responseSeconds + RECORDING_TOLERANCE_SECONDS;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Bài nói quá hạn lưu: tính từ lúc nộp bài; bài đã hủy tính từ lúc bắt đầu làm */
+export function expiredRecordingsWhere(
+  retentionDays: number,
+  now: Date,
+): Prisma.AttemptAnswerWhereInput {
+  const cutoff = new Date(now.getTime() - retentionDays * DAY_MS);
+  return {
+    audioKey: { not: null },
+    attempt: {
+      OR: [
+        {
+          status: { in: [AttemptStatus.SUBMITTED, AttemptStatus.GRADED] },
+          submittedAt: { lt: cutoff },
+        },
+        { status: AttemptStatus.CANCELLED, startedAt: { lt: cutoff } },
+      ],
+    },
+  };
 }

@@ -48,19 +48,12 @@ export const envSchema = z
     // ffmpeg chuẩn hóa bài nói Speaking (WebM/Opus, MP4/AAC → MP3 mono 16 kHz); để mặc định nếu
     // ffmpeg đã có trong PATH, Windows có thể ghi đường dẫn đầy đủ (C:\ffmpeg\bin\ffmpeg.exe)
     FFMPEG_PATH: z.string().min(1).default('ffmpeg'),
-    // Số ngày giữ bài nói Speaking sau khi nộp bài, quá hạn thì job dọn dẹp xóa (D19). TẠM ở env,
-    // chuyển sang system_settings khi làm cấu hình hệ thống (SPRINT-69)
-    RECORDING_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
 
     // AI (D28, Mục 7.4): để trống GEMINI_API_KEY thì dùng FakeAiProvider (dữ liệu mẫu, không gọi Google)
     GEMINI_API_KEY: z.string().optional(),
     GEMINI_MODEL: z.string().min(1).default('gemini-3.5-flash-lite'),
     // Model chính báo hết lượt (429) thì chuyển sang model này; để trống thì không dùng model dự phòng
     GEMINI_FALLBACK_MODEL: z.string().default('gemini-3.1-flash-lite'),
-    // Tổng lượt gọi AI mỗi ngày của cả hệ thống (gói Free: 500 lượt × 2 model Flash-Lite)
-    AI_DAILY_BUDGET: z.coerce.number().int().positive().default(1000),
-    // Lượt giải thích đáp án mỗi học viên mỗi ngày; lấy từ cache không tính
-    AI_EXPLAIN_DAILY_LIMIT: z.coerce.number().int().positive().default(20),
   })
   .refine((env) => env.JWT_ACCESS_SECRET !== env.JWT_REFRESH_SECRET, {
     message: 'JWT_ACCESS_SECRET và JWT_REFRESH_SECRET phải khác nhau',

@@ -1,12 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { z } from 'zod';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
-import type { Env } from '../../config/env.schema.js';
 import { AiCallStatus, AiFeature } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { SystemSettingsService } from '../settings/system-settings.service.js';
 import { AiProvider, AiProviderError } from './ai-provider.js';
 import {
   budgetKey,
@@ -73,7 +72,7 @@ export class AiGateway {
     private readonly provider: AiProvider,
     private readonly quota: AiQuotaService,
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService<Env, true>,
+    private readonly settings: SystemSettingsService,
   ) {}
 
   /** Đang dùng dữ liệu mẫu (chưa có GEMINI_API_KEY) */
@@ -122,9 +121,8 @@ export class AiGateway {
     }
 
     // Mỗi tính năng chỉ dùng một phần ngân sách chung, chừa lượt cho tính năng khác
-    const budget = Math.floor(
-      this.config.get('AI_DAILY_BUDGET', { infer: true }) * (request.budgetShare ?? 1),
-    );
+    const { dailyBudget } = await this.settings.get('ai');
+    const budget = Math.floor(dailyBudget * (request.budgetShare ?? 1));
     if (!(await this.quota.take(budgetKey(day), budget))) {
       await this.giveBack(taken);
       // resetAt: hàng đợi chấm Speaking/Writing hoãn tới lúc này thay vì báo lỗi

@@ -11,12 +11,15 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   'user.unlock': 'Mở khóa tài khoản',
   'assessment.override': 'Giáo viên chấm/sửa điểm Speaking, Writing',
   'audit_log.export': 'Xuất nhật ký kiểm toán',
+  'setting.update': 'Sửa cấu hình hệ thống',
+  'setting.reset': 'Khôi phục cấu hình mặc định',
 };
 
 export const AUDIT_ENTITY_LABELS: Record<string, string> = {
   user: 'Người dùng',
   assessment: 'Bài chấm Speaking, Writing',
   audit_log: 'Nhật ký kiểm toán',
+  setting: 'Cấu hình hệ thống',
 };
 
 export const ROLE_LABELS: Record<RoleCode, string> = {

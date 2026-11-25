@@ -4,6 +4,8 @@ import { ErrorCode } from '../../common/errors/error-codes.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { AttemptStatus, QuestionType } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
+import type { ScoringSettings } from '../../infra/settings/settings.schema.js';
+import { SystemSettingsService } from '../../infra/settings/system-settings.service.js';
 import type { GradingProgress } from '../assessments/assessments.types.js';
 import { AssessmentsService } from '../assessments/assessments.service.js';
 import {
@@ -12,7 +14,7 @@ import {
   type OpenQuestion,
 } from '../assessments/attempt-scoring.service.js';
 import { GradingQueueService } from '../assessments/grading-queue.service.js';
-import { gradeAttempt, strategyFor } from './grading/grading.js';
+import { gradeAttempt, scoringNameOf } from './grading/grading.js';
 import { openMaxScore } from './grading/toeic-sw-conversion.js';
 import type { AttemptResult } from './attempts.types.js';
 
@@ -52,7 +54,7 @@ export function toResult(
     attemptId: row.id,
     status: row.status,
     submittedAt: row.submittedAt,
-    scoring: strategyFor(row.exam.scoringScale, row.mode).name,
+    scoring: scoringNameOf(row.exam.scoringScale, row.mode),
     correctCount: row.correctCount,
     wrongCount: row.wrongCount,
     skippedCount: row.skippedCount,
@@ -81,6 +83,7 @@ export class AttemptSubmissionService {
     private readonly scoring: AttemptScoringService,
     private readonly queue: GradingQueueService,
     private readonly assessments: AssessmentsService,
+    private readonly settings: SystemSettingsService,
   ) {}
 
   /** studentId: chỉ cho chủ bài nộp (job tự nộp không truyền) */
@@ -100,6 +103,9 @@ export class AttemptSubmissionService {
     attemptId: string,
     studentId?: string,
   ): Promise<{ result: AttemptResult; submittedNow: boolean }> {
+    // Đọc trước transaction: đọc bên trong cần thêm một kết nối, nhiều người nộp cùng lúc có thể
+    // chiếm hết pool rồi chờ nhau
+    const tables = await this.settings.get('scoring');
     const created = await this.prisma.$transaction(
       async (tx) => {
         const [locked] = await tx.$queryRaw<{ status: AttemptStatus; student_id: string }[]>`
@@ -116,7 +122,7 @@ export class AttemptSubmissionService {
         // Đã nộp (bấm nộp hai lần, hoặc job tự nộp đến trước): giữ nguyên kết quả cũ
         if (locked.status !== AttemptStatus.IN_PROGRESS) return null;
 
-        return this.grade(tx, attemptId);
+        return this.grade(tx, attemptId, tables);
       },
       { timeout: 30_000 },
     );
@@ -131,7 +137,11 @@ export class AttemptSubmissionService {
   }
 
   /** Chấm phần trắc nghiệm, tạo phiếu chấm câu Speaking/Writing đã trả lời; trả id các phiếu vừa tạo */
-  private async grade(tx: Prisma.TransactionClient, attemptId: string): Promise<string[]> {
+  private async grade(
+    tx: Prisma.TransactionClient,
+    attemptId: string,
+    tables: ScoringSettings,
+  ): Promise<string[]> {
     const attempt = await tx.examAttempt.findUniqueOrThrow({
       where: { id: attemptId },
       select: {
@@ -184,6 +194,7 @@ export class AttemptSubmissionService {
         openScore: open.scores.get(item.id) ?? null,
       })),
       answers,
+      tables,
     });
 
     // Đúng/sai từng câu (dùng cho màn xem lại, thống kê điểm yếu); câu bỏ trống, câu mở để NULL

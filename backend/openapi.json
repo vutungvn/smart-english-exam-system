@@ -18943,6 +18943,1157 @@
           "Admin Dashboard"
         ]
       }
+    },
+    "/api/v1/admin/settings": {
+      "get": {
+        "operationId": "getAdminSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminSettings"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cấu hình hệ thống: giá trị, mặc định, khoảng hợp lệ của từng nhóm",
+        "tags": [
+          "Admin Settings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/recording/impact": {
+      "get": {
+        "operationId": "getRecordingImpact",
+        "parameters": [
+          {
+            "name": "retentionDays",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": 7,
+              "maximum": 30,
+              "example": 15,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RecordingImpact"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "retentionDays",
+                            "message": "retentionDays không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Số bản ghi âm sẽ bị xóa nếu đổi số ngày giữ",
+        "tags": [
+          "Admin Settings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/scoring": {
+      "patch": {
+        "description": "Chỉ áp dụng cho bài chấm sau khi lưu, không tính lại điểm cũ.",
+        "operationId": "updateScoringSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateScoringSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminSettings"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "listening",
+                            "message": "listening không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: VERSION_CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VERSION_CONFLICT": {
+                    "summary": "VERSION_CONFLICT: Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "VERSION_CONFLICT",
+                        "message": "Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sửa bảng quy đổi điểm TOEIC",
+        "tags": [
+          "Admin Settings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/ai": {
+      "patch": {
+        "description": "Có hiệu lực ngay trong ngày.",
+        "operationId": "updateAiSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAiSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminSettings"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "dailyBudget",
+                            "message": "dailyBudget không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: VERSION_CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VERSION_CONFLICT": {
+                    "summary": "VERSION_CONFLICT: Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "VERSION_CONFLICT",
+                        "message": "Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sửa hạn mức AI",
+        "tags": [
+          "Admin Settings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/recording": {
+      "patch": {
+        "description": "Áp dụng cả bản ghi cũ: giảm số ngày thì bản ghi quá hạn bị xóa lúc 3 giờ sáng.",
+        "operationId": "updateRecordingSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecordingSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminSettings"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "retentionDays",
+                            "message": "retentionDays không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: VERSION_CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VERSION_CONFLICT": {
+                    "summary": "VERSION_CONFLICT: Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "VERSION_CONFLICT",
+                        "message": "Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sửa số ngày giữ bản ghi âm Speaking",
+        "tags": [
+          "Admin Settings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/{group}/reset": {
+      "post": {
+        "operationId": "resetSettings",
+        "parameters": [
+          {
+            "name": "group",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "$ref": "#/components/schemas/SettingGroup"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminSettings"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "updatedAt",
+                            "message": "updatedAt không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: SETTING_GROUP_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "SETTING_GROUP_NOT_FOUND": {
+                    "summary": "SETTING_GROUP_NOT_FOUND: Không tìm thấy nhóm cấu hình",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "SETTING_GROUP_NOT_FOUND",
+                        "message": "Không tìm thấy nhóm cấu hình"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: VERSION_CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VERSION_CONFLICT": {
+                    "summary": "VERSION_CONFLICT: Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "VERSION_CONFLICT",
+                        "message": "Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Khôi phục mặc định một nhóm cấu hình",
+        "tags": [
+          "Admin Settings"
+        ]
+      }
+    },
+    "/api/v1/settings/public": {
+      "get": {
+        "operationId": "getPublicSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PublicSettings"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Cấu hình công khai",
+        "tags": [
+          "Settings"
+        ]
+      }
     }
   },
   "info": {
@@ -19004,6 +20155,7 @@
           "USER_NOT_LOCKED",
           "AUDIT_LOG_NOT_FOUND",
           "AUDIT_EXPORT_TOO_LARGE",
+          "SETTING_GROUP_NOT_FOUND",
           "STORAGE_UNAVAILABLE",
           "AVATAR_INVALID_IMAGE",
           "MEDIA_LINK_INVALID",
@@ -26137,6 +27289,511 @@
         },
         "required": [
           "refreshedAt"
+        ]
+      },
+      "SettingEditor": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Quản trị viên"
+          }
+        },
+        "required": [
+          "id",
+          "fullName"
+        ]
+      },
+      "ConversionPointDto": {
+        "type": "object",
+        "properties": {
+          "raw": {
+            "type": "number",
+            "example": 50,
+            "minimum": 0,
+            "maximum": 100,
+            "description": "LR: số câu đúng; SW: tỉ lệ % điểm thô"
+          },
+          "score": {
+            "type": "number",
+            "example": 250,
+            "description": "Điểm quy đổi"
+          }
+        },
+        "required": [
+          "raw",
+          "score"
+        ]
+      },
+      "ScoringSettingsDto": {
+        "type": "object",
+        "properties": {
+          "listening": {
+            "minItems": 2,
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversionPointDto"
+            }
+          },
+          "reading": {
+            "minItems": 2,
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversionPointDto"
+            }
+          },
+          "speaking": {
+            "minItems": 2,
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversionPointDto"
+            }
+          },
+          "writing": {
+            "minItems": 2,
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversionPointDto"
+            }
+          }
+        },
+        "required": [
+          "listening",
+          "reading",
+          "speaking",
+          "writing"
+        ]
+      },
+      "SettingConversionRule": {
+        "type": "object",
+        "properties": {
+          "minScore": {
+            "type": "number",
+            "example": 5
+          },
+          "maxScore": {
+            "type": "number",
+            "example": 495
+          },
+          "step": {
+            "type": "number",
+            "example": 5,
+            "description": "Điểm là bội số của step"
+          }
+        },
+        "required": [
+          "minScore",
+          "maxScore",
+          "step"
+        ]
+      },
+      "SettingRange": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "number",
+            "example": 7
+          },
+          "max": {
+            "type": "number",
+            "example": 30
+          }
+        },
+        "required": [
+          "min",
+          "max"
+        ]
+      },
+      "ScoringRules": {
+        "type": "object",
+        "properties": {
+          "listening": {
+            "$ref": "#/components/schemas/SettingConversionRule"
+          },
+          "reading": {
+            "$ref": "#/components/schemas/SettingConversionRule"
+          },
+          "speaking": {
+            "$ref": "#/components/schemas/SettingConversionRule"
+          },
+          "writing": {
+            "$ref": "#/components/schemas/SettingConversionRule"
+          },
+          "points": {
+            "description": "Số mốc của mỗi bảng",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SettingRange"
+              }
+            ]
+          }
+        },
+        "required": [
+          "listening",
+          "reading",
+          "speaking",
+          "writing",
+          "points"
+        ]
+      },
+      "ScoringSettingsView": {
+        "type": "object",
+        "properties": {
+          "isDefault": {
+            "type": "boolean",
+            "description": "true: đang dùng đúng giá trị mặc định"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Gửi lại trong PATCH, reset để kiểm tra xung đột"
+          },
+          "updatedBy": {
+            "nullable": true,
+            "description": "null: chưa ai sửa",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SettingEditor"
+              }
+            ]
+          },
+          "values": {
+            "$ref": "#/components/schemas/ScoringSettingsDto"
+          },
+          "defaults": {
+            "$ref": "#/components/schemas/ScoringSettingsDto"
+          },
+          "rules": {
+            "$ref": "#/components/schemas/ScoringRules"
+          }
+        },
+        "required": [
+          "isDefault",
+          "updatedAt",
+          "updatedBy",
+          "values",
+          "defaults",
+          "rules"
+        ]
+      },
+      "AiSettingsDto": {
+        "type": "object",
+        "properties": {
+          "dailyBudget": {
+            "type": "number",
+            "example": 1000,
+            "minimum": 10,
+            "maximum": 100000,
+            "description": "Tổng lượt gọi AI mỗi ngày của cả hệ thống"
+          },
+          "explainDailyLimit": {
+            "type": "number",
+            "example": 20,
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Lượt giải thích đáp án của mỗi học viên mỗi ngày"
+          }
+        },
+        "required": [
+          "dailyBudget",
+          "explainDailyLimit"
+        ]
+      },
+      "AiRanges": {
+        "type": "object",
+        "properties": {
+          "dailyBudget": {
+            "$ref": "#/components/schemas/SettingRange"
+          },
+          "explainDailyLimit": {
+            "$ref": "#/components/schemas/SettingRange"
+          }
+        },
+        "required": [
+          "dailyBudget",
+          "explainDailyLimit"
+        ]
+      },
+      "AiSettingsView": {
+        "type": "object",
+        "properties": {
+          "isDefault": {
+            "type": "boolean",
+            "description": "true: đang dùng đúng giá trị mặc định"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Gửi lại trong PATCH, reset để kiểm tra xung đột"
+          },
+          "updatedBy": {
+            "nullable": true,
+            "description": "null: chưa ai sửa",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SettingEditor"
+              }
+            ]
+          },
+          "values": {
+            "$ref": "#/components/schemas/AiSettingsDto"
+          },
+          "defaults": {
+            "$ref": "#/components/schemas/AiSettingsDto"
+          },
+          "ranges": {
+            "$ref": "#/components/schemas/AiRanges"
+          }
+        },
+        "required": [
+          "isDefault",
+          "updatedAt",
+          "updatedBy",
+          "values",
+          "defaults",
+          "ranges"
+        ]
+      },
+      "RecordingSettingsDto": {
+        "type": "object",
+        "properties": {
+          "retentionDays": {
+            "type": "number",
+            "example": 30,
+            "minimum": 7,
+            "maximum": 30,
+            "description": "Số ngày giữ bản ghi âm Speaking sau khi nộp bài"
+          }
+        },
+        "required": [
+          "retentionDays"
+        ]
+      },
+      "RecordingRanges": {
+        "type": "object",
+        "properties": {
+          "retentionDays": {
+            "$ref": "#/components/schemas/SettingRange"
+          }
+        },
+        "required": [
+          "retentionDays"
+        ]
+      },
+      "RecordingSettingsView": {
+        "type": "object",
+        "properties": {
+          "isDefault": {
+            "type": "boolean",
+            "description": "true: đang dùng đúng giá trị mặc định"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Gửi lại trong PATCH, reset để kiểm tra xung đột"
+          },
+          "updatedBy": {
+            "nullable": true,
+            "description": "null: chưa ai sửa",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SettingEditor"
+              }
+            ]
+          },
+          "values": {
+            "$ref": "#/components/schemas/RecordingSettingsDto"
+          },
+          "defaults": {
+            "$ref": "#/components/schemas/RecordingSettingsDto"
+          },
+          "ranges": {
+            "$ref": "#/components/schemas/RecordingRanges"
+          }
+        },
+        "required": [
+          "isDefault",
+          "updatedAt",
+          "updatedBy",
+          "values",
+          "defaults",
+          "ranges"
+        ]
+      },
+      "AdminSettings": {
+        "type": "object",
+        "properties": {
+          "scoring": {
+            "$ref": "#/components/schemas/ScoringSettingsView"
+          },
+          "ai": {
+            "$ref": "#/components/schemas/AiSettingsView"
+          },
+          "recording": {
+            "$ref": "#/components/schemas/RecordingSettingsView"
+          }
+        },
+        "required": [
+          "scoring",
+          "ai",
+          "recording"
+        ]
+      },
+      "RecordingImpact": {
+        "type": "object",
+        "properties": {
+          "recordingCount": {
+            "type": "number",
+            "example": 12,
+            "description": "Số bản ghi âm sẽ bị xóa ở lần dọn kế tiếp (3 giờ sáng)"
+          }
+        },
+        "required": [
+          "recordingCount"
+        ]
+      },
+      "UpdateScoringSettingsDto": {
+        "type": "object",
+        "properties": {
+          "listening": {
+            "minItems": 2,
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversionPointDto"
+            }
+          },
+          "reading": {
+            "minItems": 2,
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversionPointDto"
+            }
+          },
+          "speaking": {
+            "minItems": 2,
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversionPointDto"
+            }
+          },
+          "writing": {
+            "minItems": 2,
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversionPointDto"
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409"
+          }
+        },
+        "required": [
+          "listening",
+          "reading",
+          "speaking",
+          "writing",
+          "updatedAt"
+        ]
+      },
+      "UpdateAiSettingsDto": {
+        "type": "object",
+        "properties": {
+          "dailyBudget": {
+            "type": "number",
+            "example": 1000,
+            "minimum": 10,
+            "maximum": 100000,
+            "description": "Tổng lượt gọi AI mỗi ngày của cả hệ thống"
+          },
+          "explainDailyLimit": {
+            "type": "number",
+            "example": 20,
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Lượt giải thích đáp án của mỗi học viên mỗi ngày"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409"
+          }
+        },
+        "required": [
+          "dailyBudget",
+          "explainDailyLimit",
+          "updatedAt"
+        ]
+      },
+      "UpdateRecordingSettingsDto": {
+        "type": "object",
+        "properties": {
+          "retentionDays": {
+            "type": "number",
+            "example": 30,
+            "minimum": 7,
+            "maximum": 30,
+            "description": "Số ngày giữ bản ghi âm Speaking sau khi nộp bài"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409"
+          }
+        },
+        "required": [
+          "retentionDays",
+          "updatedAt"
+        ]
+      },
+      "SettingGroup": {
+        "type": "string",
+        "enum": [
+          "scoring",
+          "ai",
+          "recording"
+        ]
+      },
+      "ResetSettingsDto": {
+        "type": "object",
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409"
+          }
+        },
+        "required": [
+          "updatedAt"
+        ]
+      },
+      "PublicSettings": {
+        "type": "object",
+        "properties": {
+          "recordingRetentionDays": {
+            "type": "number",
+            "example": 30,
+            "description": "Số ngày giữ bản ghi âm Speaking"
+          }
+        },
+        "required": [
+          "recordingRetentionDays"
         ]
       }
     }

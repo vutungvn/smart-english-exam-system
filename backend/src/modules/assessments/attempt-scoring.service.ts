@@ -8,6 +8,7 @@ import {
   type Skill,
 } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
+import { SystemSettingsService } from '../../infra/settings/system-settings.service.js';
 import { scoreSkills, strategyFor, type SkillScore } from '../attempts/grading/grading.js';
 import { openMaxScore } from '../attempts/grading/toeic-sw-conversion.js';
 
@@ -67,7 +68,10 @@ function isUnanswered(
 export class AttemptScoringService {
   private readonly logger = new Logger(AttemptScoringService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly settings: SystemSettingsService,
+  ) {}
 
   /**
    * Điểm từng câu mở (Speaking, Writing). Bỏ trống (chưa viết, chưa có bài nói) 0 điểm, không gọi
@@ -128,10 +132,12 @@ export class AttemptScoringService {
 
   /**
    * Tổng hợp lại điểm câu mở của lượt làm bài: sau mỗi câu AI chấm xong, hoặc giáo viên chấm lại một
-   * câu (SPRINT-91, kể cả bài đã GRADED: điểm bài đổi theo). Khóa dòng bài làm nên hai câu chấm xong
-   * cùng lúc chỉ một lần chuyển GRADED. Trả true khi lượt làm vừa chuyển SUBMITTED → GRADED
+   * câu (SPRINT-91, kể cả bài đã GRADED: điểm bài đổi theo, quy đổi theo bảng điểm hiện hành). Khóa
+   * dòng bài làm nên hai câu chấm xong cùng lúc chỉ một lần chuyển GRADED. Trả true khi lượt làm vừa chuyển SUBMITTED → GRADED
    */
   async refresh(attemptId: string): Promise<boolean> {
+    // Đọc trước transaction như lúc nộp bài (AttemptSubmissionService)
+    const tables = await this.settings.get('scoring');
     return this.prisma.$transaction(async (tx) => {
       const [locked] = await tx.$queryRaw<{ status: AttemptStatus }[]>`
         SELECT status FROM exam_attempts WHERE id = ${attemptId}::uuid FOR UPDATE`;
@@ -196,7 +202,7 @@ export class AttemptScoringService {
         ...open.get(skill.skill),
       }));
 
-      const strategy = strategyFor(attempt.exam.scoringScale, attempt.mode);
+      const strategy = strategyFor(attempt.exam.scoringScale, attempt.mode, tables);
       const { skills: scored, total, pendingOpen } = scoreSkills(strategy, skills);
       // Bài đã có điểm thì không quay lại trạng thái chờ chấm (giáo viên chỉ thêm điểm, không bớt)
       if (pendingOpen && status === AttemptStatus.GRADED) return false;
