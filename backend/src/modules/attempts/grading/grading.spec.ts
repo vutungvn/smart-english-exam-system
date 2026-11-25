@@ -1,16 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { AttemptMode, QuestionType, ScoringScale, Skill } from '../../../generated/prisma/enums.js';
+import { SETTING_DEFAULTS } from '../../../infra/settings/settings.schema.js';
 import {
-  gradeAttempt,
-  percentStrategy,
+  gradeAttempt as gradeWithTables,
   strategyFor,
-  toeic990Strategy,
-  toeicSwStrategy,
   type GradingAnswer,
+  type GradingInput,
   type GradingQuestion,
 } from './grading.js';
-import { TOEIC_LR_TABLE, toeicLrScore } from './toeic-conversion.js';
-import { openMaxScore, toeicSwScore } from './toeic-sw-conversion.js';
+import { toeicLrScore as lrScore } from './toeic-conversion.js';
+import { openMaxScore, toeicSwScore as swScore } from './toeic-sw-conversion.js';
+
+// Các test dưới dùng bảng quy đổi mặc định, trừ nhóm "Bảng quy đổi do admin sửa"
+const TABLES = SETTING_DEFAULTS.scoring;
+const gradeAttempt = (input: Omit<GradingInput, 'tables'>) =>
+  gradeWithTables({ ...input, tables: TABLES });
+const toeicLrScore = (skill: Skill, correct: number) => lrScore(TABLES, skill, correct);
+const toeicSwScore = (skill: Skill, raw: number, max: number) => swScore(TABLES, skill, raw, max);
 
 const choice = (id: string, skill: Skill = Skill.READING): GradingQuestion => ({
   examQuestionId: id,
@@ -59,8 +65,7 @@ describe('Bảng quy đổi TOEIC LR', () => {
   it.each([Skill.LISTENING, Skill.READING])(
     '%s: đủ 101 mức, không giảm khi đúng thêm, luôn là bội số của 5 trong khoảng 5–495',
     (skill) => {
-      const table = TOEIC_LR_TABLE[skill];
-      expect(table).toHaveLength(101);
+      const table = Array.from({ length: 101 }, (_, i) => toeicLrScore(skill, i) as number);
       table.forEach((score, i) => {
         expect(score % 5).toBe(0);
         expect(score).toBeGreaterThanOrEqual(5);
@@ -125,11 +130,12 @@ describe('Bảng quy đổi TOEIC SW', () => {
 
 describe('Chọn cách quy đổi', () => {
   it('làm cả đề TOEIC_990 → TOEIC 990; TOEIC_SW → 0–200; luyện theo Part và đề PERCENT → %', () => {
-    expect(strategyFor(ScoringScale.TOEIC_990, AttemptMode.FULL)).toBe(toeic990Strategy);
-    expect(strategyFor(ScoringScale.TOEIC_SW, AttemptMode.FULL)).toBe(toeicSwStrategy);
-    expect(strategyFor(ScoringScale.TOEIC_990, AttemptMode.PART)).toBe(percentStrategy);
-    expect(strategyFor(ScoringScale.TOEIC_SW, AttemptMode.PART)).toBe(percentStrategy);
-    expect(strategyFor(ScoringScale.PERCENT, AttemptMode.FULL)).toBe(percentStrategy);
+    const name = (scale: ScoringScale, mode: AttemptMode) => strategyFor(scale, mode, TABLES).name;
+    expect(name(ScoringScale.TOEIC_990, AttemptMode.FULL)).toBe('TOEIC_990');
+    expect(name(ScoringScale.TOEIC_SW, AttemptMode.FULL)).toBe('TOEIC_SW');
+    expect(name(ScoringScale.TOEIC_990, AttemptMode.PART)).toBe('PERCENT');
+    expect(name(ScoringScale.TOEIC_SW, AttemptMode.PART)).toBe('PERCENT');
+    expect(name(ScoringScale.PERCENT, AttemptMode.FULL)).toBe('PERCENT');
   });
 });
 
@@ -323,5 +329,46 @@ describe('gradeAttempt', () => {
       answers: [right('q1'), right('other')],
     });
     expect(result).toMatchObject({ correct: 1, wrong: 0, skipped: 0, scaledScore: 100 });
+  });
+});
+
+describe('Bảng quy đổi do admin sửa', () => {
+  it('LR chấm theo bảng truyền vào, không theo bảng mặc định', () => {
+    const tables = {
+      ...TABLES,
+      reading: [
+        { raw: 0, score: 5 },
+        { raw: 50, score: 400 },
+        { raw: 100, score: 495 },
+      ],
+    };
+    const result = gradeWithTables({
+      scale: ScoringScale.TOEIC_990,
+      mode: AttemptMode.FULL,
+      ...lrSkill(Skill.READING, 100, 50),
+      tables,
+    });
+    expect(result.scaledScore).toBe(400);
+    // Nửa quãng từ 5 đến 400 = 202,5 → làm tròn tới bội số của 5
+    expect(lrScore(tables, Skill.READING, 25)).toBe(205);
+  });
+
+  it('SW chấm theo bảng truyền vào', () => {
+    const tables = {
+      ...TABLES,
+      writing: [
+        { raw: 0, score: 0 },
+        { raw: 100, score: 200 },
+      ],
+    };
+    const result = gradeWithTables({
+      scale: ScoringScale.TOEIC_SW,
+      mode: AttemptMode.FULL,
+      questions: writingTest(2, 3, 4),
+      answers: [],
+      tables,
+    });
+    // 20/28 ≈ 71,4% → 142,9 → 140 (bảng mặc định là 150)
+    expect(result.scaledScore).toBe(140);
   });
 });

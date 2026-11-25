@@ -1,9 +1,10 @@
 import { FileClock, ShieldCheck, UserCheck } from 'lucide-react';
+import { useRecordingRetention } from '@/hooks/use-recording-retention';
 import { Section, SectionHeading } from './Section';
 
 // Theo chính sách dữ liệu của hệ thống (kế hoạch D14, D19): ẩn danh trước khi gửi AI,
 // đồng ý riêng trước khi ghi âm, tệp ghi âm tự xóa sau số ngày cấu hình (mặc định 30)
-const ITEMS = [
+const buildItems = (retentionDays: number) => [
   {
     icon: ShieldCheck,
     title: 'Ẩn danh trước khi gửi AI',
@@ -12,8 +13,8 @@ const ITEMS = [
   },
   {
     icon: FileClock,
-    title: 'Ghi âm tự xóa sau 30 ngày',
-    description: 'Bài nói Speaking chỉ dùng để chấm điểm và tự động xóa khỏi hệ thống sau 30 ngày.',
+    title: `Ghi âm tự xóa sau ${retentionDays} ngày`,
+    description: `Bài nói Speaking chỉ dùng để chấm điểm và tự động xóa khỏi hệ thống sau ${retentionDays} ngày.`,
   },
   {
     icon: UserCheck,
@@ -23,6 +24,8 @@ const ITEMS = [
 ];
 
 export function DataSafetySection() {
+  const items = buildItems(useRecordingRetention());
+
   return (
     <Section>
       <SectionHeading
@@ -32,7 +35,7 @@ export function DataSafetySection() {
       />
 
       <ul className="mt-12 grid gap-5 rounded-3xl bg-accent p-5 sm:p-8 md:grid-cols-3">
-        {ITEMS.map(({ icon: Icon, title, description }) => (
+        {items.map(({ icon: Icon, title, description }) => (
           <li key={title} className="rounded-[20px] border border-border bg-white p-6">
             <span className="flex size-11 items-center justify-center rounded-xl bg-accent text-primary">
               <Icon className="size-5" />

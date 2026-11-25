@@ -1,10 +1,9 @@
-import type { ConfigService } from '@nestjs/config';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { ErrorCode } from '../../common/errors/error-codes.js';
-import type { Env } from '../../config/env.schema.js';
 import { AiCallStatus, AiFeature } from '../../generated/prisma/enums.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
+import type { SystemSettingsService } from '../settings/system-settings.service.js';
 import { AiGateway } from './ai-gateway.service.js';
 import { AiProvider, AiProviderError } from './ai-provider.js';
 import type { AiQuotaService } from './ai-quota.service.js';
@@ -83,8 +82,10 @@ function setup(replies: Reply[], budget = 1000) {
     Promise.resolve({}),
   );
   const prisma = { aiUsageLog: { create } } as unknown as PrismaService;
-  const config = { get: () => budget } as unknown as ConfigService<Env, true>;
-  const gateway = new AiGateway(provider, quota as unknown as AiQuotaService, prisma, config);
+  const settings = {
+    get: () => Promise.resolve({ dailyBudget: budget, explainDailyLimit: 20 }),
+  } as unknown as SystemSettingsService;
+  const gateway = new AiGateway(provider, quota as unknown as AiQuotaService, prisma, settings);
   const statuses = () => create.mock.calls.map(([args]) => args.data.status);
   return { gateway, provider, quota, statuses };
 }

@@ -5,6 +5,7 @@ import {
   Lock,
   LockOpen,
   Pencil,
+  RotateCcw,
   type LucideIcon,
 } from 'lucide-react';
 import type { ExportAuditLogsDto, ListAuditLogsApiArg, RoleCode } from '@/api/generated';
@@ -33,6 +34,7 @@ const ACTION_TONES: Record<string, ActionMeta> = {
   unlock: { icon: LockOpen, tone: 'bg-emerald-50 text-emerald-700' },
   update: { icon: Pencil, tone: 'bg-accent text-brand' },
   override: { icon: ClipboardCheck, tone: 'bg-violet-50 text-violet-700' },
+  reset: { icon: RotateCcw, tone: 'bg-amber-50 text-amber-700' },
   export: { icon: Download, tone: 'bg-slate-100 text-slate-700' },
 };
 const DEFAULT_ACTION: ActionMeta = { icon: History, tone: 'bg-slate-100 text-slate-700' };
@@ -60,6 +62,15 @@ const FIELD_LABELS: Record<string, string> = {
   maxScore: 'Điểm tối đa',
   criteria: 'Điểm tiêu chí',
   feedback: 'Nhận xét',
+  // Cấu hình hệ thống
+  listening: 'Bảng Listening',
+  reading: 'Bảng Reading',
+  speaking: 'Bảng Speaking',
+  writing: 'Bảng Writing',
+  dailyBudget: 'Tổng lượt AI mỗi ngày',
+  explainDailyLimit: 'Lượt giải thích mỗi học viên / ngày',
+  retentionDays: 'Số ngày giữ bản ghi âm',
+  group: 'Nhóm cấu hình',
   // Thông tin thêm
   reason: 'Lý do',
   attemptId: 'Mã bài làm',
@@ -92,6 +103,9 @@ const VALUE_LABELS: Record<string, string> = {
   FAILED: 'Chấm lỗi',
   SPEAKING: 'Speaking',
   WRITING: 'Writing',
+  scoring: 'Quy đổi điểm',
+  ai: 'Hạn mức AI',
+  recording: 'Ghi âm Speaking',
   csv: 'CSV',
   xlsx: 'Excel',
 };

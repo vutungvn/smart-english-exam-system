@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
-import type { ConfigService } from '@nestjs/config';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PrismaService } from '../../infra/prisma/prisma.service.js';
+import type { SystemSettingsService } from '../../infra/settings/system-settings.service.js';
 import type { StorageService } from '../../infra/storage/storage.service.js';
 import { RecordingCleanupService } from './recording-cleanup.service.js';
 
@@ -14,7 +14,7 @@ interface Row {
 }
 
 /** rows: các câu còn bài nói quá hạn; failing: key xóa lỗi (kho tệp hỏng) */
-function setup(rows: Row[], failing: string[] = []) {
+function setup(rows: Row[], failing: string[] = [], retentionDays = 30) {
   const remaining = [...rows];
   const findMany = vi.fn(({ where, take }: { where: { id: { notIn: string[] } }; take: number }) =>
     Promise.resolve(remaining.filter((row) => !where.id.notIn.includes(row.id)).slice(0, take)),
@@ -30,7 +30,7 @@ function setup(rows: Row[], failing: string[] = []) {
   const service = new RecordingCleanupService(
     { attemptAnswer: { findMany, updateMany } } as unknown as PrismaService,
     { delete: remove } as unknown as StorageService,
-    { get: () => 30 } as unknown as ConfigService<never, true>,
+    { get: () => Promise.resolve({ retentionDays }) } as unknown as SystemSettingsService,
   );
   return { service, findMany, updateMany, remove };
 }
@@ -64,6 +64,16 @@ describe('RecordingCleanupService', () => {
         },
       }),
     );
+  });
+
+  it('số ngày giữ lấy từ cấu hình hệ thống', async () => {
+    const { service, findMany } = setup([], [], 7);
+    await service.cleanup(NOW);
+
+    const cutoff = new Date(NOW.getTime() - 7 * DAY_MS);
+    expect(findMany.mock.calls[0][0].where).toMatchObject({
+      attempt: { OR: [{ submittedAt: { lt: cutoff } }, { startedAt: { lt: cutoff } }] },
+    });
   });
 
   it('xóa tệp rồi mới bỏ audio_key, ghi audio_deleted_at', async () => {
@@ -101,6 +111,7 @@ describe('RecordingCleanupService', () => {
 
     const first = service.cleanup(NOW);
     expect(await service.cleanup(NOW)).toBe(0);
+    await vi.waitFor(() => expect(findMany).toHaveBeenCalled());
     release([]);
     expect(await first).toBe(0);
     expect(findMany).toHaveBeenCalledTimes(1);

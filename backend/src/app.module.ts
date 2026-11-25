@@ -9,6 +9,7 @@ import { CommonModule } from './common/common.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { MeModule } from './modules/me/me.module.js';
 import { RedisModule } from './infra/redis/redis.module.js';
+import { SystemSettingsModule } from './infra/settings/system-settings.module.js';
 import { MailModule } from './infra/mail/mail.module.js';
 import { MediaModule } from './modules/media/media.module.js';
 import { StorageModule } from './infra/storage/storage.module.js';
@@ -25,6 +26,7 @@ import { AuditModule } from './infra/audit/audit.module.js';
 import { AdminUsersModule } from './modules/admin-users/admin-users.module.js';
 import { AdminAuditLogsModule } from './modules/admin-audit-logs/admin-audit-logs.module.js';
 import { AdminDashboardModule } from './modules/admin-dashboard/admin-dashboard.module.js';
+import { SettingsModule } from './modules/settings/settings.module.js';
 
 @Module({
   imports: [
@@ -37,6 +39,7 @@ import { AdminDashboardModule } from './modules/admin-dashboard/admin-dashboard.
     ScheduleModule.forRoot(),
     PrismaModule,
     RedisModule,
+    SystemSettingsModule,
     MailModule,
     StorageModule,
     AiModule,
@@ -56,6 +59,7 @@ import { AdminDashboardModule } from './modules/admin-dashboard/admin-dashboard.
     AdminUsersModule,
     AdminAuditLogsModule,
     AdminDashboardModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

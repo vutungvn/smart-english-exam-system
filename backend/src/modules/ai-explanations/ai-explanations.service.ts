@@ -1,15 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { AppException } from '../../common/errors/app.exception.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import type { AuthUser } from '../../common/types/auth-user.js';
-import type { Env } from '../../config/env.schema.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { AiFeature, AttemptStatus, QuestionType } from '../../generated/prisma/enums.js';
 import { AiGateway } from '../../infra/ai/ai-gateway.service.js';
 import type { AiAttachment } from '../../infra/ai/ai.types.js';
 import { FAKE_MODEL } from '../../infra/ai/fake-ai.provider.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
+import { SystemSettingsService } from '../../infra/settings/system-settings.service.js';
 import { StorageService } from '../../infra/storage/storage.service.js';
 import type { AiExplanation, AiQuota, AiQuotas } from './ai-explanations.types.js';
 import {
@@ -49,16 +48,13 @@ const questionSelect = {
 @Injectable()
 export class AiExplanationsService {
   private readonly logger = new Logger(AiExplanationsService.name);
-  private readonly dailyLimit: number;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly ai: AiGateway,
     private readonly storage: StorageService,
-    config: ConfigService<Env, true>,
-  ) {
-    this.dailyLimit = config.get('AI_EXPLAIN_DAILY_LIMIT', { infer: true });
-  }
+    private readonly settings: SystemSettingsService,
+  ) {}
 
   async quotas(user: AuthUser): Promise<AiQuotas> {
     return { explanation: await this.quota(user) };
@@ -98,10 +94,11 @@ export class AiExplanationsService {
     }
 
     const image = await this.loadImage(question.imageKey ?? question.group?.imageKey ?? null);
+    const { explainDailyLimit } = await this.settings.get('ai');
     const result = await this.ai.generate({
       feature: AiFeature.EXPLANATION,
       userId: user.id,
-      userDailyLimit: this.dailyLimit,
+      userDailyLimit: explainDailyLimit,
       budgetShare: EXPLANATION_BUDGET_SHARE,
       schema,
       systemInstruction: EXPLANATION_SYSTEM,
@@ -122,8 +119,9 @@ export class AiExplanationsService {
     });
   }
 
-  private quota(user: AuthUser): Promise<AiQuota> {
-    return this.ai.usage(AiFeature.EXPLANATION, user.id, this.dailyLimit);
+  private async quota(user: AuthUser): Promise<AiQuota> {
+    const { explainDailyLimit } = await this.settings.get('ai');
+    return this.ai.usage(AiFeature.EXPLANATION, user.id, explainDailyLimit);
   }
 
   /** Câu thuộc bài đã nộp của chính học viên; đang làm bài thì không hỏi AI được (lộ đáp án) */

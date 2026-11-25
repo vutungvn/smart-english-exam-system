@@ -257,6 +257,8 @@ model User {
   reviewedAssessments AnswerAssessment[]
   notifications       Notification[]
   auditLogs           AuditLog[]
+  /// Các nhóm cấu hình admin này sửa gần nhất (SPRINT-69)
+  updatedSettings     SystemSetting[]
 
   @@index([roleId], map: "ix_users_role_id")
   @@index([status], map: "ix_users_status")
@@ -350,6 +352,20 @@ model AuditLog {
   @@index([actorId, createdAt(sort: Desc)], map: "ix_audit_logs_actor_created")
   @@index([createdAt(sort: Desc)], map: "ix_audit_logs_created")
   @@map("audit_logs")
+}
+
+/// Cấu hình hệ thống (D13, SPRINT-69): mỗi nhóm một dòng, tạo sẵn trong migration.
+/// value = {} là dùng mặc định trong code (src/infra/settings/settings.schema.ts)
+model SystemSetting {
+  group       String   @id(map: "pk_system_settings") @db.VarChar(50)
+  value       Json     @default("{}")
+  /// Admin sửa gần nhất; null khi chưa ai sửa
+  updatedById String?  @map("updated_by_id") @db.Uuid
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull, map: "fk_system_settings_updated_by_id")
+
+  @@map("system_settings")
 }
 
 // ================================================================

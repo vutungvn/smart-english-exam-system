@@ -66,7 +66,6 @@ export const ADMIN_PLACEHOLDERS: string[] = [
   'teacher-applications',
   'roles',
   'subjects',
-  'settings',
   'ai-usage',
 ];
 
