@@ -16,6 +16,8 @@ export const addTagTypes = [
   'Admin Users',
   'Admin Audit Logs',
   'Admin Dashboard',
+  'Admin Settings',
+  'Settings',
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -761,6 +763,61 @@ const injectedRtkApi = api
       refreshDashboard: build.mutation<RefreshDashboardApiResponse, RefreshDashboardApiArg>({
         query: () => ({ url: `/api/v1/admin/dashboard/refresh`, method: 'POST' }),
         invalidatesTags: ['Admin Dashboard'],
+      }),
+      getAdminSettings: build.query<GetAdminSettingsApiResponse, GetAdminSettingsApiArg>({
+        query: () => ({ url: `/api/v1/admin/settings` }),
+        providesTags: ['Admin Settings'],
+      }),
+      getRecordingImpact: build.query<GetRecordingImpactApiResponse, GetRecordingImpactApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/settings/recording/impact`,
+          params: {
+            retentionDays: queryArg,
+          },
+        }),
+        providesTags: ['Admin Settings'],
+      }),
+      updateScoringSettings: build.mutation<
+        UpdateScoringSettingsApiResponse,
+        UpdateScoringSettingsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/settings/scoring`,
+          method: 'PATCH',
+          body: queryArg,
+        }),
+        invalidatesTags: ['Admin Settings'],
+      }),
+      updateAiSettings: build.mutation<UpdateAiSettingsApiResponse, UpdateAiSettingsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/settings/ai`,
+          method: 'PATCH',
+          body: queryArg,
+        }),
+        invalidatesTags: ['Admin Settings'],
+      }),
+      updateRecordingSettings: build.mutation<
+        UpdateRecordingSettingsApiResponse,
+        UpdateRecordingSettingsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/settings/recording`,
+          method: 'PATCH',
+          body: queryArg,
+        }),
+        invalidatesTags: ['Admin Settings'],
+      }),
+      resetSettings: build.mutation<ResetSettingsApiResponse, ResetSettingsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/settings/${queryArg.group}/reset`,
+          method: 'POST',
+          body: queryArg.resetSettingsDto,
+        }),
+        invalidatesTags: ['Admin Settings'],
+      }),
+      getPublicSettings: build.query<GetPublicSettingsApiResponse, GetPublicSettingsApiArg>({
+        query: () => ({ url: `/api/v1/settings/public` }),
+        providesTags: ['Settings'],
       }),
     }),
     overrideExisting: false,
@@ -1580,6 +1637,51 @@ export type RefreshDashboardApiResponse = /** status 200 Thành công */ {
   data: DashboardRefreshResult;
 };
 export type RefreshDashboardApiArg = void;
+export type GetAdminSettingsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminSettings;
+};
+export type GetAdminSettingsApiArg = void;
+export type GetRecordingImpactApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: RecordingImpact;
+};
+export type GetRecordingImpactApiArg = number;
+export type UpdateScoringSettingsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminSettings;
+};
+export type UpdateScoringSettingsApiArg = UpdateScoringSettingsDto;
+export type UpdateAiSettingsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminSettings;
+};
+export type UpdateAiSettingsApiArg = UpdateAiSettingsDto;
+export type UpdateRecordingSettingsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminSettings;
+};
+export type UpdateRecordingSettingsApiArg = UpdateRecordingSettingsDto;
+export type ResetSettingsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminSettings;
+};
+export type ResetSettingsApiArg = {
+  group: SettingGroup;
+  resetSettingsDto: ResetSettingsDto;
+};
+export type GetPublicSettingsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: PublicSettings;
+};
+export type GetPublicSettingsApiArg = void;
 export type UserStatus = 'PENDING_VERIFICATION' | 'PENDING_APPROVAL' | 'ACTIVE' | 'LOCKED';
 export type RegisterResult = {
   id: string;
@@ -1621,6 +1723,7 @@ export type ErrorCode =
   | 'USER_NOT_LOCKED'
   | 'AUDIT_LOG_NOT_FOUND'
   | 'AUDIT_EXPORT_TOO_LARGE'
+  | 'SETTING_GROUP_NOT_FOUND'
   | 'STORAGE_UNAVAILABLE'
   | 'AVATAR_INVALID_IMAGE'
   | 'MEDIA_LINK_INVALID'
@@ -3397,6 +3500,130 @@ export type DashboardTrends = {
 export type DashboardRefreshResult = {
   refreshedAt: string;
 };
+export type SettingEditor = {
+  id: string;
+  fullName: string;
+};
+export type ConversionPointDto = {
+  /** LR: số câu đúng; SW: tỉ lệ % điểm thô */
+  raw: number;
+  /** Điểm quy đổi */
+  score: number;
+};
+export type ScoringSettingsDto = {
+  listening: ConversionPointDto[];
+  reading: ConversionPointDto[];
+  speaking: ConversionPointDto[];
+  writing: ConversionPointDto[];
+};
+export type SettingConversionRule = {
+  minScore: number;
+  maxScore: number;
+  /** Điểm là bội số của step */
+  step: number;
+};
+export type SettingRange = {
+  min: number;
+  max: number;
+};
+export type ScoringRules = {
+  listening: SettingConversionRule;
+  reading: SettingConversionRule;
+  speaking: SettingConversionRule;
+  writing: SettingConversionRule;
+  /** Số mốc của mỗi bảng */
+  points: SettingRange;
+};
+export type ScoringSettingsView = {
+  /** true: đang dùng đúng giá trị mặc định */
+  isDefault: boolean;
+  /** Gửi lại trong PATCH, reset để kiểm tra xung đột */
+  updatedAt: string;
+  /** null: chưa ai sửa */
+  updatedBy: SettingEditor | null;
+  values: ScoringSettingsDto;
+  defaults: ScoringSettingsDto;
+  rules: ScoringRules;
+};
+export type AiSettingsDto = {
+  /** Tổng lượt gọi AI mỗi ngày của cả hệ thống */
+  dailyBudget: number;
+  /** Lượt giải thích đáp án của mỗi học viên mỗi ngày */
+  explainDailyLimit: number;
+};
+export type AiRanges = {
+  dailyBudget: SettingRange;
+  explainDailyLimit: SettingRange;
+};
+export type AiSettingsView = {
+  /** true: đang dùng đúng giá trị mặc định */
+  isDefault: boolean;
+  /** Gửi lại trong PATCH, reset để kiểm tra xung đột */
+  updatedAt: string;
+  /** null: chưa ai sửa */
+  updatedBy: SettingEditor | null;
+  values: AiSettingsDto;
+  defaults: AiSettingsDto;
+  ranges: AiRanges;
+};
+export type RecordingSettingsDto = {
+  /** Số ngày giữ bản ghi âm Speaking sau khi nộp bài */
+  retentionDays: number;
+};
+export type RecordingRanges = {
+  retentionDays: SettingRange;
+};
+export type RecordingSettingsView = {
+  /** true: đang dùng đúng giá trị mặc định */
+  isDefault: boolean;
+  /** Gửi lại trong PATCH, reset để kiểm tra xung đột */
+  updatedAt: string;
+  /** null: chưa ai sửa */
+  updatedBy: SettingEditor | null;
+  values: RecordingSettingsDto;
+  defaults: RecordingSettingsDto;
+  ranges: RecordingRanges;
+};
+export type AdminSettings = {
+  scoring: ScoringSettingsView;
+  ai: AiSettingsView;
+  recording: RecordingSettingsView;
+};
+export type RecordingImpact = {
+  /** Số bản ghi âm sẽ bị xóa ở lần dọn kế tiếp (3 giờ sáng) */
+  recordingCount: number;
+};
+export type UpdateScoringSettingsDto = {
+  listening: ConversionPointDto[];
+  reading: ConversionPointDto[];
+  speaking: ConversionPointDto[];
+  writing: ConversionPointDto[];
+  /** updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409 */
+  updatedAt: string;
+};
+export type UpdateAiSettingsDto = {
+  /** Tổng lượt gọi AI mỗi ngày của cả hệ thống */
+  dailyBudget: number;
+  /** Lượt giải thích đáp án của mỗi học viên mỗi ngày */
+  explainDailyLimit: number;
+  /** updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409 */
+  updatedAt: string;
+};
+export type UpdateRecordingSettingsDto = {
+  /** Số ngày giữ bản ghi âm Speaking sau khi nộp bài */
+  retentionDays: number;
+  /** updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409 */
+  updatedAt: string;
+};
+export type SettingGroup = 'scoring' | 'ai' | 'recording';
+export type ResetSettingsDto = {
+  /** updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409 */
+  updatedAt: string;
+};
+export type PublicSettings = {
+  /** Số ngày giữ bản ghi âm Speaking */
+  recordingRetentionDays: number;
+};
 export const {
   useRegisterMutation,
   useVerifyEmailMutation,
@@ -3493,4 +3720,11 @@ export const {
   useGetOverviewQuery,
   useGetTrendsQuery,
   useRefreshDashboardMutation,
+  useGetAdminSettingsQuery,
+  useGetRecordingImpactQuery,
+  useUpdateScoringSettingsMutation,
+  useUpdateAiSettingsMutation,
+  useUpdateRecordingSettingsMutation,
+  useResetSettingsMutation,
+  useGetPublicSettingsQuery,
 } = injectedRtkApi;

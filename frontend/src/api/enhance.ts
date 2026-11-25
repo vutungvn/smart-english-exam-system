@@ -1,5 +1,5 @@
 import { downloadResponse } from '@/lib/download';
-import { api } from './generated';
+import { api, type AdminSettings } from './generated';
 
 // Codegen gửi body { file } dạng JSON, backend nhận multipart/form-data (field "file").
 // Không tự đặt Content-Type: trình duyệt tự thêm boundary của multipart
@@ -7,6 +7,27 @@ function toFormData(file: Blob): FormData {
   const body = new FormData();
   body.append('file', file);
   return body;
+}
+
+/** Sửa cấu hình: số ngày giữ ghi âm công khai, lượt AI, nhật ký kiểm toán đổi theo */
+const SETTINGS_TAGS = ['Settings', 'AI Explanations', 'Admin Audit Logs'] as const;
+
+/**
+ * Mọi thao tác ghi cấu hình trả lại toàn bộ cấu hình: ghi thẳng vào cache thay vì tải lại
+ * (không dùng tag 'Admin Settings')
+ */
+async function storeAdminSettings(
+  _arg: unknown,
+  {
+    dispatch,
+    queryFulfilled,
+  }: {
+    dispatch: (action: ReturnType<typeof api.util.upsertQueryData<'getAdminSettings'>>) => unknown;
+    queryFulfilled: Promise<{ data: { success: true; status: number; data: AdminSettings } }>;
+  },
+): Promise<void> {
+  const result = await queryFulfilled.catch(() => null);
+  if (result) dispatch(api.util.upsertQueryData('getAdminSettings', undefined, result.data));
 }
 
 /**
@@ -165,6 +186,12 @@ export const enhancedApi = api.enhanceEndpoints({
       }),
       providesTags: [],
     },
+
+    // Cấu hình hệ thống
+    updateScoringSettings: { invalidatesTags: SETTINGS_TAGS, onQueryStarted: storeAdminSettings },
+    updateAiSettings: { invalidatesTags: SETTINGS_TAGS, onQueryStarted: storeAdminSettings },
+    updateRecordingSettings: { invalidatesTags: SETTINGS_TAGS, onQueryStarted: storeAdminSettings },
+    resetSettings: { invalidatesTags: SETTINGS_TAGS, onQueryStarted: storeAdminSettings },
 
     // Xuất nhật ký kiểm toán: tệp lưu thẳng xuống máy (không giữ Blob trong store). Việc xuất cũng
     // được ghi nhật ký (audit_log.export) nên invalidatesTags mặc định làm danh sách tải lại

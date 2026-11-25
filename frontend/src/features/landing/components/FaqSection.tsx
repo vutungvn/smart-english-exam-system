@@ -1,7 +1,8 @@
 import { ChevronDown } from 'lucide-react';
+import { useRecordingRetention } from '@/hooks/use-recording-retention';
 import { Section, SectionHeading } from './Section';
 
-const FAQS = [
+const buildFaqs = (retentionDays: number) => [
   {
     question: 'Điểm AI chấm Speaking, Writing có chính xác không?',
     answer:
@@ -23,19 +24,20 @@ const FAQS = [
   },
   {
     question: 'Dữ liệu ghi âm được lưu bao lâu?',
-    answer:
-      'Tệp ghi âm bài Speaking tự xóa sau 30 ngày. Hệ thống chỉ ghi âm khi bạn đã đồng ý riêng trước lần đầu.',
+    answer: `Tệp ghi âm bài Speaking tự xóa sau ${retentionDays} ngày. Hệ thống chỉ ghi âm khi bạn đã đồng ý riêng trước lần đầu.`,
   },
 ];
 
 // Dùng <details> có sẵn của trình duyệt: mở/đóng bằng bàn phím, không cần thêm thư viện
 export function FaqSection() {
+  const faqs = buildFaqs(useRecordingRetention());
+
   return (
     <Section id="hoi-dap" className="bg-white">
       <SectionHeading eyebrow="Hỏi đáp" title="Câu hỏi thường gặp" />
 
       <div className="mx-auto mt-12 max-w-3xl space-y-3">
-        {FAQS.map(({ question, answer }, index) => (
+        {faqs.map(({ question, answer }, index) => (
           <details
             key={question}
             open={index === 0}

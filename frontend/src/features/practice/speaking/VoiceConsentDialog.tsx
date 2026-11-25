@@ -5,6 +5,7 @@ import { useGiveVoiceConsentMutation } from '@/api/generated';
 import { AppDialog } from '@/components/AppDialog';
 import { FormAlert } from '@/components/form/FormAlert';
 import { Button } from '@/components/ui/button';
+import { useRecordingRetention } from '@/hooks/use-recording-retention';
 
 interface VoiceConsentDialogProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface VoiceConsentDialogProps {
 export function VoiceConsentDialog({ open, onClose, onAgreed }: VoiceConsentDialogProps) {
   const [giveConsent, { isLoading }] = useGiveVoiceConsentMutation();
   const [error, setError] = useState<string>();
+  const retentionDays = useRecordingRetention();
 
   const agree = async () => {
     setError(undefined);
@@ -68,7 +70,9 @@ export function VoiceConsentDialog({ open, onClose, onAgreed }: VoiceConsentDial
           Bài nói được AI chấm theo tiêu chí TOEIC. Dữ liệu gửi AI không kèm tên, email hay mã tài
           khoản của bạn.
         </li>
-        <li>Bản ghi âm được lưu tối đa 30 ngày để bạn nghe lại, sau đó tự động xóa.</li>
+        <li>
+          Bản ghi âm được lưu tối đa {retentionDays} ngày để bạn nghe lại, sau đó tự động xóa.
+        </li>
         <li>Bạn chỉ cần đồng ý một lần; trình duyệt sẽ hỏi quyền dùng micro khi bắt đầu.</li>
       </ul>
     </AppDialog>
