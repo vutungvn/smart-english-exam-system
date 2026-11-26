@@ -39,8 +39,9 @@ const TOEIC_TOPICS: { skill: Skill; parts: number[]; name: string }[] = [
   { skill: Skill.WRITING, parts: [3], name: 'W3 – Bài luận nêu quan điểm' },
 ];
 
-// Dữ liệu danh mục (không phải dữ liệu demo) nên chạy cả ở production.
-// upsert: chạy lại nhiều lần không trùng, sửa skill/parts ở đây thì lần seed sau cập nhật theo.
+// Dữ liệu danh mục (không phải dữ liệu demo) nên chạy cả ở production, mỗi lần deploy.
+// Chủ đề chỉ tạo khi TOEIC chưa có chủ đề nào: sau đó admin quản lý ở /admin/subjects (SPRINT-69).
+// Không upsert theo tên nữa, vì chủ đề admin đã đổi tên hoặc xóa sẽ bị tạo lại ở lần deploy sau.
 export async function seedSubjects(prisma: PrismaClient): Promise<void> {
   const toeic = await prisma.subject.upsert({
     where: { code: 'TOEIC' },
@@ -48,13 +49,12 @@ export async function seedSubjects(prisma: PrismaClient): Promise<void> {
     create: { code: 'TOEIC', name: 'TOEIC 4 kỹ năng', category: SubjectCategory.TOEIC },
   });
 
-  for (const topic of TOEIC_TOPICS) {
-    await prisma.topic.upsert({
-      where: { subjectId_name: { subjectId: toeic.id, name: topic.name } },
-      update: { skill: topic.skill, parts: topic.parts },
-      create: { subjectId: toeic.id, ...topic },
-    });
+  if ((await prisma.topic.count({ where: { subjectId: toeic.id } })) > 0) {
+    console.log('• Chương trình TOEIC đã có chủ đề, bỏ qua');
+    return;
   }
-
+  await prisma.topic.createMany({
+    data: TOEIC_TOPICS.map((topic) => ({ subjectId: toeic.id, ...topic })),
+  });
   console.log(`• Chương trình TOEIC với ${TOEIC_TOPICS.length} chủ đề`);
 }

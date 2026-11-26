@@ -399,6 +399,8 @@ model Topic {
   name        String   @db.VarChar(150)
   description String?
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  /// Bổ sung (SPRINT-69): khóa lạc quan khi admin sửa chủ đề
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade, map: "fk_topics_subject_id")
   questions      Question[]

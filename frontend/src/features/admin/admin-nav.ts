@@ -62,12 +62,7 @@ export function adminPath(path: string): string {
  * TẠM: mục đã có trong menu nhưng chưa làm trang, hiện "đang phát triển" trong layout.
  * Làm xong trang nào thì xóa path đó khỏi đây và khai báo route thật trong router
  */
-export const ADMIN_PLACEHOLDERS: string[] = [
-  'teacher-applications',
-  'roles',
-  'subjects',
-  'ai-usage',
-];
+export const ADMIN_PLACEHOLDERS: string[] = ['teacher-applications', 'roles', 'ai-usage'];
 
 export function adminNavItem(path: string): AdminNavItem | undefined {
   return ADMIN_NAV.flatMap((section) => section.items).find((item) => item.path === path);

@@ -2732,6 +2732,1912 @@
         ]
       }
     },
+    "/api/v1/admin/subjects": {
+      "get": {
+        "operationId": "listAdminSubjects",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminSubjectItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Danh sách chương trình thi (cả đang ẩn) kèm số chủ đề, đề thi, câu hỏi",
+        "tags": [
+          "Admin Subjects"
+        ]
+      },
+      "post": {
+        "description": "Mã không đổi được sau khi tạo.",
+        "operationId": "createSubject",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 201
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminSubjectItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "code",
+                            "message": "code không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: SUBJECT_CODE_EXISTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "SUBJECT_CODE_EXISTS": {
+                    "summary": "SUBJECT_CODE_EXISTS: Mã chương trình thi đã tồn tại",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "SUBJECT_CODE_EXISTS",
+                        "message": "Mã chương trình thi đã tồn tại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Thêm chương trình thi",
+        "tags": [
+          "Admin Subjects"
+        ]
+      }
+    },
+    "/api/v1/admin/subjects/{id}": {
+      "get": {
+        "operationId": "getAdminSubject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminSubjectItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: SUBJECT_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "SUBJECT_NOT_FOUND": {
+                    "summary": "SUBJECT_NOT_FOUND: Không tìm thấy chương trình thi",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "SUBJECT_NOT_FOUND",
+                        "message": "Không tìm thấy chương trình thi"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Chi tiết một chương trình thi",
+        "tags": [
+          "Admin Subjects"
+        ]
+      },
+      "patch": {
+        "description": "Chương trình ẩn không còn trong danh sách công khai, không chọn được khi tạo đề, câu hỏi, nhập tệp; đề và câu hỏi đã có giữ nguyên. TOEIC không ẩn được.",
+        "operationId": "updateSubject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminSubjectItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "updatedAt",
+                            "message": "updatedAt không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: SUBJECT_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "SUBJECT_NOT_FOUND": {
+                    "summary": "SUBJECT_NOT_FOUND: Không tìm thấy chương trình thi",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "SUBJECT_NOT_FOUND",
+                        "message": "Không tìm thấy chương trình thi"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: SUBJECT_PROTECTED, VERSION_CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "SUBJECT_PROTECTED": {
+                    "summary": "SUBJECT_PROTECTED: Không thể ẩn hoặc xóa chương trình hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "SUBJECT_PROTECTED",
+                        "message": "Không thể ẩn hoặc xóa chương trình hệ thống"
+                      }
+                    }
+                  },
+                  "VERSION_CONFLICT": {
+                    "summary": "VERSION_CONFLICT: Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "VERSION_CONFLICT",
+                        "message": "Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sửa tên, ẩn/hiện chương trình thi",
+        "tags": [
+          "Admin Subjects"
+        ]
+      },
+      "delete": {
+        "description": "Chỉ khi chưa có đề thi, câu hỏi, nhóm câu nào (tính cả bản đã xóa); chủ đề xóa theo. TOEIC không xóa được.",
+        "operationId": "deleteSubject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true,
+                      "example": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: SUBJECT_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "SUBJECT_NOT_FOUND": {
+                    "summary": "SUBJECT_NOT_FOUND: Không tìm thấy chương trình thi",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "SUBJECT_NOT_FOUND",
+                        "message": "Không tìm thấy chương trình thi"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: SUBJECT_PROTECTED, SUBJECT_IN_USE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "SUBJECT_PROTECTED": {
+                    "summary": "SUBJECT_PROTECTED: Không thể ẩn hoặc xóa chương trình hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "SUBJECT_PROTECTED",
+                        "message": "Không thể ẩn hoặc xóa chương trình hệ thống"
+                      }
+                    }
+                  },
+                  "SUBJECT_IN_USE": {
+                    "summary": "SUBJECT_IN_USE: Chương trình đang có đề thi hoặc câu hỏi, hãy ẩn thay vì xóa",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "SUBJECT_IN_USE",
+                        "message": "Chương trình đang có đề thi hoặc câu hỏi, hãy ẩn thay vì xóa"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xóa chương trình thi",
+        "tags": [
+          "Admin Subjects"
+        ]
+      }
+    },
+    "/api/v1/admin/subjects/{id}/topics": {
+      "get": {
+        "operationId": "listAdminTopics",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skill",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Skill"
+            }
+          },
+          {
+            "name": "part",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 7,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminTopicItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: SUBJECT_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "SUBJECT_NOT_FOUND": {
+                    "summary": "SUBJECT_NOT_FOUND: Không tìm thấy chương trình thi",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "SUBJECT_NOT_FOUND",
+                        "message": "Không tìm thấy chương trình thi"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Chủ đề của chương trình kèm số câu hỏi, nhóm câu đang dùng",
+        "tags": [
+          "Admin Subjects"
+        ]
+      },
+      "post": {
+        "description": "Part phải thuộc kỹ năng. Chương trình IELTS chưa thêm chủ đề được.",
+        "operationId": "createTopic",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTopicDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 201
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTopicItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "parts",
+                            "message": "Part 1 không thuộc READING; dùng được: 5, 6, 7"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: SUBJECT_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "SUBJECT_NOT_FOUND": {
+                    "summary": "SUBJECT_NOT_FOUND: Không tìm thấy chương trình thi",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "SUBJECT_NOT_FOUND",
+                        "message": "Không tìm thấy chương trình thi"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: TOPIC_NAME_EXISTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOPIC_NAME_EXISTS": {
+                    "summary": "TOPIC_NAME_EXISTS: Chương trình đã có chủ đề cùng tên",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "TOPIC_NAME_EXISTS",
+                        "message": "Chương trình đã có chủ đề cùng tên"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Lỗi, error.code thuộc: TOPICS_NOT_SUPPORTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOPICS_NOT_SUPPORTED": {
+                    "summary": "TOPICS_NOT_SUPPORTED: Chương trình này chưa thêm chủ đề được (hệ thống mới hỗ trợ cấu trúc đề TOEIC)",
+                    "value": {
+                      "success": false,
+                      "status": 422,
+                      "error": {
+                        "code": "TOPICS_NOT_SUPPORTED",
+                        "message": "Chương trình này chưa thêm chủ đề được (hệ thống mới hỗ trợ cấu trúc đề TOEIC)"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Thêm chủ đề",
+        "tags": [
+          "Admin Subjects"
+        ]
+      }
+    },
+    "/api/v1/admin/subjects/{id}/topics/{topicId}": {
+      "patch": {
+        "description": "Đổi tên làm tệp nhập câu hỏi soạn theo tên cũ báo lỗi. Không đổi kỹ năng khi chủ đề còn câu hỏi, không bỏ Part còn câu hỏi dùng.",
+        "operationId": "updateTopic",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "topicId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTopicDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTopicItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "parts",
+                            "message": "Part 1 không thuộc READING; dùng được: 5, 6, 7"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: SUBJECT_NOT_FOUND, TOPIC_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "SUBJECT_NOT_FOUND": {
+                    "summary": "SUBJECT_NOT_FOUND: Không tìm thấy chương trình thi",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "SUBJECT_NOT_FOUND",
+                        "message": "Không tìm thấy chương trình thi"
+                      }
+                    }
+                  },
+                  "TOPIC_NOT_FOUND": {
+                    "summary": "TOPIC_NOT_FOUND: Không tìm thấy chủ đề",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "TOPIC_NOT_FOUND",
+                        "message": "Không tìm thấy chủ đề"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: TOPIC_NAME_EXISTS, TOPIC_IN_USE, VERSION_CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOPIC_NAME_EXISTS": {
+                    "summary": "TOPIC_NAME_EXISTS: Chương trình đã có chủ đề cùng tên",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "TOPIC_NAME_EXISTS",
+                        "message": "Chương trình đã có chủ đề cùng tên"
+                      }
+                    }
+                  },
+                  "TOPIC_IN_USE": {
+                    "summary": "TOPIC_IN_USE: Chủ đề đang có câu hỏi dùng",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "TOPIC_IN_USE",
+                        "message": "Chủ đề đang có câu hỏi dùng"
+                      }
+                    }
+                  },
+                  "VERSION_CONFLICT": {
+                    "summary": "VERSION_CONFLICT: Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "VERSION_CONFLICT",
+                        "message": "Dữ liệu đã được cập nhật bởi người khác, vui lòng tải lại"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sửa chủ đề",
+        "tags": [
+          "Admin Subjects"
+        ]
+      },
+      "delete": {
+        "description": "Chỉ khi chưa có câu hỏi, nhóm câu nào dùng (tính cả bản đã xóa).",
+        "operationId": "deleteTopic",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "topicId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "status",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true,
+                      "example": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lỗi, error.code thuộc: VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "VALIDATION_ERROR": {
+                    "summary": "VALIDATION_ERROR: Dữ liệu gửi lên không hợp lệ",
+                    "value": {
+                      "success": false,
+                      "status": 400,
+                      "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Dữ liệu gửi lên không hợp lệ",
+                        "details": [
+                          {
+                            "field": "id",
+                            "message": "id không hợp lệ"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Lỗi, error.code thuộc: UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "UNAUTHORIZED": {
+                    "summary": "UNAUTHORIZED: Bạn cần đăng nhập để tiếp tục",
+                    "value": {
+                      "success": false,
+                      "status": 401,
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Bạn cần đăng nhập để tiếp tục"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Lỗi, error.code thuộc: FORBIDDEN, AUTH_PASSWORD_CHANGE_REQUIRED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "FORBIDDEN: Bạn không có quyền thực hiện thao tác này",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Bạn không có quyền thực hiện thao tác này"
+                      }
+                    }
+                  },
+                  "AUTH_PASSWORD_CHANGE_REQUIRED": {
+                    "summary": "AUTH_PASSWORD_CHANGE_REQUIRED: Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống",
+                    "value": {
+                      "success": false,
+                      "status": 403,
+                      "error": {
+                        "code": "AUTH_PASSWORD_CHANGE_REQUIRED",
+                        "message": "Bạn cần đổi mật khẩu trước khi tiếp tục sử dụng hệ thống"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lỗi, error.code thuộc: SUBJECT_NOT_FOUND, TOPIC_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "SUBJECT_NOT_FOUND": {
+                    "summary": "SUBJECT_NOT_FOUND: Không tìm thấy chương trình thi",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "SUBJECT_NOT_FOUND",
+                        "message": "Không tìm thấy chương trình thi"
+                      }
+                    }
+                  },
+                  "TOPIC_NOT_FOUND": {
+                    "summary": "TOPIC_NOT_FOUND: Không tìm thấy chủ đề",
+                    "value": {
+                      "success": false,
+                      "status": 404,
+                      "error": {
+                        "code": "TOPIC_NOT_FOUND",
+                        "message": "Không tìm thấy chủ đề"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lỗi, error.code thuộc: TOPIC_IN_USE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "TOPIC_IN_USE": {
+                    "summary": "TOPIC_IN_USE: Chủ đề đang có câu hỏi dùng",
+                    "value": {
+                      "success": false,
+                      "status": 409,
+                      "error": {
+                        "code": "TOPIC_IN_USE",
+                        "message": "Chủ đề đang có câu hỏi dùng"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi, error.code thuộc: INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                },
+                "examples": {
+                  "INTERNAL_SERVER_ERROR": {
+                    "summary": "INTERNAL_SERVER_ERROR: Đã có lỗi xảy ra, vui lòng thử lại sau",
+                    "value": {
+                      "success": false,
+                      "status": 500,
+                      "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xóa chủ đề",
+        "tags": [
+          "Admin Subjects"
+        ]
+      }
+    },
     "/api/v1/teacher/questions": {
       "get": {
         "operationId": "listQuestions",
@@ -20162,6 +22068,13 @@
           "MEDIA_RANGE_NOT_SATISFIABLE",
           "MEDIA_INVALID_FILE",
           "SUBJECT_NOT_FOUND",
+          "SUBJECT_CODE_EXISTS",
+          "SUBJECT_IN_USE",
+          "SUBJECT_PROTECTED",
+          "TOPIC_NOT_FOUND",
+          "TOPIC_NAME_EXISTS",
+          "TOPIC_IN_USE",
+          "TOPICS_NOT_SUPPORTED",
           "QUESTION_NOT_FOUND",
           "QUESTION_GROUP_NOT_FOUND",
           "QUESTION_GROUP_NOT_EMPTY",
@@ -20818,6 +22731,271 @@
           "parts",
           "name",
           "description"
+        ]
+      },
+      "AdminSubjectItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "example": "TOEIC"
+          },
+          "name": {
+            "type": "string",
+            "example": "TOEIC 4 kỹ năng"
+          },
+          "category": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubjectCategory"
+              }
+            ]
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "false: đang ẩn"
+          },
+          "isProtected": {
+            "type": "boolean",
+            "description": "Chương trình hệ thống (TOEIC): không ẩn, không xóa được"
+          },
+          "topicCount": {
+            "type": "number",
+            "example": 29
+          },
+          "examCount": {
+            "type": "number",
+            "example": 12,
+            "description": "Đề thi chưa xóa"
+          },
+          "questionCount": {
+            "type": "number",
+            "example": 300,
+            "description": "Câu hỏi chưa xóa thuộc các chủ đề của chương trình"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Gửi lại trong PATCH để kiểm tra xung đột"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "category",
+          "isActive",
+          "isProtected",
+          "topicCount",
+          "examCount",
+          "questionCount",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateSubjectDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "IELTS",
+            "pattern": "^[A-Z0-9_]{2,50}$",
+            "description": "Chữ hoa, số, gạch dưới; không đổi được sau khi tạo (dùng trong tệp nhập câu hỏi)"
+          },
+          "name": {
+            "type": "string",
+            "example": "IELTS Academic",
+            "minLength": 2,
+            "maxLength": 150
+          },
+          "category": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubjectCategory"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "category"
+        ]
+      },
+      "UpdateSubjectDto": {
+        "type": "object",
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409"
+          },
+          "name": {
+            "type": "string",
+            "example": "TOEIC 4 kỹ năng",
+            "minLength": 2,
+            "maxLength": 150
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "false: ẩn khỏi danh sách công khai, không chọn được khi tạo đề, câu hỏi"
+          }
+        },
+        "required": [
+          "updatedAt"
+        ]
+      },
+      "AdminTopicItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "parts": {
+            "example": [
+              5,
+              6
+            ],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "name": {
+            "type": "string",
+            "example": "P5/P6 – Từ loại"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "questionCount": {
+            "type": "number",
+            "example": 25,
+            "description": "Câu hỏi chưa xóa dùng chủ đề này"
+          },
+          "groupCount": {
+            "type": "number",
+            "example": 3,
+            "description": "Nhóm câu chưa xóa dùng chủ đề này"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Gửi lại trong PATCH để kiểm tra xung đột"
+          }
+        },
+        "required": [
+          "id",
+          "skill",
+          "parts",
+          "name",
+          "description",
+          "questionCount",
+          "groupCount",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateTopicDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "P5/P6 – Câu điều kiện",
+            "minLength": 2,
+            "maxLength": 150
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "parts": {
+            "example": [
+              5,
+              6
+            ],
+            "description": "Part dùng được chủ đề, phải thuộc kỹ năng (Listening 1–4, Reading 5–7…)",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "name",
+          "skill",
+          "parts"
+        ]
+      },
+      "UpdateTopicDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "P5/P6 – Câu điều kiện",
+            "minLength": 2,
+            "maxLength": 150
+          },
+          "skill": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Skill"
+              }
+            ]
+          },
+          "parts": {
+            "example": [
+              5,
+              6
+            ],
+            "description": "Part dùng được chủ đề, phải thuộc kỹ năng (Listening 1–4, Reading 5–7…)",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409"
+          }
+        },
+        "required": [
+          "updatedAt"
         ]
       },
       "TopicRef": {
