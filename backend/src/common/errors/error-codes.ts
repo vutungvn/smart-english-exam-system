@@ -59,6 +59,13 @@ export const ErrorCode = {
 
   // Ngân hàng câu hỏi
   SUBJECT_NOT_FOUND: 'SUBJECT_NOT_FOUND',
+  SUBJECT_CODE_EXISTS: 'SUBJECT_CODE_EXISTS',
+  SUBJECT_IN_USE: 'SUBJECT_IN_USE',
+  SUBJECT_PROTECTED: 'SUBJECT_PROTECTED',
+  TOPIC_NOT_FOUND: 'TOPIC_NOT_FOUND',
+  TOPIC_NAME_EXISTS: 'TOPIC_NAME_EXISTS',
+  TOPIC_IN_USE: 'TOPIC_IN_USE',
+  TOPICS_NOT_SUPPORTED: 'TOPICS_NOT_SUPPORTED',
   QUESTION_NOT_FOUND: 'QUESTION_NOT_FOUND',
   QUESTION_GROUP_NOT_FOUND: 'QUESTION_GROUP_NOT_FOUND',
   QUESTION_GROUP_NOT_EMPTY: 'QUESTION_GROUP_NOT_EMPTY',
@@ -286,6 +293,34 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorDefinition> = {
   [ErrorCode.SUBJECT_NOT_FOUND]: {
     status: HttpStatus.NOT_FOUND,
     message: 'Không tìm thấy chương trình thi',
+  },
+  [ErrorCode.SUBJECT_CODE_EXISTS]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Mã chương trình thi đã tồn tại',
+  },
+  [ErrorCode.SUBJECT_IN_USE]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Chương trình đang có đề thi hoặc câu hỏi, hãy ẩn thay vì xóa',
+  },
+  [ErrorCode.SUBJECT_PROTECTED]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Không thể ẩn hoặc xóa chương trình hệ thống',
+  },
+  [ErrorCode.TOPIC_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Không tìm thấy chủ đề',
+  },
+  [ErrorCode.TOPIC_NAME_EXISTS]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Chương trình đã có chủ đề cùng tên',
+  },
+  [ErrorCode.TOPIC_IN_USE]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Chủ đề đang có câu hỏi dùng',
+  },
+  [ErrorCode.TOPICS_NOT_SUPPORTED]: {
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    message: 'Chương trình này chưa thêm chủ đề được (hệ thống mới hỗ trợ cấu trúc đề TOEIC)',
   },
   [ErrorCode.QUESTION_NOT_FOUND]: {
     status: HttpStatus.NOT_FOUND,

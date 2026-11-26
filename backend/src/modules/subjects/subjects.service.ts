@@ -5,7 +5,7 @@ import { PrismaService } from '../../infra/prisma/prisma.service.js';
 import type { TopicQueryDto } from './dto/topic-query.dto.js';
 import type { SubjectItem, TopicItem } from './subjects.types.js';
 
-// Chỉ đọc. CRUD chương trình thi/chủ đề cho admin (/admin/subjects) làm cùng module Quản trị
+// Chỉ đọc, chỉ chương trình đang dùng. Admin thêm, sửa, xóa ở AdminSubjectsService
 @Injectable()
 export class SubjectsService {
   constructor(private readonly prisma: PrismaService) {}

@@ -101,6 +101,7 @@ export function api(app: INestApplication<App>, token?: string) {
     upload: (url: string, file: Buffer, filename: string) =>
       auth(request(server).put(`/api/v1${url}`)).attach('file', file, filename),
     patch: (url: string, body: object) => auth(request(server).patch(`/api/v1${url}`)).send(body),
+    delete: (url: string) => auth(request(server).delete(`/api/v1${url}`)),
   };
 }
 

@@ -13,6 +13,12 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   'audit_log.export': 'Xuất nhật ký kiểm toán',
   'setting.update': 'Sửa cấu hình hệ thống',
   'setting.reset': 'Khôi phục cấu hình mặc định',
+  'subject.create': 'Thêm chương trình thi',
+  'subject.update': 'Sửa chương trình thi',
+  'subject.delete': 'Xóa chương trình thi',
+  'topic.create': 'Thêm chủ đề',
+  'topic.update': 'Sửa chủ đề',
+  'topic.delete': 'Xóa chủ đề',
 };
 
 export const AUDIT_ENTITY_LABELS: Record<string, string> = {
@@ -20,6 +26,8 @@ export const AUDIT_ENTITY_LABELS: Record<string, string> = {
   assessment: 'Bài chấm Speaking, Writing',
   audit_log: 'Nhật ký kiểm toán',
   setting: 'Cấu hình hệ thống',
+  subject: 'Chương trình thi',
+  topic: 'Chủ đề',
 };
 
 export const ROLE_LABELS: Record<RoleCode, string> = {
