@@ -9,6 +9,8 @@ function toFormData(file: Blob): FormData {
   return body;
 }
 
+const SUBJECT_TAGS = ['Admin Subjects', 'Subjects', 'Admin Audit Logs'] as const;
+
 /** Sửa cấu hình: số ngày giữ ghi âm công khai, lượt AI, nhật ký kiểm toán đổi theo */
 const SETTINGS_TAGS = ['Settings', 'AI Explanations', 'Admin Audit Logs'] as const;
 
@@ -192,6 +194,15 @@ export const enhancedApi = api.enhanceEndpoints({
     updateAiSettings: { invalidatesTags: SETTINGS_TAGS, onQueryStarted: storeAdminSettings },
     updateRecordingSettings: { invalidatesTags: SETTINGS_TAGS, onQueryStarted: storeAdminSettings },
     resetSettings: { invalidatesTags: SETTINGS_TAGS, onQueryStarted: storeAdminSettings },
+
+    // Chương trình thi, chủ đề: danh sách công khai, chủ đề trong form câu hỏi của giáo viên và
+    // nhật ký cùng đổi
+    createSubject: { invalidatesTags: SUBJECT_TAGS },
+    updateSubject: { invalidatesTags: SUBJECT_TAGS },
+    deleteSubject: { invalidatesTags: SUBJECT_TAGS },
+    createTopic: { invalidatesTags: SUBJECT_TAGS },
+    updateTopic: { invalidatesTags: SUBJECT_TAGS },
+    deleteTopic: { invalidatesTags: SUBJECT_TAGS },
 
     // Xuất nhật ký kiểm toán: tệp lưu thẳng xuống máy (không giữ Blob trong store). Việc xuất cũng
     // được ghi nhật ký (audit_log.export) nên invalidatesTags mặc định làm danh sách tải lại

@@ -3,6 +3,7 @@ export const addTagTypes = [
   'Auth',
   'Me',
   'Subjects',
+  'Admin Subjects',
   'Questions',
   'Question Groups',
   'Question Import',
@@ -125,6 +126,63 @@ const injectedRtkApi = api
           },
         }),
         providesTags: ['Subjects'],
+      }),
+      listAdminSubjects: build.query<ListAdminSubjectsApiResponse, ListAdminSubjectsApiArg>({
+        query: () => ({ url: `/api/v1/admin/subjects` }),
+        providesTags: ['Admin Subjects'],
+      }),
+      createSubject: build.mutation<CreateSubjectApiResponse, CreateSubjectApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/admin/subjects`, method: 'POST', body: queryArg }),
+        invalidatesTags: ['Admin Subjects'],
+      }),
+      getAdminSubject: build.query<GetAdminSubjectApiResponse, GetAdminSubjectApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/admin/subjects/${queryArg}` }),
+        providesTags: ['Admin Subjects'],
+      }),
+      updateSubject: build.mutation<UpdateSubjectApiResponse, UpdateSubjectApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/subjects/${queryArg.id}`,
+          method: 'PATCH',
+          body: queryArg.updateSubjectDto,
+        }),
+        invalidatesTags: ['Admin Subjects'],
+      }),
+      deleteSubject: build.mutation<DeleteSubjectApiResponse, DeleteSubjectApiArg>({
+        query: (queryArg) => ({ url: `/api/v1/admin/subjects/${queryArg}`, method: 'DELETE' }),
+        invalidatesTags: ['Admin Subjects'],
+      }),
+      listAdminTopics: build.query<ListAdminTopicsApiResponse, ListAdminTopicsApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/subjects/${queryArg.id}/topics`,
+          params: {
+            skill: queryArg.skill,
+            part: queryArg.part,
+          },
+        }),
+        providesTags: ['Admin Subjects'],
+      }),
+      createTopic: build.mutation<CreateTopicApiResponse, CreateTopicApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/subjects/${queryArg.id}/topics`,
+          method: 'POST',
+          body: queryArg.createTopicDto,
+        }),
+        invalidatesTags: ['Admin Subjects'],
+      }),
+      updateTopic: build.mutation<UpdateTopicApiResponse, UpdateTopicApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/subjects/${queryArg.id}/topics/${queryArg.topicId}`,
+          method: 'PATCH',
+          body: queryArg.updateTopicDto,
+        }),
+        invalidatesTags: ['Admin Subjects'],
+      }),
+      deleteTopic: build.mutation<DeleteTopicApiResponse, DeleteTopicApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/admin/subjects/${queryArg.id}/topics/${queryArg.topicId}`,
+          method: 'DELETE',
+        }),
+        invalidatesTags: ['Admin Subjects'],
       }),
       listQuestions: build.query<ListQuestionsApiResponse, ListQuestionsApiArg>({
         query: (queryArg) => ({
@@ -943,6 +1001,77 @@ export type ListTopicsApiArg = {
   skill?: Skill;
   part?: number;
 };
+export type ListAdminSubjectsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminSubjectItem[];
+};
+export type ListAdminSubjectsApiArg = void;
+export type CreateSubjectApiResponse = /** status 201 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminSubjectItem;
+};
+export type CreateSubjectApiArg = CreateSubjectDto;
+export type GetAdminSubjectApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminSubjectItem;
+};
+export type GetAdminSubjectApiArg = string;
+export type UpdateSubjectApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminSubjectItem;
+};
+export type UpdateSubjectApiArg = {
+  id: string;
+  updateSubjectDto: UpdateSubjectDto;
+};
+export type DeleteSubjectApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: object | null;
+};
+export type DeleteSubjectApiArg = string;
+export type ListAdminTopicsApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminTopicItem[];
+};
+export type ListAdminTopicsApiArg = {
+  id: string;
+  skill?: Skill;
+  part?: number;
+};
+export type CreateTopicApiResponse = /** status 201 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminTopicItem;
+};
+export type CreateTopicApiArg = {
+  id: string;
+  createTopicDto: CreateTopicDto;
+};
+export type UpdateTopicApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: AdminTopicItem;
+};
+export type UpdateTopicApiArg = {
+  id: string;
+  topicId: string;
+  updateTopicDto: UpdateTopicDto;
+};
+export type DeleteTopicApiResponse = /** status 200 Thành công */ {
+  success: true;
+  status: number;
+  data: object | null;
+};
+export type DeleteTopicApiArg = {
+  id: string;
+  topicId: string;
+};
 export type ListQuestionsApiResponse = /** status 200 Thành công */ {
   success: true;
   status: number;
@@ -1730,6 +1859,13 @@ export type ErrorCode =
   | 'MEDIA_RANGE_NOT_SATISFIABLE'
   | 'MEDIA_INVALID_FILE'
   | 'SUBJECT_NOT_FOUND'
+  | 'SUBJECT_CODE_EXISTS'
+  | 'SUBJECT_IN_USE'
+  | 'SUBJECT_PROTECTED'
+  | 'TOPIC_NOT_FOUND'
+  | 'TOPIC_NAME_EXISTS'
+  | 'TOPIC_IN_USE'
+  | 'TOPICS_NOT_SUPPORTED'
   | 'QUESTION_NOT_FOUND'
   | 'QUESTION_GROUP_NOT_FOUND'
   | 'QUESTION_GROUP_NOT_EMPTY'
@@ -1902,6 +2038,67 @@ export type TopicItem = {
   parts: number[];
   name: string;
   description: string | null;
+};
+export type AdminSubjectItem = {
+  id: string;
+  code: string;
+  name: string;
+  category: SubjectCategory;
+  /** false: đang ẩn */
+  isActive: boolean;
+  /** Chương trình hệ thống (TOEIC): không ẩn, không xóa được */
+  isProtected: boolean;
+  topicCount: number;
+  /** Đề thi chưa xóa */
+  examCount: number;
+  /** Câu hỏi chưa xóa thuộc các chủ đề của chương trình */
+  questionCount: number;
+  createdAt: string;
+  /** Gửi lại trong PATCH để kiểm tra xung đột */
+  updatedAt: string;
+};
+export type CreateSubjectDto = {
+  /** Chữ hoa, số, gạch dưới; không đổi được sau khi tạo (dùng trong tệp nhập câu hỏi) */
+  code: string;
+  name: string;
+  category: SubjectCategory;
+};
+export type UpdateSubjectDto = {
+  /** updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409 */
+  updatedAt: string;
+  name?: string;
+  /** false: ẩn khỏi danh sách công khai, không chọn được khi tạo đề, câu hỏi */
+  isActive?: boolean;
+};
+export type AdminTopicItem = {
+  id: string;
+  skill: Skill;
+  parts: number[];
+  name: string;
+  description: string | null;
+  /** Câu hỏi chưa xóa dùng chủ đề này */
+  questionCount: number;
+  /** Nhóm câu chưa xóa dùng chủ đề này */
+  groupCount: number;
+  createdAt: string;
+  /** Gửi lại trong PATCH để kiểm tra xung đột */
+  updatedAt: string;
+};
+export type CreateTopicDto = {
+  name: string;
+  skill: Skill;
+  /** Part dùng được chủ đề, phải thuộc kỹ năng (Listening 1–4, Reading 5–7…) */
+  parts: number[];
+  description?: string | null;
+};
+export type UpdateTopicDto = {
+  name?: string;
+  skill?: Skill;
+  /** Part dùng được chủ đề, phải thuộc kỹ năng (Listening 1–4, Reading 5–7…) */
+  parts?: number[];
+  description?: string | null;
+  /** updatedAt nhận được lần đọc gần nhất; đã có người sửa sau đó thì trả 409 */
+  updatedAt: string;
 };
 export type TopicRef = {
   id: string;
@@ -3643,6 +3840,15 @@ export const {
   useRemoveAvatarMutation,
   useListSubjectsQuery,
   useListTopicsQuery,
+  useListAdminSubjectsQuery,
+  useCreateSubjectMutation,
+  useGetAdminSubjectQuery,
+  useUpdateSubjectMutation,
+  useDeleteSubjectMutation,
+  useListAdminTopicsQuery,
+  useCreateTopicMutation,
+  useUpdateTopicMutation,
+  useDeleteTopicMutation,
   useListQuestionsQuery,
   useCreateQuestionMutation,
   useGetQuestionQuery,

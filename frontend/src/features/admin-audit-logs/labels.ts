@@ -5,7 +5,9 @@ import {
   Lock,
   LockOpen,
   Pencil,
+  Plus,
   RotateCcw,
+  Trash2,
   type LucideIcon,
 } from 'lucide-react';
 import type { ExportAuditLogsDto, ListAuditLogsApiArg, RoleCode } from '@/api/generated';
@@ -32,6 +34,8 @@ interface ActionMeta {
 const ACTION_TONES: Record<string, ActionMeta> = {
   lock: { icon: Lock, tone: 'bg-danger-soft text-destructive' },
   unlock: { icon: LockOpen, tone: 'bg-emerald-50 text-emerald-700' },
+  create: { icon: Plus, tone: 'bg-emerald-50 text-emerald-700' },
+  delete: { icon: Trash2, tone: 'bg-danger-soft text-destructive' },
   update: { icon: Pencil, tone: 'bg-accent text-brand' },
   override: { icon: ClipboardCheck, tone: 'bg-violet-50 text-violet-700' },
   reset: { icon: RotateCcw, tone: 'bg-amber-50 text-amber-700' },
@@ -62,6 +66,14 @@ const FIELD_LABELS: Record<string, string> = {
   maxScore: 'Điểm tối đa',
   criteria: 'Điểm tiêu chí',
   feedback: 'Nhận xét',
+  // Chương trình thi, chủ đề
+  code: 'Mã',
+  name: 'Tên',
+  category: 'Loại',
+  isActive: 'Đang dùng',
+  parts: 'Part',
+  description: 'Mô tả',
+  subject: 'Chương trình thi',
   // Cấu hình hệ thống
   listening: 'Bảng Listening',
   reading: 'Bảng Reading',
@@ -101,6 +113,8 @@ const VALUE_LABELS: Record<string, string> = {
   DONE: 'Đã chấm',
   PENDING: 'Chờ chấm',
   FAILED: 'Chấm lỗi',
+  LISTENING: 'Listening',
+  READING: 'Reading',
   SPEAKING: 'Speaking',
   WRITING: 'Writing',
   scoring: 'Quy đổi điểm',
